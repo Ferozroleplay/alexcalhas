@@ -5566,32 +5566,22 @@ html[data-bs-theme="dark"] .inv-visita-hora {
 
 .inv-data-table--visitas tbody td.inv-col-observacao {
     vertical-align: top !important;
+    white-space: normal !important;
+    text-align: left !important;
 }
 
 .inv-data-table--visitas .inv-col-observacao {
     min-width: 9rem;
-    max-width: 16rem;
-}
-
-.inv-data-table--visitas .inv-obs-visita {
-    -webkit-line-clamp: 2;
+    max-width: 18rem;
 }
 
 .inv-obs-visita {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    display: block;
     font-size: 0.84rem;
     line-height: 1.4;
     color: var(--dash-text-muted, #64748b);
     white-space: normal;
     word-break: break-word;
-}
-
-.inv-card .inv-obs-visita {
-    -webkit-line-clamp: unset;
-    display: block;
 }
 
 .inv-data-table--visitas .inv-col-actions {

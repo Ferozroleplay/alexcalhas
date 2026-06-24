@@ -41,13 +41,7 @@ function visaoAtiva(user: { visao: AdminVisao } | null): AdminVisao {
   return user?.visao ?? "admin";
 }
 
-function roleLabel(visao: AdminVisao, simulando: boolean, impersonando: boolean): string {
-  if (impersonando) {
-    if (visao === "funcionário") return "Funcionário";
-    if (visao === "fornecedor") return "Fornecedor";
-    return "Usuário";
-  }
-  if (!simulando) return "Admin";
+function visaoDemonstracaoLabel(visao: AdminVisao): string {
   if (visao === "funcionário") return "Funcionário";
   if (visao === "fornecedor") return "Fornecedor";
   return "Admin";
@@ -139,7 +133,7 @@ export function AdminShell() {
       {user?.simulando && (
         <div className="dash-visao-banner" role="status">
           <span>
-            Modo demonstração — visão <strong>{roleLabel(visao, true)}</strong>. Seu acesso real continua
+            Modo demonstração — visão <strong>{visaoDemonstracaoLabel(visao)}</strong>. Seu acesso real continua
             admin.
           </span>
           <button type="button" className="dash-visao-banner__btn" onClick={() => void trocar("admin")}>
@@ -209,9 +203,6 @@ export function AdminShell() {
             <summary className="dash-topbar__user-toggle">
               <div className="dash-topbar__user-text">
                 <p className="dash-topbar__user-name">{user?.nome ?? "Usuário"}</p>
-                <p className="dash-topbar__user-role">
-                  {roleLabel(visao, Boolean(user?.simulando), Boolean(user?.impersonando))}
-                </p>
               </div>
               <span className="dash-topbar__user-avatar">
                 <UserThumb

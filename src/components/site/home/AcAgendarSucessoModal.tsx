@@ -16,21 +16,32 @@ function formatDataVisita(iso: string): string {
   return `${m[3]}/${m[2]}/${m[1]}`;
 }
 
+function getAgendarPortalRoot(): HTMLElement {
+  if (typeof document === "undefined") {
+    return null as unknown as HTMLElement;
+  }
+  let root = document.getElementById("ac-agendar-portal");
+  if (!root) {
+    root = document.createElement("div");
+    root.id = "ac-agendar-portal";
+    document.body.appendChild(root);
+  }
+  return root;
+}
+
 export function AcAgendarSucessoModal({ open, onClose, nome, dataVisita }: Props) {
   useEffect(() => {
     if (!open) return;
 
-    const scrollY = window.scrollY;
-    const prevOverflow = document.body.style.overflow;
-    const prevPosition = document.body.style.position;
-    const prevTop = document.body.style.top;
-    const prevWidth = document.body.style.width;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+
+    const html = document.documentElement;
+    const prevHtmlOverflow = html.style.overflow;
+    const prevBodyOverflow = document.body.style.overflow;
 
     document.body.classList.add("ac-agendar-sucesso-open");
+    html.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = "100%";
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -39,11 +50,8 @@ export function AcAgendarSucessoModal({ open, onClose, nome, dataVisita }: Props
 
     return () => {
       document.body.classList.remove("ac-agendar-sucesso-open");
-      document.body.style.overflow = prevOverflow;
-      document.body.style.position = prevPosition;
-      document.body.style.top = prevTop;
-      document.body.style.width = prevWidth;
-      window.scrollTo(0, scrollY);
+      html.style.overflow = prevHtmlOverflow;
+      document.body.style.overflow = prevBodyOverflow;
       document.removeEventListener("keydown", onKey);
     };
   }, [open, onClose]);
@@ -121,6 +129,6 @@ export function AcAgendarSucessoModal({ open, onClose, nome, dataVisita }: Props
         </div>
       </div>
     </div>,
-    document.body,
+    getAgendarPortalRoot(),
   );
 }

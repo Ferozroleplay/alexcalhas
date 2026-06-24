@@ -154,7 +154,7 @@ export function ObservacaoVisitaCell({ texto }: { texto: string | null | undefin
   const t = (texto ?? "").trim();
   if (!t) return <span className="inv-detail-empty">—</span>;
   return (
-    <span className="inv-obs-visita" title={t}>
+    <span className="inv-obs-visita">
       {t}
     </span>
   );

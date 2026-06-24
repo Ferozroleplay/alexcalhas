@@ -214,6 +214,10 @@ export function AcAgendarForm() {
     setSubmitting(true);
     try {
       await enviarAgendamento(parsed.data);
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
       setSucessoInfo({ nome: parsed.data.nome, data: parsed.data.data });
       setSucessoOpen(true);
       setErrorMsg(null);
