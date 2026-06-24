@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 
 import { HOME_SITE, waUrl } from "@/data/home-config";
+import { AcAgendarSucessoModal } from "@/components/site/home/AcAgendarSucessoModal";
 import { enviarAgendamento } from "@/lib/agendamentos";
 import { horaAtualBr } from "@/lib/inventario-format";
 import { fetchConsultaDocumentoSite, fetchViaCep } from "@/lib/site-consulta-client";
@@ -61,7 +62,9 @@ function maskTelefone(digits: string): string {
 
 export function AcAgendarForm() {
   const [form, setForm] = useState<FormState>(initial);
-  const [alert, setAlert] = useState<{ type: "success" | "danger"; msg: string } | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [sucessoOpen, setSucessoOpen] = useState(false);
+  const [sucessoInfo, setSucessoInfo] = useState<{ nome: string; data: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [docLoading, setDocLoading] = useState(false);
@@ -76,19 +79,13 @@ export function AcAgendarForm() {
     if (el) el.min = new Date().toISOString().split("T")[0];
   }, []);
 
-  useEffect(() => {
-    if (!alert || alert.type !== "success") return;
-    const t = window.setTimeout(() => setAlert(null), 8000);
-    return () => window.clearTimeout(t);
-  }, [alert]);
-
-  const showAlert = (type: "success" | "danger", msg: string) => {
+  const showError = (msg: string) => {
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
-    setAlert({ type, msg });
+    setErrorMsg(msg);
     window.setTimeout(() => {
-      document.getElementById("ac-agendar-toast")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      document.getElementById("ac-agendar-error")?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 120);
   };
 
@@ -113,14 +110,14 @@ export function AcAgendarForm() {
       try {
         const data = await fetchViaCep(cep);
         if (!data || data.erro) {
-          if (!silent) showAlert("danger", "CEP não encontrado.");
+          if (!silent) showError("CEP não encontrado.");
           return;
         }
         lastCepFetched.current = cep;
         aplicarViaCep(data);
         if (!silent) document.getElementById("ac-ag-numero")?.focus();
       } catch {
-        if (!silent) showAlert("danger", "Erro ao buscar CEP. Tente novamente.");
+        if (!silent) showError("Erro ao buscar CEP. Tente novamente.");
       } finally {
         setCepLoading(false);
       }
@@ -202,7 +199,7 @@ export function AcAgendarForm() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    setAlert(null);
+    setErrorMsg(null);
 
     const parsed = agendamentoSiteSchema.safeParse({
       ...form,
@@ -210,21 +207,23 @@ export function AcAgendarForm() {
       hora: horaAtualBr(),
     });
     if (!parsed.success) {
-      showAlert("danger", parsed.error.issues[0]?.message ?? "Preencha os campos obrigatórios.");
+      showError(parsed.error.issues[0]?.message ?? "Preencha os campos obrigatórios.");
       return;
     }
 
     setSubmitting(true);
     try {
-      const res = await enviarAgendamento(parsed.data);
-      showAlert("success", res.message ?? "Visita agendada com sucesso! Em breve entraremos em contato.");
+      await enviarAgendamento(parsed.data);
+      setSucessoInfo({ nome: parsed.data.nome, data: parsed.data.data });
+      setSucessoOpen(true);
+      setErrorMsg(null);
       setForm(initial);
       lastCepFetched.current = "";
       lastDocFetched.current = "";
       const el = document.getElementById("ac-ag-data") as HTMLInputElement | null;
       if (el) el.min = new Date().toISOString().split("T")[0];
     } catch (err) {
-      showAlert("danger", err instanceof Error ? err.message : "Não foi possível agendar. Tente novamente.");
+      showError(err instanceof Error ? err.message : "Não foi possível agendar. Tente novamente.");
     } finally {
       setSubmitting(false);
     }
@@ -366,18 +365,14 @@ export function AcAgendarForm() {
             onChange={(e) => setForm((f) => ({ ...f, observacao: e.target.value }))}
           />
         </div>
-        {alert ? (
+        {errorMsg ? (
           <div
-            id="ac-agendar-alert"
-            className={`ac-form-alert ac-form-alert--${alert.type === "success" ? "success" : "danger"}`}
-            role="status"
-            aria-live="polite"
+            id="ac-agendar-error"
+            className="ac-form-alert ac-form-alert--danger"
+            role="alert"
+            aria-live="assertive"
           >
-            <i
-              className={`bi ${alert.type === "success" ? "bi-check-circle-fill" : "bi-exclamation-triangle-fill"}`}
-              aria-hidden="true"
-            />{" "}
-            {alert.msg}
+            <i className="bi bi-exclamation-triangle-fill" aria-hidden="true" /> {errorMsg}
           </div>
         ) : null}
         <button type="submit" className="ac-btn ac-btn--primary ac-btn--lg ac-btn--block" id="ac-agendar-submit" disabled={submitting}>
@@ -390,28 +385,21 @@ export function AcAgendarForm() {
           </a>
         </p>
       </form>
-      {alert ? (
-        <div
-          id="ac-agendar-toast"
-          className={`ac-form-toast ac-form-toast--${alert.type === "success" ? "success" : "danger"}`}
-          role="alert"
-          aria-live="assertive"
-        >
-          <i
-            className={`bi ac-form-toast__icon ${alert.type === "success" ? "bi-check-circle-fill" : "bi-exclamation-triangle-fill"}`}
-            aria-hidden="true"
-          />
-          <p className="ac-form-toast__text">{alert.msg}</p>
-          <button
-            type="button"
-            className="ac-form-toast__close"
-            aria-label="Fechar aviso"
-            onClick={() => setAlert(null)}
-          >
+      {errorMsg ? (
+        <div className="ac-form-toast ac-form-toast--danger" role="alert" aria-live="assertive">
+          <i className="bi ac-form-toast__icon bi-exclamation-triangle-fill" aria-hidden="true" />
+          <p className="ac-form-toast__text">{errorMsg}</p>
+          <button type="button" className="ac-form-toast__close" aria-label="Fechar aviso" onClick={() => setErrorMsg(null)}>
             <i className="bi bi-x-lg" aria-hidden="true" />
           </button>
         </div>
       ) : null}
+      <AcAgendarSucessoModal
+        open={sucessoOpen}
+        onClose={() => setSucessoOpen(false)}
+        nome={sucessoInfo?.nome}
+        dataVisita={sucessoInfo?.data}
+      />
     </div>
   );
 }
