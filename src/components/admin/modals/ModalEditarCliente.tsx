@@ -195,6 +195,16 @@ export function ModalEditarCliente({ open, onClose, inventarioId, onSaved }: Pro
                           onChange={(e) => setDados({ ...dados, horaVisita: e.target.value })}
                         />
                       </div>
+                      <div className="col-12">
+                        <label className="dash-edit-modal__label">Observação do cliente</label>
+                        <textarea
+                          className="form-control dash-edit-modal__input"
+                          rows={3}
+                          placeholder="Projeto, necessidade ou informações extras informadas no agendamento"
+                          value={dados.observacao}
+                          onChange={(e) => setDados({ ...dados, observacao: e.target.value })}
+                        />
+                      </div>
                     </div>
                   </section>
                 ) : null}

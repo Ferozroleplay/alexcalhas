@@ -5558,6 +5558,29 @@ html[data-bs-theme="dark"] .inv-visita-hora {
     vertical-align: middle;
 }
 
+.inv-data-table--visitas .inv-col-observacao {
+    min-width: 9rem;
+    max-width: 16rem;
+    vertical-align: middle;
+}
+
+.inv-obs-visita {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 0.84rem;
+    line-height: 1.4;
+    color: var(--dash-text-muted, #64748b);
+    white-space: normal;
+    word-break: break-word;
+}
+
+.inv-card .inv-obs-visita {
+    -webkit-line-clamp: unset;
+    display: block;
+}
+
 .inv-visita-datetime-row {
     display: grid;
     grid-template-columns: 1fr auto 1fr;

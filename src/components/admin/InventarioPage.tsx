@@ -12,6 +12,7 @@ import {
   InvRecebidoCell,
   InvRowActions,
   ListingHeaderMeta,
+  ObservacaoVisitaCell,
   paginateItems,
   TelefoneCell,
   VisitaDataCell,
@@ -480,6 +481,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
                         <th className="inv-col-telefone">Telefone</th>
                         <th className="inv-col-endereco">Endereço</th>
                         {showVisita ? <th className="inv-col-datetime">Data / Hora</th> : null}
+                        {showVisita ? <th className="inv-col-observacao">Observação</th> : null}
                         {showMontagem ? <th className="inv-col-montagem">Montagem</th> : null}
                         {showValor ? <th className="inv-col-valor">Valor</th> : null}
                         {showRecebido ? <th className="inv-col-recebido">Recebido</th> : null}
@@ -508,6 +510,11 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
                                 data={item.dataVisita}
                                 hora={horaParaExibicaoVisita(item)}
                               />
+                            </td>
+                          ) : null}
+                          {showVisita ? (
+                            <td className="inv-col-observacao">
+                              <ObservacaoVisitaCell texto={item.observacao} />
                             </td>
                           ) : null}
                           {showMontagem ? (
@@ -568,6 +575,10 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
                           <MobileKeyValue
                             label="Hora"
                             value={<VisitaHoraCell hora={horaParaExibicaoVisita(item)} />}
+                          />
+                          <MobileKeyValue
+                            label="Observação"
+                            value={<ObservacaoVisitaCell texto={item.observacao} />}
                           />
                         </>
                       ) : null}

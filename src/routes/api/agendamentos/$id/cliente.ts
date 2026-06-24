@@ -26,6 +26,7 @@ const patchSchema = z.object({
   data: z.string().trim().optional(),
   hora: z.string().trim().max(50).optional(),
   dataMontagem: z.string().trim().optional(),
+  observacao: z.string().trim().max(1000).optional(),
 });
 
 export const Route = createFileRoute("/api/agendamentos/$id/cliente")({
@@ -72,6 +73,7 @@ export const Route = createFileRoute("/api/agendamentos/$id/cliente")({
                 status: row.status,
               }),
               dataMontagem: row.dataMontagem ? dataBrParaInput(row.dataMontagem) : "",
+              observacao: row.observacao ?? "",
               status: row.status,
             },
           });
@@ -130,6 +132,9 @@ export const Route = createFileRoute("/api/agendamentos/$id/cliente")({
           if (row.status === "agendado") {
             if (d.data) update.dataVisita = dataInputParaDb(d.data);
             if (d.hora) update.horaVisita = normalizarHoraVisitaDb(d.hora);
+            if (d.observacao !== undefined) {
+              update.observacao = d.observacao.trim() || null;
+            }
 
             const dup = await prisma.inventario.findFirst({
               where: {

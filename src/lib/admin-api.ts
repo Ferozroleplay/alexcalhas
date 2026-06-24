@@ -71,6 +71,7 @@ export type ClienteInventarioDados = {
   dataVisita: string;
   horaVisita: string;
   dataMontagem: string;
+  observacao: string;
   status: string;
 };
 
@@ -286,6 +287,7 @@ export async function saveClienteInventario(
       data: payload.dataVisita,
       hora: payload.horaVisita,
       dataMontagem: payload.dataMontagem,
+      observacao: payload.observacao,
     }),
   });
   const data = await parseJson<{ ok?: boolean; item?: AgendamentoItem; message?: string }>(res);

@@ -230,7 +230,7 @@ export function OrcamentoDocument({ item, itens }: Props) {
             <tr>
               <th>Código</th>
               <th>Descrição</th>
-              <th>Qtd.</th>
+              <th>Metro</th>
               <th>Valor unitário</th>
               <th>Total</th>
             </tr>

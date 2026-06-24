@@ -145,6 +145,17 @@ export function VisitaDataHoraCell({ data, hora }: { data: string; hora: string 
   );
 }
 
+/** Observação informada pelo cliente no agendamento (site ou painel). */
+export function ObservacaoVisitaCell({ texto }: { texto: string | null | undefined }) {
+  const t = (texto ?? "").trim();
+  if (!t) return <span className="inv-detail-empty">—</span>;
+  return (
+    <span className="inv-obs-visita" title={t}>
+      {t}
+    </span>
+  );
+}
+
 /** Endereço clicável — abre Google Maps. Em tabelas usa chip compacto "Mapa" (endereço só no tooltip). */
 export function EnderecoLink({
   endereco,
