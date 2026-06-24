@@ -148,7 +148,9 @@ export function OrcamentoDocument({ item, itens }: Props) {
               </svg>
             }
           >
-            {empresa.whatsapp}
+            {empresa.whatsapp1}
+            <br />
+            {empresa.whatsapp2}
           </TopLine>
         </div>
       </header>

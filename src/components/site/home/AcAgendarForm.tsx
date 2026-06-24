@@ -76,9 +76,20 @@ export function AcAgendarForm() {
     if (el) el.min = new Date().toISOString().split("T")[0];
   }, []);
 
+  useEffect(() => {
+    if (!alert || alert.type !== "success") return;
+    const t = window.setTimeout(() => setAlert(null), 8000);
+    return () => window.clearTimeout(t);
+  }, [alert]);
+
   const showAlert = (type: "success" | "danger", msg: string) => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
     setAlert({ type, msg });
-    document.getElementById("ac-agendar-alert")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    window.setTimeout(() => {
+      document.getElementById("ac-agendar-toast")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 120);
   };
 
   const aplicarViaCep = useCallback((data: NonNullable<Awaited<ReturnType<typeof fetchViaCep>>>) => {
@@ -227,14 +238,6 @@ export function AcAgendarForm() {
       <p className="ac-agendar-card__desc">
         Preencha os dados — o agendamento aparece na área administrativa na hora.
       </p>
-      <div
-        id="ac-agendar-alert"
-        className={`ac-form-alert${alert ? ` ac-form-alert--${alert.type === "success" ? "success" : "danger"}` : ""}`}
-        role="alert"
-        hidden={!alert}
-      >
-        {alert?.msg}
-      </div>
       <form id="ac-agendar-form" className="ac-agendar-form" noValidate onSubmit={(e) => void onSubmit(e)}>
         <div className="ac-form-row">
           <div className="ac-form-group">
@@ -363,6 +366,20 @@ export function AcAgendarForm() {
             onChange={(e) => setForm((f) => ({ ...f, observacao: e.target.value }))}
           />
         </div>
+        {alert ? (
+          <div
+            id="ac-agendar-alert"
+            className={`ac-form-alert ac-form-alert--${alert.type === "success" ? "success" : "danger"}`}
+            role="status"
+            aria-live="polite"
+          >
+            <i
+              className={`bi ${alert.type === "success" ? "bi-check-circle-fill" : "bi-exclamation-triangle-fill"}`}
+              aria-hidden="true"
+            />{" "}
+            {alert.msg}
+          </div>
+        ) : null}
         <button type="submit" className="ac-btn ac-btn--primary ac-btn--lg ac-btn--block" id="ac-agendar-submit" disabled={submitting}>
           <i className="bi bi-calendar-check" aria-hidden="true" /> {submitting ? "Enviando…" : "Agendar"}
         </button>
@@ -373,6 +390,28 @@ export function AcAgendarForm() {
           </a>
         </p>
       </form>
+      {alert ? (
+        <div
+          id="ac-agendar-toast"
+          className={`ac-form-toast ac-form-toast--${alert.type === "success" ? "success" : "danger"}`}
+          role="alert"
+          aria-live="assertive"
+        >
+          <i
+            className={`bi ac-form-toast__icon ${alert.type === "success" ? "bi-check-circle-fill" : "bi-exclamation-triangle-fill"}`}
+            aria-hidden="true"
+          />
+          <p className="ac-form-toast__text">{alert.msg}</p>
+          <button
+            type="button"
+            className="ac-form-toast__close"
+            aria-label="Fechar aviso"
+            onClick={() => setAlert(null)}
+          >
+            <i className="bi bi-x-lg" aria-hidden="true" />
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

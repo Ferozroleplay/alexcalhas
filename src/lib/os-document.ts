@@ -5,9 +5,10 @@ import { parseFormaPagamento, calcularCreditoMaquininha } from "@/lib/orcamento.
 /** Dados fixos da empresa no orçamento. */
 export const OS_ORCAMENTO_EMPRESA = {
   tagline: "Calhas • Rufos • Pingadeiras",
-  telefone1: "(18) 99757-8060",
-  telefone2: "(18) 99757-8060",
-  whatsapp: "18 996475269  996069273",
+  telefone1: "(18) 99647-5269",
+  telefone2: "(18) 99606-9273",
+  whatsapp1: "(18) 99647-5269",
+  whatsapp2: "(18) 99606-9273",
   cnpj: "28.376.837/0001-59",
   ie: "731.021.804.118",
   enderecoLinha1: "Rua Angelim, 137",
