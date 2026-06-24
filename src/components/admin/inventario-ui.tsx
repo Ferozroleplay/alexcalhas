@@ -137,11 +137,15 @@ export function InvRecebidoCell({
 
 /** Data e hora centralizadas na coluna Visitas. */
 export function VisitaDataHoraCell({ data, hora }: { data: string; hora: string }) {
+  const d = data.trim();
+  const h = formatHoraVisitaExibicao(hora);
+  if (!d && !h) return <span className="inv-detail-empty">—</span>;
   return (
-    <div className="inv-visita-datetime-row">
-      <VisitaDataCell data={data} />
-      <VisitaHoraCell hora={hora} />
-    </div>
+    <span className="inv-visita-inline">
+      {d ? <span className="inv-visita-inline__data">{d}</span> : null}
+      {d && h ? <span className="inv-visita-inline__sep"> </span> : null}
+      {h ? <span className="inv-visita-inline__hora">{h}</span> : null}
+    </span>
   );
 }
 

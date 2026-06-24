@@ -5555,17 +5555,26 @@ html[data-bs-theme="dark"] .inv-visita-hora {
     padding-left: 0.65rem !important;
     padding-right: 0.65rem !important;
     text-align: center !important;
-    vertical-align: middle;
+    vertical-align: top !important;
+    white-space: nowrap;
 }
 
 .inv-data-table--visitas thead .inv-col-datetime {
     text-align: center !important;
+    vertical-align: middle !important;
+}
+
+.inv-data-table--visitas tbody td.inv-col-observacao {
+    vertical-align: top !important;
 }
 
 .inv-data-table--visitas .inv-col-observacao {
     min-width: 9rem;
     max-width: 16rem;
-    vertical-align: middle;
+}
+
+.inv-data-table--visitas .inv-obs-visita {
+    -webkit-line-clamp: 2;
 }
 
 .inv-obs-visita {
@@ -5583,21 +5592,6 @@ html[data-bs-theme="dark"] .inv-visita-hora {
 .inv-card .inv-obs-visita {
     -webkit-line-clamp: unset;
     display: block;
-}
-
-.inv-visita-datetime-row {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    flex-wrap: nowrap;
-    white-space: nowrap;
-    vertical-align: middle;
-}
-
-.inv-visita-datetime-row .inv-visita-data,
-.inv-visita-datetime-row .inv-visita-hora {
-    text-align: center;
 }
 
 .inv-data-table--visitas .inv-col-actions {
