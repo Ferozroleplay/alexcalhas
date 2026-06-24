@@ -1063,6 +1063,42 @@ body.ac-landing > main {
     }
 }
 
+@media (max-width: 767.98px) {
+    .ac-agendar-sucesso {
+        align-items: flex-start;
+        padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+        padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+    }
+
+    .ac-agendar-sucesso__dialog {
+        width: 100%;
+        border-radius: 18px;
+    }
+
+    .ac-agendar-sucesso__body {
+        padding: 1.15rem 1.15rem 1.25rem;
+    }
+
+    .ac-agendar-sucesso__hero {
+        padding: 1.5rem 1rem 1.1rem;
+    }
+
+    .ac-agendar-sucesso__title {
+        font-size: 1.15rem;
+    }
+
+    .ac-agendar-sucesso__steps {
+        padding: 0.7rem 0.85rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .ac-agendar-sucesso__dialog {
+        max-height: min(92vh, 720px);
+        overflow: auto;
+    }
+}
+
 @media (min-width: 768px) {
     .ac-form-toast {
         left: auto;
@@ -1987,30 +2023,36 @@ body.ac-login-open {
 .ac-agendar-sucesso {
     position: fixed;
     inset: 0;
-    z-index: 11050;
+    z-index: 120000;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: max(1rem, env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-right, 0px))
         max(1rem, env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
 }
 
 .ac-agendar-sucesso__backdrop {
-    position: absolute;
+    position: fixed;
     inset: 0;
-    background: rgba(21, 43, 69, 0.58);
+    background: rgba(21, 43, 69, 0.72);
     backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     animation: ac-agendar-sucesso-fade 0.3s ease;
 }
 
 .ac-agendar-sucesso__dialog {
     position: relative;
+    z-index: 1;
     width: min(100%, 440px);
-    max-height: min(92vh, 720px);
-    overflow: auto;
+    max-height: none;
+    margin: auto;
+    flex-shrink: 0;
     background: #fff;
     border-radius: 20px;
-    box-shadow: 0 28px 80px rgba(7, 150, 87, 0.18), 0 12px 40px rgba(21, 43, 69, 0.2);
+    box-shadow: 0 28px 80px rgba(7, 150, 87, 0.18), 0 12px 40px rgba(21, 43, 69, 0.28);
     border: 1px solid rgba(7, 150, 87, 0.12);
     animation: ac-agendar-sucesso-pop 0.38s cubic-bezier(0.22, 1, 0.36, 1);
 }

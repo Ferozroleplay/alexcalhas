@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 import { HOME_SITE, waUrl } from "@/data/home-config";
 
@@ -18,25 +19,41 @@ function formatDataVisita(iso: string): string {
 export function AcAgendarSucessoModal({ open, onClose, nome, dataVisita }: Props) {
   useEffect(() => {
     if (!open) return;
-    const prev = document.body.style.overflow;
+
+    const scrollY = window.scrollY;
+    const prevOverflow = document.body.style.overflow;
+    const prevPosition = document.body.style.position;
+    const prevTop = document.body.style.top;
+    const prevWidth = document.body.style.width;
+
     document.body.classList.add("ac-agendar-sucesso-open");
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKey);
+
     return () => {
-      document.body.style.overflow = prev;
       document.body.classList.remove("ac-agendar-sucesso-open");
+      document.body.style.overflow = prevOverflow;
+      document.body.style.position = prevPosition;
+      document.body.style.top = prevTop;
+      document.body.style.width = prevWidth;
+      window.scrollTo(0, scrollY);
       document.removeEventListener("keydown", onKey);
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
 
   const primeiroNome = nome?.trim().split(/\s+/)[0];
   const dataFmt = dataVisita ? formatDataVisita(dataVisita) : "";
 
-  return (
+  return createPortal(
     <div
       className="ac-agendar-sucesso is-open"
       role="dialog"
@@ -63,7 +80,13 @@ export function AcAgendarSucessoModal({ open, onClose, nome, dataVisita }: Props
           <p className="ac-agendar-sucesso__text">
             Recebemos sua solicitação com sucesso. Em breve um profissional da{" "}
             <strong>Alex Calhas</strong> entrará em contato para confirmar os detalhes
-            {dataFmt ? <> da visita em <strong>{dataFmt}</strong></> : null}.
+            {dataFmt ? (
+              <>
+                {" "}
+                da visita em <strong>{dataFmt}</strong>
+              </>
+            ) : null}
+            .
           </p>
 
           <ul className="ac-agendar-sucesso__steps">
@@ -81,7 +104,11 @@ export function AcAgendarSucessoModal({ open, onClose, nome, dataVisita }: Props
             </li>
           </ul>
 
-          <button type="button" className="ac-btn ac-btn--primary ac-btn--block ac-agendar-sucesso__btn" onClick={onClose}>
+          <button
+            type="button"
+            className="ac-btn ac-btn--primary ac-btn--block ac-agendar-sucesso__btn"
+            onClick={onClose}
+          >
             Entendi, obrigado!
           </button>
 
@@ -93,6 +120,7 @@ export function AcAgendarSucessoModal({ open, onClose, nome, dataVisita }: Props
           </p>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

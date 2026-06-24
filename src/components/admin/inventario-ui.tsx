@@ -75,7 +75,7 @@ export function VisitaHoraCell({ hora }: { hora: string }) {
   );
 }
 
-/** Data à esquerda, hora no centro — entre a data e a coluna de ações. */
+/** Resumo de recebimentos do orçamento (valor recebido / saldo). */
 export function InvRecebidoCell({
   valorOrcamento,
   valorRecebido = 0,
@@ -135,12 +135,12 @@ export function InvRecebidoCell({
   return <div className={`inv-receb-chip ${classe}`}>{inner}</div>;
 }
 
+/** Data e hora centralizadas na coluna Visitas. */
 export function VisitaDataHoraCell({ data, hora }: { data: string; hora: string }) {
   return (
     <div className="inv-visita-datetime-row">
       <VisitaDataCell data={data} />
       <VisitaHoraCell hora={hora} />
-      <span className="inv-visita-datetime-row__spacer" aria-hidden="true" />
     </div>
   );
 }

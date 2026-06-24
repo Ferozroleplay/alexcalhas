@@ -5547,15 +5547,25 @@ html[data-bs-theme="dark"] .inv-visita-hora {
     text-align: center !important;
 }
 
-/* Visitas: data à esquerda, hora no meio antes de Ações */
+/* Visitas: data e hora centralizadas sob o cabeçalho */
 .inv-data-table--visitas .inv-col-datetime {
     width: auto;
     min-width: 10.5rem;
     max-width: 13rem;
     padding-left: 0.65rem !important;
-    padding-right: 1rem !important;
+    padding-right: 0.65rem !important;
     text-align: center !important;
     vertical-align: middle;
+}
+
+.inv-data-table--visitas thead .inv-col-datetime {
+    text-align: center !important;
+}
+
+.inv-data-table--visitas td.inv-col-datetime {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .inv-data-table--visitas .inv-col-observacao {
@@ -5582,25 +5592,18 @@ html[data-bs-theme="dark"] .inv-visita-hora {
 }
 
 .inv-visita-datetime-row {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
     width: 100%;
-    gap: 0.35rem;
+    flex-wrap: nowrap;
+    white-space: nowrap;
 }
 
-.inv-visita-datetime-row .inv-visita-data {
-    justify-self: end;
-    text-align: right;
-}
-
+.inv-visita-datetime-row .inv-visita-data,
 .inv-visita-datetime-row .inv-visita-hora {
-    justify-self: center;
-}
-
-.inv-visita-datetime-row__spacer {
-    display: block;
-    min-width: 0;
+    text-align: center;
 }
 
 .inv-data-table--visitas .inv-col-actions {
