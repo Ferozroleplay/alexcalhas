@@ -5562,12 +5562,6 @@ html[data-bs-theme="dark"] .inv-visita-hora {
     text-align: center !important;
 }
 
-.inv-data-table--visitas td.inv-col-datetime {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
 .inv-data-table--visitas .inv-col-observacao {
     min-width: 9rem;
     max-width: 16rem;
@@ -5596,9 +5590,9 @@ html[data-bs-theme="dark"] .inv-visita-hora {
     align-items: center;
     justify-content: center;
     gap: 0.4rem;
-    width: 100%;
     flex-wrap: nowrap;
     white-space: nowrap;
+    vertical-align: middle;
 }
 
 .inv-visita-datetime-row .inv-visita-data,
