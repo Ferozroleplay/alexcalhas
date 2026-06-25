@@ -80,8 +80,8 @@
 }
 
 .dash-bobina-mobile-input:focus {
-  border-color: var(--primary, #CA8A04);
-  box-shadow: 0 0 0 2px rgba(202, 138, 4, 0.18);
+  border-color: var(--primary, #16ca85);
+  box-shadow: 0 0 0 2px rgba(22, 202, 133, 0.18);
   outline: none;
 }
 
@@ -302,6 +302,212 @@
   border-bottom: 1px solid var(--dash-card-border, #e8ecf4);
 }
 
+.dash-bobina-table-panel .inv-table-scroll,
+.dash-bobina-table-panel .table-responsive {
+  overflow: visible !important;
+}
+
+/* --- Layout em cards (sem rolagem horizontal) --- */
+.dash-bobina-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.dash-bobina-line-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--dash-card-border, #e8ecf4);
+  border-radius: 12px;
+  background: var(--dash-card-bg, #fff);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.dash-bobina-line-card__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: end;
+}
+
+.dash-bobina-line-card__field {
+  min-width: 0;
+}
+
+.dash-bobina-line-card__custo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  grid-column: 1 / -1;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid var(--dash-card-border, #e8ecf4);
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.dash-bobina-line-card__custo strong {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-secundary, #334155);
+}
+
+.dash-bobina-line-card__custo.is-active strong {
+  color: var(--primary, #16ca85);
+}
+
+.dash-bobina-line-card__produto {
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  border: 1px dashed var(--dash-card-border, #e2e8f0);
+  background: rgba(148, 163, 184, 0.05);
+}
+
+.dash-bobina-line-card__produto .bobina-calc__produto-nome {
+  color: var(--primary, #16ca85);
+}
+
+.dash-bobina-line-card__precos {
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  border: 1px solid var(--dash-card-border, #e8ecf4);
+  background: rgba(148, 163, 184, 0.05);
+}
+
+.dash-bobina-line-card__preco-grid {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.dash-bobina-line-card__preco-grid--unified {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.dash-bobina-line-card__preco-block {
+  padding: 0.6rem 0.65rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+}
+
+.dash-bobina-line-card__preco-block--material {
+  background: rgba(59, 130, 246, 0.06);
+  border-color: rgba(59, 130, 246, 0.14);
+}
+
+.dash-bobina-line-card__preco-block--instalado {
+  background: rgba(22, 202, 133, 0.06);
+  border-color: rgba(22, 202, 133, 0.14);
+}
+
+.dash-bobina-line-card__preco-block--custom {
+  background: rgba(124, 58, 237, 0.05);
+  border-color: rgba(124, 58, 237, 0.14);
+}
+
+.dash-bobina-line-card__preco-label {
+  margin: 0 0 0.45rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dash-bobina-line-card__preco-block--material .dash-bobina-line-card__preco-label {
+  color: #2563eb;
+}
+
+.dash-bobina-line-card__preco-block--instalado .dash-bobina-line-card__preco-label {
+  color: var(--primary, #16ca85);
+}
+
+.dash-bobina-line-card__preco-block--custom .dash-bobina-line-card__preco-label {
+  color: #7c3aed;
+}
+
+.dash-bobina-line-card__preco-grid--custom {
+  grid-template-columns: repeat(auto-fit, minmax(4.5rem, 1fr));
+}
+
+.dash-bobina-line-card__preco-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.12rem;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.25rem;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: var(--dash-card-bg, #fff);
+}
+
+.dash-bobina-line-card__mult {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--dash-muted, #64748b);
+  white-space: nowrap;
+}
+
+.dash-bobina-line-card__val {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  word-break: break-word;
+  color: var(--text-secundary, #475569);
+}
+
+.dash-bobina-line-card__preco-item.is-active .dash-bobina-line-card__val {
+  color: var(--text-secundary, #0f172a);
+}
+
+.dash-bobina-line-card__preco-item--material.is-active .dash-bobina-line-card__val,
+.dash-bobina-line-card__preco-item--instalado.is-active .dash-bobina-line-card__val {
+  color: var(--primary, #16ca85);
+}
+
+.dash-bobina-line-card__preco-block--custom .dash-bobina-line-card__preco-item.is-active .dash-bobina-line-card__val {
+  color: #7c3aed;
+}
+
+@media (min-width: 640px) {
+  .dash-bobina-line-card__top {
+    grid-template-columns: minmax(0, 7rem) minmax(0, 7rem) minmax(0, 1fr);
+  }
+
+  .dash-bobina-line-card__custo {
+    grid-column: auto;
+  }
+}
+
+html[data-bs-theme="dark"] .dash-bobina-line-card {
+  background: #1a1a1a;
+  border-color: #333;
+  box-shadow: none;
+}
+
+html[data-bs-theme="dark"] .dash-bobina-line-card__custo {
+  background: rgba(148, 163, 184, 0.08);
+  border-color: #333;
+}
+
+html[data-bs-theme="dark"] .dash-bobina-line-card__produto {
+  background: rgba(148, 163, 184, 0.06);
+  border-color: #404040;
+}
+
+html[data-bs-theme="dark"] .dash-bobina-line-card__preco-item {
+  background: #252525;
+  border-color: #404040;
+}
+
+html[data-bs-theme="dark"] .dash-bobina-line-card__val {
+  color: #cbd5e1;
+}
+
 .dash-bobina-page__stack--modal .dash-bobina-panel,
 .dash-bobina-page__stack--modal .dash-bobina-toolbar,
 .dash-bobina-page__stack--modal .dash-bobina-table-panel,
@@ -311,22 +517,18 @@
 
 .dash-bobina-import {
   border-top: 1px dashed var(--dash-card-border, #e0e0e0);
+  text-align: center;
 }
 
-.dash-bobina-import__hint {
-  margin: 0;
-  font-size: 0.75rem;
-  color: var(--dash-muted, #64748b);
-}
-
-html[data-bs-theme="dark"] .dash-bobina-import__hint {
-  color: #94a3b8;
+.dash-bobina-import .dash-edit-modal__panel-title {
+  justify-content: center;
 }
 
 .dash-bobina-import__total {
   margin: 0;
   font-size: 0.875rem;
   color: var(--dash-text, #0f172a);
+  text-align: center;
 }
 
 .dash-bobina-import__total-detail {
@@ -344,74 +546,77 @@ html[data-bs-theme="dark"] .dash-bobina-import__total-detail {
 
 .dash-bobina-import__row {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .dash-bobina-import__choices {
   display: flex;
-  flex: 1 1 auto;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.65rem;
-  min-width: 0;
+  justify-content: center;
+  width: 100%;
+  max-width: 34rem;
+  margin: 0 auto;
 }
 
 .dash-bobina-import__pills {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.35rem;
+  width: 100%;
 }
 
 .dash-bobina-import__pill {
-  display: inline-flex;
+  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.1rem;
-  min-width: 4.5rem;
-  padding: 0.35rem 0.55rem;
-  border: 1px solid #d1d5db;
+  gap: 0.12rem;
+  min-width: 0;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.25rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
   border-radius: 10px;
-  background: #ffffff;
-  color: #111111;
+  background: var(--dash-card-bg, #fff);
+  color: var(--text-secundary, #334155);
   line-height: 1.2;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .dash-bobina-import__pill-mult {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  opacity: 0.72;
-}
-
-.dash-bobina-import__pill-val {
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 700;
+  color: var(--dash-muted, #64748b);
   white-space: nowrap;
 }
 
+.dash-bobina-import__pill-val {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  white-space: nowrap;
+  line-height: 1.25;
+}
+
 .dash-bobina-import__pill:hover {
-  border-color: var(--primary, #ca8a04);
-  color: #854d0e;
+  border-color: rgba(22, 202, 133, 0.45);
+  background: rgba(22, 202, 133, 0.06);
 }
 
 .dash-bobina-import__pill.is-active {
   background: linear-gradient(
     135deg,
-    #854d0e 0%,
-    #a16207 25%,
-    #ca8a04 50%,
-    #eab308 75%,
-    #ca8a04 100%
+    #0a9f6a 0%,
+    #16ca85 30%,
+    #3ee09f 55%,
+    #16ca85 80%,
+    #12b377 100%
   ) !important;
-  border-color: #eab308 !important;
+  border-color: #16ca85 !important;
   color: #ffffff !important;
   box-shadow:
-    0 4px 14px rgba(202, 138, 4, 0.45),
+    0 4px 14px rgba(22, 202, 133, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
 }
 
@@ -422,35 +627,41 @@ html[data-bs-theme="dark"] .dash-bobina-import__total-detail {
 }
 
 html[data-bs-theme="dark"] .dash-bobina-import__pill {
-  background: #ffffff;
-  border-color: #d1d5db;
-  color: #111111;
+  background: #252525;
+  border-color: #404040;
+  color: #e2e8f0;
 }
 
 html[data-bs-theme="dark"] .dash-bobina-import__pill.is-active {
   background: linear-gradient(
     135deg,
-    #854d0e 0%,
-    #a16207 25%,
-    #ca8a04 50%,
-    #eab308 75%,
-    #ca8a04 100%
+    #0a9f6a 0%,
+    #16ca85 30%,
+    #3ee09f 55%,
+    #16ca85 80%,
+    #12b377 100%
   ) !important;
-  border-color: #eab308 !important;
+  border-color: #16ca85 !important;
   color: #ffffff !important;
   box-shadow:
-    0 4px 14px rgba(202, 138, 4, 0.5),
+    0 4px 14px rgba(22, 202, 133, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
 }
 
 .dash-bobina-import__submit {
-  flex-shrink: 0;
-  margin-left: auto;
+  margin-left: 0;
   white-space: nowrap;
+  min-width: min(100%, 16rem);
+  justify-content: center;
+}
+
+.dash-bobina-import .text-danger {
+  text-align: center;
 }
 
 .bobina-calc__table {
-  min-width: 960px;
+  width: 100%;
+  min-width: 0;
 }
 
 .bobina-calc__table thead th {
@@ -575,38 +786,61 @@ html[data-bs-theme="dark"] .dash-bobina-import__pill.is-active {
   min-width: 7.5rem;
 }
 
-.bobina-calc__col-produto {
-  left: 7.5rem;
-  min-width: 14rem;
-  max-width: 18rem;
-}
-
 .bobina-calc__col-metragem {
-  left: 21.5rem;
+  left: 7.5rem;
   min-width: 8.5rem;
 }
 
 .bobina-calc__col-custo {
-  left: 30rem;
+  left: 16rem;
   min-width: 8.5rem;
   box-shadow: 6px 0 10px -8px rgba(15, 23, 42, 0.25);
+}
+
+.bobina-calc__row--inputs td {
+  border-bottom: none !important;
+  padding-bottom: 0.35rem !important;
+  vertical-align: bottom !important;
+}
+
+.bobina-calc__row--produto td {
+  border-top: none !important;
+  padding-top: 0 !important;
+}
+
+.bobina-calc__produto-below {
+  left: 0;
+  min-width: 24.5rem;
+  max-width: 32rem;
+  white-space: normal !important;
+  vertical-align: top !important;
+  padding-bottom: 0.75rem !important;
+  box-shadow: 6px 0 10px -8px rgba(15, 23, 42, 0.25);
+}
+
+.bobina-calc__produto-below-spacer {
+  padding: 0 !important;
+  border-top: none !important;
+  border-bottom: 1px solid var(--border-table, #f1f5f9) !important;
 }
 
 .bobina-calc__produto-nome {
   display: block;
   font-size: 0.75rem;
   font-weight: 600;
-  line-height: 1.35;
+  line-height: 1.45;
   color: var(--primary, #a16207);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
+  overflow: visible;
 }
 
 .bobina-calc__produto-vazio {
   display: block;
   font-size: 0.75rem;
   color: var(--dash-muted, #94a3b8);
+  white-space: normal;
+  word-break: break-word;
 }
 
 .bobina-calc__produto-select {
@@ -614,6 +848,9 @@ html[data-bs-theme="dark"] .dash-bobina-import__pill.is-active {
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
   font-size: 0.75rem;
+  width: 100%;
+  max-width: 100%;
+  white-space: normal;
 }
 
 .bobina-calc__produto-select--compact {
@@ -851,8 +1088,68 @@ html[data-bs-theme="light"] .dash-bobina-mobile-card__badge {
     line-height: 1.35;
   }
 
+  .modal-header.visitas-orc-calculadora-modal__header {
+    justify-content: flex-start;
+  }
+
   .visitas-orc-calculadora-modal__header {
+    position: relative;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.45rem;
     padding: 0.55rem 0.65rem;
+    padding-right: 2.75rem;
+  }
+
+  .visitas-orc-calculadora-modal__close {
+    position: absolute;
+    top: 0.55rem;
+    right: 0.65rem;
+    z-index: 2;
+    margin: 0;
+  }
+
+  .visitas-orc-calculadora-modal__head {
+    flex: 1 1 100%;
+    min-width: 0;
+    order: 1;
+  }
+
+  .visitas-orc-calculadora-modal__head-text {
+    min-width: 0;
+  }
+
+  .visitas-orc-calculadora-modal__custo-card {
+    flex: 1 1 100%;
+    order: 2;
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    padding: 0.35rem 0.4rem;
+  }
+
+  .visitas-orc-calculadora-modal__custo-card .metric-card__top {
+    margin-bottom: 0.15rem;
+  }
+
+  .visitas-orc-calculadora-modal__custo-card .metric-card__label {
+    font-size: 0.5rem;
+  }
+
+  .visitas-orc-calculadora-modal__custo-card .metric-card__icon {
+    width: 1.1rem;
+    height: 1.1rem;
+    font-size: 0.5625rem;
+  }
+
+  .visitas-orc-calculadora-modal__custo-card .metric-card__value {
+    font-size: 0.8125rem;
+  }
+
+  .visitas-orc-calculadora-modal__custo-card .metric-card__hint {
+    font-size: 0.5rem;
+    margin-top: 0.12rem;
+    line-height: 1.2;
   }
 
   .visitas-orc-calculadora-modal__icon {
@@ -882,6 +1179,11 @@ html[data-bs-theme="light"] .dash-bobina-mobile-card__badge {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .dash-bobina-toolbar__actions .analytics-btn {
+    justify-content: center;
+    width: 100%;
+  }
+
   .dash-bobina-toolbar__actions .dash-bobina-btn-col {
     grid-column: 1 / -1;
   }
@@ -891,18 +1193,16 @@ html[data-bs-theme="light"] .dash-bobina-mobile-card__badge {
   }
 
   .dash-bobina-import__row {
-    flex-direction: column;
-    align-items: stretch;
+    align-items: center;
   }
 
   .dash-bobina-import__choices {
-    flex-direction: column;
-    align-items: stretch;
+    max-width: 100%;
   }
 
   .dash-bobina-import__submit {
-    margin-left: 0;
     width: 100%;
+    max-width: 20rem;
   }
 }
 
@@ -946,11 +1246,16 @@ html[data-bs-theme="light"] .dash-bobina-mobile-card__badge {
     flex-direction: column;
 }
 
+.modal-header.visitas-orc-calculadora-modal__header {
+    justify-content: flex-start;
+}
+
 .visitas-orc-calculadora-modal__header {
     display: flex;
+    flex-wrap: nowrap;
     align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
+    justify-content: flex-start;
+    gap: 0.75rem 1rem;
     padding: 0.85rem 1rem;
     border-bottom: 1px solid var(--dash-card-border, #e0e0e0);
 }
@@ -959,7 +1264,73 @@ html[data-bs-theme="light"] .dash-bobina-mobile-card__badge {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex: 1 1 auto;
     min-width: 0;
+    order: 1;
+}
+
+.visitas-orc-calculadora-modal__head-text {
+    min-width: 0;
+}
+
+.visitas-orc-calculadora-modal__custo-card {
+    flex-shrink: 0;
+    order: 2;
+    width: min(100%, 8.25rem);
+    padding: 0.4rem 0.45rem;
+    margin: 0;
+    margin-left: auto;
+    border-radius: 8px;
+    background: var(--dash-page-bg, #f8fafc);
+    border: 1px solid var(--dash-card-border, #e2e8f0);
+    text-align: center;
+}
+
+.visitas-orc-calculadora-modal__close {
+    order: 3;
+    flex-shrink: 0;
+    margin: 0;
+}
+
+.visitas-orc-calculadora-modal__custo-card .metric-card__top {
+    margin-bottom: 0.18rem;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.visitas-orc-calculadora-modal__custo-card .metric-card__label {
+    font-size: 0.5625rem;
+    opacity: 1;
+    text-align: left;
+    line-height: 1.15;
+}
+
+.visitas-orc-calculadora-modal__custo-card .metric-card__icon {
+    width: 1.15rem;
+    height: 1.15rem;
+    font-size: 0.5625rem;
+    border-radius: 5px;
+}
+
+.visitas-orc-calculadora-modal__custo-card .metric-card__value {
+    font-size: 0.875rem;
+    text-align: center;
+    line-height: 1.1;
+}
+
+.visitas-orc-calculadora-modal__custo-card .metric-card__hint {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.5625rem;
+    font-weight: 500;
+    color: var(--dash-muted, #64748b);
+    line-height: 1.2;
+    text-align: center;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-calculadora-modal__custo-card {
+    background: var(--dash-card-bg, #252525);
+    border-color: var(--dash-card-border, #404040);
 }
 
 .visitas-orc-calculadora-modal__icon {
@@ -969,7 +1340,7 @@ html[data-bs-theme="light"] .dash-bobina-mobile-card__badge {
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 10px;
-    background: linear-gradient(135deg, #A16207, #CA8A04);
+    background: linear-gradient(135deg, #0a9f6a, #16ca85);
     color: #fff;
     font-size: 1.1rem;
     flex-shrink: 0;
@@ -991,7 +1362,8 @@ html[data-bs-theme="light"] .dash-bobina-mobile-card__badge {
 }
 
 .visitas-orc-calculadora-layer .dash-bobina-table-panel .inv-table-scroll {
-    max-height: min(42vh, 420px);
+    max-height: none;
+    overflow: visible !important;
 }
 
 .visitas-orc-calculadora-layer button.dash-bobina-import__pill {
@@ -1003,16 +1375,16 @@ html[data-bs-theme="light"] .dash-bobina-mobile-card__badge {
 .visitas-orc-calculadora-layer button.dash-bobina-import__pill.is-active {
     background: linear-gradient(
         135deg,
-        #854d0e 0%,
-        #a16207 25%,
-        #ca8a04 50%,
-        #eab308 75%,
-        #ca8a04 100%
+        #0a9f6a 0%,
+        #16ca85 30%,
+        #3ee09f 55%,
+        #16ca85 80%,
+        #12b377 100%
     ) !important;
-    border-color: #eab308 !important;
+    border-color: #16ca85 !important;
     color: #ffffff !important;
     box-shadow:
-        0 4px 14px rgba(202, 138, 4, 0.45),
+        0 4px 14px rgba(22, 202, 133, 0.45),
         inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
 }
 
@@ -1037,8 +1409,8 @@ html[data-bs-theme="light"] .dash-bobina-mobile-card__badge {
 }
 
 .visitas-orc-material-select__trigger.is-open {
-    border-color: var(--primary, #CA8A04);
-    box-shadow: 0 0 0 3px rgba(202, 138, 4, 0.15);
+    border-color: var(--primary, #16ca85);
+    box-shadow: 0 0 0 3px rgba(22, 202, 133, 0.15);
 }
 
 .visitas-orc-material-select__trigger.is-disabled {
@@ -1094,22 +1466,22 @@ html[data-bs-theme="light"] .dash-bobina-mobile-card__badge {
 
 .visitas-orc-material-select__option:hover,
 .visitas-orc-material-select__option:focus-visible {
-    background: rgba(202, 138, 4, 0.12);
+    background: rgba(22, 202, 133, 0.12);
     outline: none;
 }
 
 .visitas-orc-material-select__option.is-selected {
-    background: rgba(202, 138, 4, 0.18);
+    background: rgba(22, 202, 133, 0.18);
     font-weight: 600;
-    color: var(--primary, #A16207);
+    color: var(--primary, #16ca85);
 }
 
 .visitas-orc-valor-wrap .visitas-orc-valor {
     font-weight: 700;
     font-size: 1rem;
-    color: var(--primary, #A16207);
-    background: rgba(202, 138, 4, 0.08);
-    border-color: rgba(202, 138, 4, 0.35);
+    color: var(--primary, #16ca85);
+    background: rgba(22, 202, 133, 0.08);
+    border-color: rgba(22, 202, 133, 0.35);
 }
 
 .visitas-orc-panel {
@@ -1131,7 +1503,7 @@ html[data-bs-theme="light"] .dash-bobina-mobile-card__badge {
 }
 
 .visitas-orc-panel__title i {
-    color: var(--primary, #CA8A04);
+    color: var(--primary, #16ca85);
     font-size: 1rem;
 }
 
@@ -1157,11 +1529,11 @@ html[data-bs-theme="light"] .dash-bobina-mobile-card__badge {
     border-radius: 8px;
     background: linear-gradient(
         135deg,
-        #854D0E 0%,
-        #A16207 25%,
-        #CA8A04 50%,
-        #EAB308 75%,
-        #CA8A04 100%
+        #0a9f6a 0%,
+        #16ca85 30%,
+        #3ee09f 55%,
+        #16ca85 80%,
+        #12b377 100%
     ) !important;
     background-size: 220% 220% !important;
     animation: dash-nav-gradient-flow 5s ease infinite;
@@ -1169,14 +1541,14 @@ html[data-bs-theme="light"] .dash-bobina-mobile-card__badge {
     font-size: 0.8125rem;
     font-weight: 600;
     white-space: nowrap;
-    box-shadow: 0 4px 12px rgba(202, 138, 4, 0.3);
+    box-shadow: 0 4px 12px rgba(22, 202, 133, 0.3);
     transition: transform 0.1s ease, box-shadow 0.15s ease;
 }
 
 .visitas-orc-add-btn:hover {
     color: #fff;
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(202, 138, 4, 0.4);
+    box-shadow: 0 6px 16px rgba(22, 202, 133, 0.4);
 }
 
 .visitas-orc-add-btn:active {
@@ -1191,18 +1563,18 @@ html[data-bs-theme="light"] .dash-bobina-mobile-card__badge {
     min-height: 38px;
     padding: 0 0.75rem;
     border-radius: 8px;
-    border: 1px solid rgba(202, 138, 4, 0.45);
+    border: 1px solid rgba(22, 202, 133, 0.45);
     background: var(--dash-card-bg, #fff);
-    color: #CA8A04;
+    color: var(--primary, #16ca85);
     font-size: 1rem;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
     transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
 }
 
 .visitas-orc-calc-btn:hover {
-    background: rgba(202, 138, 4, 0.08);
-    border-color: #CA8A04;
-    color: #A16207;
+    background: rgba(22, 202, 133, 0.08);
+    border-color: var(--primary, #16ca85);
+    color: #0d9660;
 }
 
 .visitas-orc-calc-btn:active {
@@ -1211,12 +1583,12 @@ html[data-bs-theme="light"] .dash-bobina-mobile-card__badge {
 
 html[data-bs-theme="dark"] .visitas-orc-calc-btn {
     background: #252525;
-    border-color: rgba(202, 138, 4, 0.5);
-    color: #EAB308;
+    border-color: rgba(22, 202, 133, 0.5);
+    color: #3ee09f;
 }
 
 html[data-bs-theme="dark"] .visitas-orc-calc-btn:hover {
-    background: rgba(202, 138, 4, 0.12);
+    background: rgba(22, 202, 133, 0.12);
 }
 
 .visitas-orc-act-label {
@@ -1359,10 +1731,10 @@ html[data-bs-theme="dark"] .visitas-orc-calc-btn:hover {
     width: 28px;
     height: 28px;
     padding: 0;
-    border: 1px solid rgba(202, 138, 4, 0.35);
+    border: 1px solid rgba(22, 202, 133, 0.35);
     border-radius: 6px;
-    background: rgba(202, 138, 4, 0.18);
-    color: #a16207;
+    background: rgba(22, 202, 133, 0.18);
+    color: #0d9660;
     font-size: 0.875rem;
     line-height: 1;
     cursor: pointer;
@@ -1370,9 +1742,9 @@ html[data-bs-theme="dark"] .visitas-orc-calc-btn:hover {
 }
 
 .visitas-orc-edit-btn:hover {
-    background: rgba(202, 138, 4, 0.3);
-    border-color: rgba(202, 138, 4, 0.55);
-    color: #854d0e;
+    background: rgba(22, 202, 133, 0.3);
+    border-color: rgba(22, 202, 133, 0.55);
+    color: #0a9f6a;
 }
 
 .visitas-orc-save-row-btn,
@@ -1455,7 +1827,7 @@ html[data-bs-theme="dark"] .visitas-orc-calc-btn:hover {
 }
 
 .visitas-orc-edit-pill:hover {
-    border-color: rgba(202, 138, 4, 0.35);
+    border-color: rgba(22, 202, 133, 0.35);
     transform: translateY(-1px);
 }
 
@@ -1484,13 +1856,13 @@ html[data-bs-theme="dark"] .visitas-orc-calc-btn:hover {
 }
 
 .visitas-orc-edit-pill--instalado.is-active {
-    background: #fffdf5;
-    border-color: rgba(202, 138, 4, 0.45);
-    box-shadow: 0 0 0 2px rgba(202, 138, 4, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
+    background: #f5fff9;
+    border-color: rgba(22, 202, 133, 0.45);
+    box-shadow: 0 0 0 2px rgba(22, 202, 133, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .visitas-orc-edit-pill--instalado.is-active .visitas-orc-edit-pill__mult {
-    color: #a16207;
+    color: var(--primary, #16ca85);
 }
 
 .visitas-orc-row-actions--inline {
@@ -1516,7 +1888,7 @@ html[data-bs-theme="dark"] .visitas-orc-calc-btn:hover {
 
 .visitas-orc-table__row--editing td {
     vertical-align: middle;
-    background: rgba(202, 138, 4, 0.06) !important;
+    background: rgba(22, 202, 133, 0.06) !important;
 }
 
 .visitas-orc-table:has(.visitas-orc-table__row--editing) {
@@ -1527,6 +1899,9 @@ html[data-bs-theme="dark"] .visitas-orc-calc-btn:hover {
     .visitas-orc-edit-pills {
         grid-template-columns: repeat(3, minmax(0, 1fr));
         max-width: 11rem;
+    }
+}
+
 .modal-backdrop.visitas-orc-calculadora-layer {
     z-index: 2110 !important;
 }
@@ -1569,11 +1944,16 @@ html[data-bs-theme="dark"] .visitas-orc-calc-btn:hover {
     flex-direction: column;
 }
 
+.modal-header.visitas-orc-calculadora-modal__header {
+    justify-content: flex-start;
+}
+
 .visitas-orc-calculadora-modal__header {
     display: flex;
+    flex-wrap: nowrap;
     align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
+    justify-content: flex-start;
+    gap: 0.75rem 1rem;
     padding: 0.85rem 1rem;
     border-bottom: 1px solid var(--dash-card-border, #e0e0e0);
 }
@@ -1582,7 +1962,73 @@ html[data-bs-theme="dark"] .visitas-orc-calc-btn:hover {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex: 1 1 auto;
     min-width: 0;
+    order: 1;
+}
+
+.visitas-orc-calculadora-modal__head-text {
+    min-width: 0;
+}
+
+.visitas-orc-calculadora-modal__custo-card {
+    flex-shrink: 0;
+    order: 2;
+    width: min(100%, 8.25rem);
+    padding: 0.4rem 0.45rem;
+    margin: 0;
+    margin-left: auto;
+    border-radius: 8px;
+    background: var(--dash-page-bg, #f8fafc);
+    border: 1px solid var(--dash-card-border, #e2e8f0);
+    text-align: center;
+}
+
+.visitas-orc-calculadora-modal__close {
+    order: 3;
+    flex-shrink: 0;
+    margin: 0;
+}
+
+.visitas-orc-calculadora-modal__custo-card .metric-card__top {
+    margin-bottom: 0.18rem;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.visitas-orc-calculadora-modal__custo-card .metric-card__label {
+    font-size: 0.5625rem;
+    opacity: 1;
+    text-align: left;
+    line-height: 1.15;
+}
+
+.visitas-orc-calculadora-modal__custo-card .metric-card__icon {
+    width: 1.15rem;
+    height: 1.15rem;
+    font-size: 0.5625rem;
+    border-radius: 5px;
+}
+
+.visitas-orc-calculadora-modal__custo-card .metric-card__value {
+    font-size: 0.875rem;
+    text-align: center;
+    line-height: 1.1;
+}
+
+.visitas-orc-calculadora-modal__custo-card .metric-card__hint {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.5625rem;
+    font-weight: 500;
+    color: var(--dash-muted, #64748b);
+    line-height: 1.2;
+    text-align: center;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-calculadora-modal__custo-card {
+    background: var(--dash-card-bg, #252525);
+    border-color: var(--dash-card-border, #404040);
 }
 
 .visitas-orc-calculadora-modal__icon {
@@ -1592,7 +2038,7 @@ html[data-bs-theme="dark"] .visitas-orc-calc-btn:hover {
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 10px;
-    background: linear-gradient(135deg, #A16207, #CA8A04);
+    background: linear-gradient(135deg, #0a9f6a, #16ca85);
     color: #fff;
     font-size: 1.1rem;
     flex-shrink: 0;
@@ -1614,7 +2060,8 @@ html[data-bs-theme="dark"] .visitas-orc-calc-btn:hover {
 }
 
 .visitas-orc-calculadora-layer .dash-bobina-table-panel .inv-table-scroll {
-    max-height: min(42vh, 420px);
+    max-height: none;
+    overflow: visible !important;
 }
 
 .visitas-orc-calculadora-layer button.dash-bobina-import__pill {
@@ -1626,22 +2073,25 @@ html[data-bs-theme="dark"] .visitas-orc-calc-btn:hover {
 .visitas-orc-calculadora-layer button.dash-bobina-import__pill.is-active {
     background: linear-gradient(
         135deg,
-        #854d0e 0%,
-        #a16207 25%,
-        #ca8a04 50%,
-        #eab308 75%,
-        #ca8a04 100%
+        #0a9f6a 0%,
+        #16ca85 30%,
+        #3ee09f 55%,
+        #16ca85 80%,
+        #12b377 100%
     ) !important;
-    border-color: #eab308 !important;
+    border-color: #16ca85 !important;
     color: #ffffff !important;
     box-shadow:
-        0 4px 14px rgba(202, 138, 4, 0.45),
+        0 4px 14px rgba(22, 202, 133, 0.45),
         inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
 }
 
 .visitas-orc-calculadora-layer button.dash-bobina-import__pill.is-active .dash-bobina-import__pill-mult,
 .visitas-orc-calculadora-layer button.dash-bobina-import__pill.is-active .dash-bobina-import__pill-val {
     color: #ffffff !important;
+    opacity: 1;
+}
+
 html[data-bs-theme="dark"] .visitas-orc-material-select__menu {
     background: #1A1A1A;
     border-color: #333333;
@@ -1652,12 +2102,12 @@ html[data-bs-theme="dark"] .visitas-orc-material-select__option {
 }
 
 html[data-bs-theme="dark"] .visitas-orc-material-select__option.is-selected {
-    color: #fde047;
+    color: #6ee7b7;
 }
 
 html[data-bs-theme="dark"] .visitas-orc-valor-wrap .visitas-orc-valor {
-    background: rgba(202, 138, 4, 0.12);
-    color: #FDE047;
+    background: rgba(22, 202, 133, 0.12);
+    color: #6ee7b7;
 }
 
 html[data-bs-theme="dark"] .visitas-orc-table thead {
@@ -1680,9 +2130,9 @@ html[data-bs-theme="dark"] .visitas-orc-pay-card {
 }
 
 html[data-bs-theme="dark"] .visitas-orc-panel--pay {
-    border-color: rgba(202, 138, 4, 0.28);
+    border-color: rgba(22, 202, 133, 0.28);
     background:
-        linear-gradient(180deg, rgba(202, 138, 4, 0.1) 0%, rgba(202, 138, 4, 0) 45%),
+        linear-gradient(180deg, rgba(22, 202, 133, 0.1) 0%, rgba(22, 202, 133, 0) 45%),
         #181818;
 }
 
@@ -1707,23 +2157,23 @@ html[data-bs-theme="dark"] .visitas-orc-pay-card__desc {
 
 html[data-bs-theme="dark"] .visitas-orc-pay-card:has(.visitas-orc-pay-card__input:checked),
 html[data-bs-theme="dark"] .visitas-orc-pay-card--active {
-    background: rgba(202, 138, 4, 0.15);
+    background: rgba(22, 202, 133, 0.15);
     box-shadow:
-        0 0 0 1px rgba(202, 138, 4, 0.22),
+        0 0 0 1px rgba(22, 202, 133, 0.22),
         0 10px 24px rgba(0, 0, 0, 0.28);
 }
 
 html[data-bs-theme="dark"] .visitas-orc-pay-card:has(.visitas-orc-pay-card__input:checked) .visitas-orc-pay-card__name,
 html[data-bs-theme="dark"] .visitas-orc-pay-card--active .visitas-orc-pay-card__name {
-    color: #FDE047;
+    color: #6ee7b7;
 }
 
 html[data-bs-theme="dark"] .visitas-orc-pay-card--active .visitas-orc-pay-card__desc {
-    color: #fcd34d;
+    color: #a7f3d0;
 }
 
 html[data-bs-theme="dark"] .visitas-orc-parcelas-link {
-    color: #FDE047 !important;
+    color: #6ee7b7 !important;
 }
 
 html[data-bs-theme="dark"] .visitas-orc-modal__footer {
@@ -1744,15 +2194,15 @@ html[data-bs-theme="dark"] .visitas-orc-del-btn {
 }
 
 html[data-bs-theme="dark"] .visitas-orc-edit-btn {
-    background: rgba(234, 179, 8, 0.22);
-    border-color: rgba(234, 179, 8, 0.45);
-    color: #fde047;
+    background: rgba(22, 202, 133, 0.22);
+    border-color: rgba(22, 202, 133, 0.45);
+    color: #6ee7b7;
 }
 
 html[data-bs-theme="dark"] .visitas-orc-edit-btn:hover {
-    background: rgba(234, 179, 8, 0.32);
-    border-color: rgba(234, 179, 8, 0.6);
-    color: #fef08a;
+    background: rgba(22, 202, 133, 0.32);
+    border-color: rgba(22, 202, 133, 0.6);
+    color: #a7f3d0;
 }
 
 html[data-bs-theme="dark"] .visitas-orc-save-row-btn {
