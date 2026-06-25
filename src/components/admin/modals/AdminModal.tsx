@@ -6,6 +6,8 @@ type Props = {
   dialogClass?: string;
   /** Classe extra no backdrop e no container (ex.: z-index acima de outro modal). */
   layerClass?: string;
+  /** Se false, só fecha pelo botão X ou ações explícitas (salvar/cancelar). */
+  closeOnBackdrop?: boolean;
   children: ReactNode;
 };
 
@@ -15,6 +17,7 @@ export function AdminModal({
   onClose,
   dialogClass = "modal-lg",
   layerClass = "",
+  closeOnBackdrop = true,
   children,
 }: Props) {
   if (!open) return null;
@@ -25,7 +28,7 @@ export function AdminModal({
     <>
       <div
         className={`modal-backdrop fade show${layer ? ` ${layer}` : ""}`}
-        onClick={onClose}
+        onClick={closeOnBackdrop ? onClose : undefined}
         aria-hidden="true"
       />
       <div
@@ -34,7 +37,7 @@ export function AdminModal({
         role="dialog"
         aria-modal="true"
         onClick={(e) => {
-          if (e.target === e.currentTarget) onClose();
+          if (closeOnBackdrop && e.target === e.currentTarget) onClose();
         }}
       >
         <div

@@ -11,6 +11,7 @@ const ADMIN_ONLY = [
   "/painel/confirmado",
   "/painel/finalizado",
   "/painel/material",
+  "/painel/calculadora-bobina",
   "/painel/clientes",
   "/painel/usuarios",
   "/painel/financeiro",

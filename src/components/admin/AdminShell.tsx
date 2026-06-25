@@ -24,6 +24,7 @@ const NAV_MAIN: { to: string; label: string; icon: string; exact?: boolean }[] =
 const NAV_ADMIN: { to: string; label: string; icon: string }[] = [
   { to: "/painel/clientes", label: "Clientes", icon: "bi-person-vcard" },
   { to: "/painel/material", label: "Materiais", icon: "bi-box-seam" },
+  { to: "/painel/calculadora-bobina", label: "Calculadora", icon: "bi-calculator" },
   { to: "/painel/usuarios", label: "Usuários", icon: "bi-people" },
   { to: "/painel/fornecedores", label: "Entregas", icon: "bi-inbox" },
   { to: "/painel/financeiro", label: "Financeiro", icon: "bi-cash-coin" },

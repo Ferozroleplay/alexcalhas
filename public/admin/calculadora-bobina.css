@@ -1,0 +1,1774 @@
+﻿/* Calculadora de bobina â€” alinhada ao painel Materiais / Financeiro */
+.dash-bobina-page__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dash-bobina-panel {
+  margin-bottom: 0;
+}
+
+.dash-bobina-unit-group .input-group-text {
+  min-width: 2.75rem;
+  justify-content: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--dash-muted, #64748b);
+  background: var(--dash-input-group-bg, #f8fafc);
+  border-color: var(--dash-card-border, #e2e8f0);
+}
+
+.dash-bobina-metrics {
+  margin: 0;
+  padding: 0;
+}
+
+.dash-bobina-metrics .dash-bobina-metric {
+  max-width: 360px;
+}
+
+.dash-bobina-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.25rem;
+}
+
+.dash-bobina-toolbar__hint,
+.dash-bobina-table-head__hint {
+  color: var(--dash-muted, #64748b);
+  font-size: 0.875rem;
+}
+
+.dash-bobina-table-head__hint--mobile {
+  display: none;
+}
+
+.dash-bobina-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem 0.65rem;
+}
+
+.dash-bobina-mobile-label {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--text-anexo, #9a9a9a);
+}
+
+.dash-bobina-mobile-input {
+  min-height: 2rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 7px;
+  border: 1px solid var(--dash-card-border, #333);
+  background: var(--background-imputs, #252525);
+  color: var(--text-secundary, #d4d4d4);
+  font-size: 0.8125rem;
+  line-height: 1.2;
+}
+
+.dash-bobina-mobile-input::placeholder {
+  color: var(--text-anexo, #737373);
+  opacity: 0.75;
+}
+
+.dash-bobina-mobile-input:focus {
+  border-color: var(--primary, #CA8A04);
+  box-shadow: 0 0 0 2px rgba(202, 138, 4, 0.18);
+  outline: none;
+}
+
+.dash-bobina-mobile-custom {
+  padding: 0.55rem 0.65rem;
+  border: 1px dashed rgba(124, 58, 237, 0.28);
+  border-radius: 10px;
+  background: rgba(124, 58, 237, 0.04);
+}
+
+.dash-bobina-mobile-custom__title {
+  margin: 0 0 0.45rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #a78bfa;
+}
+
+.dash-bobina-mobile-custom__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.dash-bobina-mobile-custom__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.dash-bobina-mobile-card {
+  border: 1px solid var(--dash-card-border, #2e2e2e);
+  border-radius: 10px;
+  padding: 0.55rem 0.65rem 0.6rem;
+  background: var(--dash-card-bg, #222);
+}
+
+.dash-bobina-mobile-card__badge {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 0.45rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(202, 138, 4, 0.12);
+  border: 1px solid rgba(202, 138, 4, 0.22);
+  color: #EAB308;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.dash-bobina-mobile-card__fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem 0.55rem;
+}
+
+.dash-bobina-mobile-card__field {
+  min-width: 0;
+}
+
+.dash-bobina-mobile-card__custo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.45rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-anexo, #9a9a9a);
+}
+
+.dash-bobina-mobile-card__custo strong {
+  color: var(--text-secundary, #d4d4d4);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.dash-bobina-mobile-card__custo--active strong {
+  color: #EAB308;
+}
+
+.dash-bobina-mobile-card__section {
+  margin-top: 0.35rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.dash-bobina-mobile-card__section summary {
+  cursor: pointer;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  padding: 0.3rem 0;
+  user-select: none;
+}
+
+.dash-bobina-mobile-card__section summary::-webkit-details-marker {
+  display: none;
+}
+
+.dash-bobina-mobile-card__section summary::after {
+  content: "+";
+  font-size: 0.8125rem;
+  font-weight: 700;
+  opacity: 0.35;
+}
+
+.dash-bobina-mobile-card__section[open] summary::after {
+  content: "âˆ’";
+}
+
+.dash-bobina-mobile-card__section--material summary {
+  color: #93c5fd;
+}
+
+.dash-bobina-mobile-card__section--instalado summary {
+  color: #EAB308;
+}
+
+.dash-bobina-mobile-card__section--precos summary {
+  color: var(--text-secundary, #c8c8c8);
+}
+
+.dash-bobina-mobile-card__section--custom summary {
+  color: #c4b5fd;
+}
+
+.dash-bobina-mobile-card__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.3rem 0.45rem;
+  margin: 0.25rem 0 0.1rem;
+  padding-bottom: 0.15rem;
+}
+
+.dash-bobina-mobile-card__grid--unified {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.dash-bobina-mobile-card__pair--material dt {
+  color: #93c5fd;
+}
+
+.dash-bobina-mobile-card__pair--material dd {
+  color: #bfdbfe;
+}
+
+.dash-bobina-mobile-card__pair--instalado dt {
+  color: #EAB308;
+}
+
+.dash-bobina-mobile-card__pair--instalado dd {
+  color: #fde047;
+}
+
+.dash-bobina-mobile-card__pair {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.dash-bobina-mobile-card__pair dt {
+  margin: 0;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--text-anexo, #737373);
+}
+
+.dash-bobina-mobile-card__pair dd {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text-secundary, #c8c8c8);
+  white-space: nowrap;
+}
+
+.dash-bobina-toolbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.dash-bobina-btn-danger {
+  border-color: rgba(239, 68, 68, 0.35) !important;
+  color: #ef4444 !important;
+}
+
+.dash-bobina-btn-danger:hover {
+  background: rgba(239, 68, 68, 0.08) !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  color: #dc2626 !important;
+}
+
+.dash-bobina-btn-col {
+  border-color: rgba(139, 92, 246, 0.35) !important;
+  color: #8b5cf6 !important;
+}
+
+.dash-bobina-btn-col:hover {
+  background: rgba(139, 92, 246, 0.08) !important;
+  border-color: rgba(139, 92, 246, 0.5) !important;
+  color: #7c3aed !important;
+}
+
+.dash-bobina-table-panel .dash-bobina-table-head {
+  padding: 1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid var(--dash-card-border, #e8ecf4);
+}
+
+.dash-bobina-page__stack--modal .dash-bobina-panel,
+.dash-bobina-page__stack--modal .dash-bobina-toolbar,
+.dash-bobina-page__stack--modal .dash-bobina-table-panel,
+.dash-bobina-page__stack--modal .dash-bobina-import {
+  margin-bottom: 0;
+}
+
+.dash-bobina-import {
+  border-top: 1px dashed var(--dash-card-border, #e0e0e0);
+}
+
+.dash-bobina-import__hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--dash-muted, #64748b);
+}
+
+html[data-bs-theme="dark"] .dash-bobina-import__hint {
+  color: #94a3b8;
+}
+
+.dash-bobina-import__total {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--dash-text, #0f172a);
+}
+
+.dash-bobina-import__total-detail {
+  font-size: 0.8125rem;
+  color: var(--dash-muted, #64748b);
+}
+
+html[data-bs-theme="dark"] .dash-bobina-import__total {
+  color: #e2e8f0;
+}
+
+html[data-bs-theme="dark"] .dash-bobina-import__total-detail {
+  color: #94a3b8;
+}
+
+.dash-bobina-import__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dash-bobina-import__choices {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.dash-bobina-import__pills {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.dash-bobina-import__pill {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  min-width: 4.5rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #111111;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dash-bobina-import__pill-mult {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  opacity: 0.72;
+}
+
+.dash-bobina-import__pill-val {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.dash-bobina-import__pill:hover {
+  border-color: var(--primary, #ca8a04);
+  color: #854d0e;
+}
+
+.dash-bobina-import__pill.is-active {
+  background: linear-gradient(
+    135deg,
+    #854d0e 0%,
+    #a16207 25%,
+    #ca8a04 50%,
+    #eab308 75%,
+    #ca8a04 100%
+  ) !important;
+  border-color: #eab308 !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 4px 14px rgba(202, 138, 4, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+}
+
+.dash-bobina-import__pill.is-active .dash-bobina-import__pill-mult,
+.dash-bobina-import__pill.is-active .dash-bobina-import__pill-val {
+  color: #ffffff !important;
+  opacity: 1;
+}
+
+html[data-bs-theme="dark"] .dash-bobina-import__pill {
+  background: #ffffff;
+  border-color: #d1d5db;
+  color: #111111;
+}
+
+html[data-bs-theme="dark"] .dash-bobina-import__pill.is-active {
+  background: linear-gradient(
+    135deg,
+    #854d0e 0%,
+    #a16207 25%,
+    #ca8a04 50%,
+    #eab308 75%,
+    #ca8a04 100%
+  ) !important;
+  border-color: #eab308 !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 4px 14px rgba(202, 138, 4, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+}
+
+.dash-bobina-import__submit {
+  flex-shrink: 0;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.bobina-calc__table {
+  min-width: 960px;
+}
+
+.bobina-calc__table thead th {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.bobina-calc__group--material {
+  background: rgba(59, 130, 246, 0.08);
+  color: #2563eb;
+}
+
+.bobina-calc__group--instalado {
+  background: rgba(202, 138, 4, 0.1);
+  color: #A16207;
+}
+
+.bobina-calc__group--custom {
+  background: rgba(124, 58, 237, 0.08);
+  color: #7c3aed;
+}
+
+.bobina-calc__mult--material {
+  background: rgba(59, 130, 246, 0.04);
+  color: #3b82f6;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.bobina-calc__mult-label {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.bobina-calc__mult-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-left: 0.25rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  font-size: 0.625rem;
+  line-height: 1;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.bobina-calc__mult-remove:hover {
+  background: rgba(239, 68, 68, 0.28);
+  color: #dc2626;
+}
+
+.dash-bobina-btn-restore {
+  border-color: rgba(234, 179, 8, 0.45) !important;
+  color: #CA8A04 !important;
+}
+
+.dash-bobina-btn-restore:hover {
+  background: rgba(234, 179, 8, 0.1) !important;
+}
+
+.bobina-calc__mult--instalado {
+  background: rgba(202, 138, 4, 0.06);
+  color: #CA8A04;
+  font-size: 0.72rem;
+}
+
+.bobina-calc__mult--custom {
+  background: rgba(124, 58, 237, 0.05);
+  color: #7c3aed;
+  font-size: 0.72rem;
+  min-width: 6.5rem;
+}
+
+.bobina-calc__custom-head {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.bobina-calc__mult-input {
+  width: 3.25rem;
+  min-height: 1.75rem;
+  padding: 0.15rem 0.35rem;
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  border-radius: 6px;
+  background: var(--dash-card-bg, #fff);
+  color: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.bobina-calc__mult-input:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.15);
+  outline: none;
+}
+
+.bobina-calc__money--custom.bobina-calc__money--active {
+  color: #7c3aed;
+  font-weight: 600;
+}
+
+.bobina-calc__sticky {
+  position: sticky;
+  z-index: 2;
+  background: var(--dash-card-bg, #fff);
+}
+
+.bobina-calc__col-corte {
+  left: 0;
+  min-width: 7.5rem;
+}
+
+.bobina-calc__col-produto {
+  left: 7.5rem;
+  min-width: 14rem;
+  max-width: 18rem;
+}
+
+.bobina-calc__col-metragem {
+  left: 21.5rem;
+  min-width: 8.5rem;
+}
+
+.bobina-calc__col-custo {
+  left: 30rem;
+  min-width: 8.5rem;
+  box-shadow: 6px 0 10px -8px rgba(15, 23, 42, 0.25);
+}
+
+.bobina-calc__produto-nome {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--primary, #a16207);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bobina-calc__produto-vazio {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--dash-muted, #94a3b8);
+}
+
+.bobina-calc__produto-select {
+  min-height: 2.25rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.bobina-calc__produto-select--compact {
+  width: 100%;
+}
+
+.dash-bobina-mobile-card__field--produto {
+  grid-column: 1 / -1;
+}
+
+.bobina-calc__input {
+  min-height: 2.25rem;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+  font-size: 0.875rem;
+}
+
+.bobina-calc__money {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8125rem;
+  color: var(--dash-muted, #94a3b8);
+}
+
+.bobina-calc__money--active {
+  color: var(--dash-text, #0f172a);
+  font-weight: 600;
+}
+
+.bobina-calc__money--material.bobina-calc__money--active {
+  color: #2563eb;
+}
+
+.bobina-calc__money--instalado.bobina-calc__money--active {
+  color: #A16207;
+}
+
+.bobina-calc__col-custo.bobina-calc__money--active {
+  color: #0f172a;
+}
+
+html[data-bs-theme="dark"] .dash-bobina-unit-group .input-group-text {
+  background: #252525;
+  border-color: #333333;
+  color: #94a3b8;
+}
+
+html[data-bs-theme="dark"] .dash-bobina-table-panel .dash-bobina-table-head {
+  border-bottom-color: #333333;
+}
+
+html[data-bs-theme="dark"] .bobina-calc__produto-nome {
+  color: #fde047;
+}
+
+html[data-bs-theme="dark"] .bobina-calc__sticky {
+  background: #181818;
+}
+
+html[data-bs-theme="dark"] .bobina-calc__col-custo {
+  box-shadow: 6px 0 10px -8px rgba(0, 0, 0, 0.45);
+}
+
+html[data-bs-theme="dark"] .bobina-calc__group--material {
+  background: rgba(59, 130, 246, 0.14);
+  color: #93c5fd;
+}
+
+html[data-bs-theme="dark"] .bobina-calc__group--instalado {
+  background: rgba(202, 138, 4, 0.12);
+  color: #FDE047;
+}
+
+html[data-bs-theme="dark"] .bobina-calc__group--custom {
+  background: rgba(167, 139, 250, 0.1);
+  color: #c4b5fd;
+}
+
+html[data-bs-theme="dark"] .bobina-calc__mult--material {
+  background: rgba(59, 130, 246, 0.08);
+  color: #93c5fd;
+}
+
+html[data-bs-theme="dark"] .bobina-calc__mult--instalado {
+  background: rgba(202, 138, 4, 0.08);
+  color: #FDE047;
+}
+
+html[data-bs-theme="dark"] .bobina-calc__mult--custom {
+  background: rgba(167, 139, 250, 0.08);
+  color: #c4b5fd;
+}
+
+html[data-bs-theme="dark"] .bobina-calc__mult-input {
+  background: #252525;
+  border-color: rgba(167, 139, 250, 0.35);
+  color: #e9d5ff;
+}
+
+html[data-bs-theme="dark"] .bobina-calc__money--active {
+  color: #f1f5f9;
+}
+
+html[data-bs-theme="dark"] .bobina-calc__money--material.bobina-calc__money--active {
+  color: #93c5fd;
+}
+
+html[data-bs-theme="dark"] .bobina-calc__money--instalado.bobina-calc__money--active {
+  color: #FDE047;
+}
+
+html[data-bs-theme="dark"] .bobina-calc__money--custom.bobina-calc__money--active {
+  color: #c4b5fd;
+}
+
+html[data-bs-theme="dark"] .dash-bobina-btn-danger {
+  color: #f87171 !important;
+}
+
+html[data-bs-theme="dark"] .dash-bobina-mobile-card {
+  background: #1c1c1c;
+  border-color: #2e2e2e;
+}
+
+html[data-bs-theme="dark"] .dash-bobina-mobile-card__custo {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+html[data-bs-theme="dark"] .dash-bobina-mobile-input {
+  background: #252525;
+  border-color: #333;
+  color: #d4d4d4;
+}
+
+html[data-bs-theme="dark"] .dash-bobina-mobile-custom {
+  background: rgba(167, 139, 250, 0.06);
+  border-color: rgba(167, 139, 250, 0.28);
+}
+
+html[data-bs-theme="light"] .dash-bobina-mobile-card {
+  background: #fff;
+  border-color: #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+html[data-bs-theme="light"] .dash-bobina-mobile-card__custo {
+  background: #f5f5f5;
+}
+
+html[data-bs-theme="light"] .dash-bobina-mobile-input {
+  background: #fff;
+  border-color: #d4d4d4;
+  color: #404040;
+}
+
+html[data-bs-theme="light"] .dash-bobina-mobile-card__section {
+  border-top-color: #ececec;
+}
+
+html[data-bs-theme="light"] .dash-bobina-mobile-card__section--material summary {
+  color: #2563eb;
+}
+
+html[data-bs-theme="light"] .dash-bobina-mobile-card__section--instalado summary {
+  color: #A16207;
+}
+
+html[data-bs-theme="light"] .dash-bobina-mobile-card__pair--material dt {
+  color: #2563eb;
+}
+
+html[data-bs-theme="light"] .dash-bobina-mobile-card__pair--material dd {
+  color: #1d4ed8;
+}
+
+html[data-bs-theme="light"] .dash-bobina-mobile-card__pair--instalado dt {
+  color: #A16207;
+}
+
+html[data-bs-theme="light"] .dash-bobina-mobile-card__pair--instalado dd {
+  color: #854d0e;
+}
+
+html[data-bs-theme="light"] .dash-bobina-mobile-card__custo--active strong {
+  color: #CA8A04;
+}
+
+html[data-bs-theme="light"] .dash-bobina-mobile-card__badge {
+  color: #A16207;
+}
+
+@media (max-width: 899px) {
+  .dash-bobina-table-head__hint--desktop {
+    display: none;
+  }
+
+  .dash-bobina-table-head__hint--mobile {
+    display: block;
+    font-size: 0.6875rem;
+    line-height: 1.35;
+    opacity: 0.85;
+  }
+
+  .dash-bobina-table-panel .dash-bobina-table-head {
+    padding: 0.55rem 0.65rem 0.45rem;
+  }
+
+  .dash-bobina-table-panel .dash-edit-modal__panel-title {
+    margin-bottom: 0.25rem;
+    font-size: 0.75rem;
+  }
+
+  .dash-bobina-table-panel .dash-edit-modal__panel-title i {
+    font-size: 0.875rem;
+  }
+
+  .visitas-orc-calculadora-layer .dash-bobina-page__stack--modal {
+    gap: 0.5rem;
+    padding: 0.35rem 0.45rem 0.5rem;
+  }
+
+  .visitas-orc-calculadora-layer .dash-bobina-panel,
+  .visitas-orc-calculadora-layer .dash-bobina-toolbar,
+  .visitas-orc-calculadora-layer .dash-bobina-import {
+    padding: 0.65rem 0.75rem;
+  }
+
+  .visitas-orc-calculadora-layer .dash-edit-modal__panel-title {
+    margin-bottom: 0.45rem;
+    font-size: 0.75rem;
+  }
+
+  .visitas-orc-calculadora-layer .dash-bobina-toolbar__hint {
+    font-size: 0.6875rem;
+    line-height: 1.35;
+  }
+
+  .visitas-orc-calculadora-modal__header {
+    padding: 0.55rem 0.65rem;
+  }
+
+  .visitas-orc-calculadora-modal__icon {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.95rem;
+    border-radius: 8px;
+  }
+
+  .visitas-orc-calculadora-modal .modal-title {
+    font-size: 0.9375rem;
+  }
+
+  .visitas-orc-calculadora-modal__subtitle {
+    font-size: 0.6875rem;
+    line-height: 1.3;
+    opacity: 0.85;
+  }
+
+  .dash-bobina-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dash-bobina-toolbar__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dash-bobina-toolbar__actions .dash-bobina-btn-col {
+    grid-column: 1 / -1;
+  }
+
+  .dash-bobina-metrics .dash-bobina-metric {
+    max-width: none;
+  }
+
+  .dash-bobina-import__row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dash-bobina-import__choices {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dash-bobina-import__submit {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+
+/* --- Modal visitas/orçamento (dashboard-saas) --- */
+
+    z-index: 2120 !important;
+}
+
+.visitas-orc-calculadora-modal__dialog {
+    max-width: min(1140px, calc(100vw - 1.5rem));
+    margin: 0.75rem auto;
+}
+
+@media (max-width: 899px) {
+    .visitas-orc-calculadora-modal__dialog {
+        max-width: none;
+        width: 100%;
+        margin: 0;
+        min-height: 100dvh;
+    }
+
+    .visitas-orc-calculadora-modal {
+        min-height: 100dvh;
+        border-radius: 0;
+    }
+
+    .visitas-orc-calculadora-modal__body {
+        flex: 1;
+        overflow: auto;
+    }
+}
+
+.visitas-orc-calculadora-modal {
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--dash-card-border, #e0e0e0);
+    background: var(--dash-card-bg, #fff);
+    max-height: calc(100dvh - 1.5rem);
+    display: flex;
+    flex-direction: column;
+}
+
+.visitas-orc-calculadora-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--dash-card-border, #e0e0e0);
+}
+
+.visitas-orc-calculadora-modal__head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.visitas-orc-calculadora-modal__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #A16207, #CA8A04);
+    color: #fff;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.visitas-orc-calculadora-modal__subtitle {
+    font-size: 0.8125rem;
+    color: var(--text-anexo, #737373);
+}
+
+.visitas-orc-calculadora-modal__body {
+    overflow: auto;
+    padding: 0.75rem !important;
+}
+
+.visitas-orc-calculadora-layer .dash-bobina-page__stack--modal {
+    gap: 0.75rem;
+    padding: 0.25rem;
+}
+
+.visitas-orc-calculadora-layer .dash-bobina-table-panel .inv-table-scroll {
+    max-height: min(42vh, 420px);
+}
+
+.visitas-orc-calculadora-layer button.dash-bobina-import__pill {
+    appearance: none;
+    -webkit-appearance: none;
+    font: inherit;
+}
+
+.visitas-orc-calculadora-layer button.dash-bobina-import__pill.is-active {
+    background: linear-gradient(
+        135deg,
+        #854d0e 0%,
+        #a16207 25%,
+        #ca8a04 50%,
+        #eab308 75%,
+        #ca8a04 100%
+    ) !important;
+    border-color: #eab308 !important;
+    color: #ffffff !important;
+    box-shadow:
+        0 4px 14px rgba(202, 138, 4, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+}
+
+.visitas-orc-calculadora-layer button.dash-bobina-import__pill.is-active .dash-bobina-import__pill-mult,
+.visitas-orc-calculadora-layer button.dash-bobina-import__pill.is-active .dash-bobina-import__pill-val {
+    color: #ffffff !important;
+    opacity: 1;
+}
+
+
+/* --- Integração orçamento / modal --- */
+
+.visitas-orc-material-select__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.375rem 0.65rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.visitas-orc-material-select__trigger.is-open {
+    border-color: var(--primary, #CA8A04);
+    box-shadow: 0 0 0 3px rgba(202, 138, 4, 0.15);
+}
+
+.visitas-orc-material-select__trigger.is-disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.visitas-orc-material-select__text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.visitas-orc-material-select__chevron {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    color: var(--text-anexo, #94a3b8);
+    transition: transform 0.2s ease;
+}
+
+.visitas-orc-material-select__trigger.is-open .visitas-orc-material-select__chevron {
+    transform: rotate(180deg);
+}
+
+.visitas-orc-material-select__menu {
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 0.35rem;
+    border-radius: 10px;
+    border: 1px solid var(--dash-card-border, #e2e8f0);
+    background: var(--dash-card-bg, #fff);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.16);
+}
+
+.visitas-orc-material-select__option {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.6rem;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text-secundary, #333333);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    text-align: left;
+    cursor: pointer;
+    white-space: normal;
+    overflow: visible;
+    word-break: break-word;
+}
+
+.visitas-orc-material-select__option:hover,
+.visitas-orc-material-select__option:focus-visible {
+    background: rgba(202, 138, 4, 0.12);
+    outline: none;
+}
+
+.visitas-orc-material-select__option.is-selected {
+    background: rgba(202, 138, 4, 0.18);
+    font-weight: 600;
+    color: var(--primary, #A16207);
+}
+
+.visitas-orc-valor-wrap .visitas-orc-valor {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--primary, #A16207);
+    background: rgba(202, 138, 4, 0.08);
+    border-color: rgba(202, 138, 4, 0.35);
+}
+
+.visitas-orc-panel {
+    background: var(--dash-card-bg, #fff);
+    border: 1px solid var(--dash-card-border, #e8ecf4);
+    border-radius: 12px;
+    padding: 0.75rem 0.85rem;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.visitas-orc-panel__title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0 0 0.65rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--text-secundary, #333333);
+}
+
+.visitas-orc-panel__title i {
+    color: var(--primary, #CA8A04);
+    font-size: 1rem;
+}
+
+.visitas-orc-toolbar {
+    margin-bottom: 0.5rem;
+}
+
+#modal-materiais {
+    cursor: pointer;
+}
+
+.visitas-orc-add-btn {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 38px;
+    padding: 0 0.85rem;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(
+        135deg,
+        #854D0E 0%,
+        #A16207 25%,
+        #CA8A04 50%,
+        #EAB308 75%,
+        #CA8A04 100%
+    ) !important;
+    background-size: 220% 220% !important;
+    animation: dash-nav-gradient-flow 5s ease infinite;
+    color: #fff;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(202, 138, 4, 0.3);
+    transition: transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+.visitas-orc-add-btn:hover {
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(202, 138, 4, 0.4);
+}
+
+.visitas-orc-add-btn:active {
+    transform: scale(0.98);
+}
+
+.visitas-orc-calc-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 38px;
+    padding: 0 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(202, 138, 4, 0.45);
+    background: var(--dash-card-bg, #fff);
+    color: #CA8A04;
+    font-size: 1rem;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.visitas-orc-calc-btn:hover {
+    background: rgba(202, 138, 4, 0.08);
+    border-color: #CA8A04;
+    color: #A16207;
+}
+
+.visitas-orc-calc-btn:active {
+    transform: scale(0.98);
+}
+
+html[data-bs-theme="dark"] .visitas-orc-calc-btn {
+    background: #252525;
+    border-color: rgba(202, 138, 4, 0.5);
+    color: #EAB308;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-calc-btn:hover {
+    background: rgba(202, 138, 4, 0.12);
+}
+
+.visitas-orc-act-label {
+    display: none;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+@media (max-width: 899px) {
+    .visitas-orc-add-btn,
+    .visitas-orc-calc-btn {
+        flex-direction: column;
+        gap: 0.15rem;
+        padding-top: 0.35rem;
+        padding-bottom: 0.35rem;
+        font-size: 0.72rem;
+    }
+
+    .visitas-orc-act-label {
+        display: inline;
+    }
+}
+
+.visitas-orc-table-wrap {
+    max-height: 140px;
+    border-radius: 8px;
+    border: 1px solid var(--dash-card-border, #e8ecf4);
+    overflow: auto;
+}
+
+.visitas-orc-table-wrap:has(.visitas-orc-table__row--editing) {
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+.visitas-orc-table {
+    margin-bottom: 0;
+    --bs-table-bg: transparent;
+}
+
+.visitas-orc-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #f1f5f9;
+}
+
+.visitas-orc-table thead th {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--dash-muted, #64748b);
+    border-bottom: 1px solid var(--dash-card-border, #e2e8f0);
+    padding: 0.45rem 0.5rem;
+    white-space: nowrap;
+}
+
+.visitas-orc-table tbody td,
+.visitas-orc-table tbody th {
+    font-size: 0.8125rem;
+    color: var(--text-secundary, #333333);
+    padding: 0.4rem 0.5rem;
+    vertical-align: middle;
+    border-color: #f1f5f9;
+}
+
+.visitas-orc-table__line-total {
+    font-weight: 600;
+    color: var(--dash-text, #0f172a);
+}
+
+.visitas-orc-empty-row td {
+    padding: 0 !important;
+    border: none !important;
+}
+
+.visitas-orc-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 1.25rem 1rem;
+    text-align: center;
+    color: var(--dash-muted, #94a3b8);
+}
+
+.visitas-orc-empty i {
+    font-size: 1.5rem;
+    opacity: 0.7;
+}
+
+.visitas-orc-empty span {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--dash-muted, #64748b);
+}
+
+.visitas-orc-empty small {
+    font-size: 0.75rem;
+    max-width: 260px;
+    line-height: 1.35;
+}
+
+.visitas-orc-del-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid rgba(220, 38, 38, 0.25);
+    border-radius: 6px;
+    background: #fee2e2;
+    color: #dc2626;
+    font-size: 0.875rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.visitas-orc-del-btn:hover {
+    background: #fecaca;
+    color: #b91c1c;
+}
+
+.visitas-orc-row-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+}
+
+.visitas-orc-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid rgba(202, 138, 4, 0.35);
+    border-radius: 6px;
+    background: rgba(202, 138, 4, 0.18);
+    color: #a16207;
+    font-size: 0.875rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.visitas-orc-edit-btn:hover {
+    background: rgba(202, 138, 4, 0.3);
+    border-color: rgba(202, 138, 4, 0.55);
+    color: #854d0e;
+}
+
+.visitas-orc-save-row-btn,
+.visitas-orc-cancel-row-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.visitas-orc-save-row-btn {
+    border: 1px solid rgba(22, 163, 74, 0.45);
+    background: rgba(22, 163, 74, 0.18);
+    color: #16a34a;
+}
+
+.visitas-orc-save-row-btn:hover {
+    background: rgba(22, 163, 74, 0.3);
+    border-color: rgba(22, 163, 74, 0.65);
+    color: #15803d;
+}
+
+.visitas-orc-cancel-row-btn {
+    border: 1px solid rgba(100, 116, 139, 0.35);
+    background: rgba(100, 116, 139, 0.15);
+    color: #64748b;
+}
+
+.visitas-orc-cancel-row-btn:hover {
+    background: rgba(100, 116, 139, 0.28);
+    border-color: rgba(100, 116, 139, 0.55);
+    color: #475569;
+}
+
+.visitas-orc-table__edit-calc {
+    padding: 0.45rem 0.5rem !important;
+}
+
+.visitas-orc-edit-bar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: 0.4rem;
+    min-width: 0;
+}
+
+.visitas-orc-edit-pills {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.3rem;
+    min-width: 0;
+    flex: 1 1 auto;
+    max-width: 17.5rem;
+}
+
+.visitas-orc-edit-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.12rem;
+    width: 100%;
+    min-height: 2.65rem;
+    padding: 0.28rem 0.2rem;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    background: #ffffff;
+    color: #111111;
+    line-height: 1.1;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.visitas-orc-edit-pill:hover {
+    border-color: rgba(202, 138, 4, 0.35);
+    transform: translateY(-1px);
+}
+
+.visitas-orc-edit-pill__mult {
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: #666666;
+    letter-spacing: 0.01em;
+}
+
+.visitas-orc-edit-pill__val {
+    font-size: 0.6rem;
+    font-weight: 700;
+    white-space: nowrap;
+    color: #111111;
+}
+
+.visitas-orc-edit-pill--material.is-active {
+    background: #f8fbff;
+    border-color: rgba(59, 130, 246, 0.45);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.visitas-orc-edit-pill--material.is-active .visitas-orc-edit-pill__mult {
+    color: #2563eb;
+}
+
+.visitas-orc-edit-pill--instalado.is-active {
+    background: #fffdf5;
+    border-color: rgba(202, 138, 4, 0.45);
+    box-shadow: 0 0 0 2px rgba(202, 138, 4, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.visitas-orc-edit-pill--instalado.is-active .visitas-orc-edit-pill__mult {
+    color: #a16207;
+}
+
+.visitas-orc-row-actions--inline {
+    flex-shrink: 0;
+    align-self: center;
+    padding-top: 0.1rem;
+}
+
+.visitas-orc-table__row--editing td:first-child + td {
+    max-width: 9rem;
+    font-size: 0.75rem;
+    line-height: 1.25;
+    vertical-align: middle;
+}
+
+.visitas-orc-inline-input {
+    min-width: 5.5rem;
+    max-width: 7rem;
+    margin-left: auto;
+    padding: 0.25rem 0.45rem;
+    font-size: 0.8125rem;
+}
+
+.visitas-orc-table__row--editing td {
+    vertical-align: middle;
+    background: rgba(202, 138, 4, 0.06) !important;
+}
+
+.visitas-orc-table:has(.visitas-orc-table__row--editing) {
+    min-width: 28rem;
+}
+
+@media (max-width: 575.98px) {
+    .visitas-orc-edit-pills {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        max-width: 11rem;
+.modal-backdrop.visitas-orc-calculadora-layer {
+    z-index: 2110 !important;
+}
+
+.modal.visitas-orc-calculadora-layer {
+    z-index: 2120 !important;
+}
+
+.visitas-orc-calculadora-modal__dialog {
+    max-width: min(1140px, calc(100vw - 1.5rem));
+    margin: 0.75rem auto;
+}
+
+@media (max-width: 899px) {
+    .visitas-orc-calculadora-modal__dialog {
+        max-width: none;
+        width: 100%;
+        margin: 0;
+        min-height: 100dvh;
+    }
+
+    .visitas-orc-calculadora-modal {
+        min-height: 100dvh;
+        border-radius: 0;
+    }
+
+    .visitas-orc-calculadora-modal__body {
+        flex: 1;
+        overflow: auto;
+    }
+}
+
+.visitas-orc-calculadora-modal {
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--dash-card-border, #e0e0e0);
+    background: var(--dash-card-bg, #fff);
+    max-height: calc(100dvh - 1.5rem);
+    display: flex;
+    flex-direction: column;
+}
+
+.visitas-orc-calculadora-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--dash-card-border, #e0e0e0);
+}
+
+.visitas-orc-calculadora-modal__head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.visitas-orc-calculadora-modal__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #A16207, #CA8A04);
+    color: #fff;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.visitas-orc-calculadora-modal__subtitle {
+    font-size: 0.8125rem;
+    color: var(--text-anexo, #737373);
+}
+
+.visitas-orc-calculadora-modal__body {
+    overflow: auto;
+    padding: 0.75rem !important;
+}
+
+.visitas-orc-calculadora-layer .dash-bobina-page__stack--modal {
+    gap: 0.75rem;
+    padding: 0.25rem;
+}
+
+.visitas-orc-calculadora-layer .dash-bobina-table-panel .inv-table-scroll {
+    max-height: min(42vh, 420px);
+}
+
+.visitas-orc-calculadora-layer button.dash-bobina-import__pill {
+    appearance: none;
+    -webkit-appearance: none;
+    font: inherit;
+}
+
+.visitas-orc-calculadora-layer button.dash-bobina-import__pill.is-active {
+    background: linear-gradient(
+        135deg,
+        #854d0e 0%,
+        #a16207 25%,
+        #ca8a04 50%,
+        #eab308 75%,
+        #ca8a04 100%
+    ) !important;
+    border-color: #eab308 !important;
+    color: #ffffff !important;
+    box-shadow:
+        0 4px 14px rgba(202, 138, 4, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+}
+
+.visitas-orc-calculadora-layer button.dash-bobina-import__pill.is-active .dash-bobina-import__pill-mult,
+.visitas-orc-calculadora-layer button.dash-bobina-import__pill.is-active .dash-bobina-import__pill-val {
+    color: #ffffff !important;
+html[data-bs-theme="dark"] .visitas-orc-material-select__menu {
+    background: #1A1A1A;
+    border-color: #333333;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-material-select__option {
+    color: #e2e8f0;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-material-select__option.is-selected {
+    color: #fde047;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-valor-wrap .visitas-orc-valor {
+    background: rgba(202, 138, 4, 0.12);
+    color: #FDE047;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-table thead {
+    background: #252f3f;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-table-wrap {
+    border-color: #333333;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-table tbody td,
+html[data-bs-theme="dark"] .visitas-orc-table tbody th {
+    border-color: #333333;
+    color: #cbd5e1;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-pay-card {
+    background: #1A1A1A;
+    border-color: #333333;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-panel--pay {
+    border-color: rgba(202, 138, 4, 0.28);
+    background:
+        linear-gradient(180deg, rgba(202, 138, 4, 0.1) 0%, rgba(202, 138, 4, 0) 45%),
+        #181818;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-pay-card:hover {
+    background: #181818;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+html[data-bs-theme="dark"] .visitas-orc-pay-card__icon {
+    background: #181818;
+    border-color: #333333;
+    color: #94a3b8;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-pay-card__name {
+    color: #e2e8f0;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-pay-card__desc {
+    color: #94a3b8;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-pay-card:has(.visitas-orc-pay-card__input:checked),
+html[data-bs-theme="dark"] .visitas-orc-pay-card--active {
+    background: rgba(202, 138, 4, 0.15);
+    box-shadow:
+        0 0 0 1px rgba(202, 138, 4, 0.22),
+        0 10px 24px rgba(0, 0, 0, 0.28);
+}
+
+html[data-bs-theme="dark"] .visitas-orc-pay-card:has(.visitas-orc-pay-card__input:checked) .visitas-orc-pay-card__name,
+html[data-bs-theme="dark"] .visitas-orc-pay-card--active .visitas-orc-pay-card__name {
+    color: #FDE047;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-pay-card--active .visitas-orc-pay-card__desc {
+    color: #fcd34d;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-parcelas-link {
+    color: #FDE047 !important;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-modal__footer {
+    background: #181818;
+    border-top-color: #333333;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-btn-fechar {
+    background: #1A1A1A;
+    border-color: #333333;
+    color: #cbd5e1;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-del-btn {
+    background: rgba(220, 38, 38, 0.2);
+    border-color: rgba(248, 113, 113, 0.4);
+    color: #fca5a5;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-edit-btn {
+    background: rgba(234, 179, 8, 0.22);
+    border-color: rgba(234, 179, 8, 0.45);
+    color: #fde047;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-edit-btn:hover {
+    background: rgba(234, 179, 8, 0.32);
+    border-color: rgba(234, 179, 8, 0.6);
+    color: #fef08a;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-save-row-btn {
+    background: rgba(34, 197, 94, 0.18);
+    border-color: rgba(74, 222, 128, 0.45);
+    color: #86efac;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-cancel-row-btn {
+    background: rgba(148, 163, 184, 0.15);
+    border-color: rgba(148, 163, 184, 0.35);
+    color: #cbd5e1;
+}
+
+html[data-bs-theme="dark"] .visitas-orc-edit-pill {
+    background: #ffffff;
+    border-color: #d1d5db;
+    color: #111111;
+}

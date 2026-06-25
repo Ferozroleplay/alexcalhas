@@ -2,8 +2,21 @@ import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { AdminModal } from "@/components/admin/modals/AdminModal";
+import { OrcMaterialSelect } from "@/components/admin/modals/OrcMaterialSelect";
+import { PopupCalculadoraOrcamento } from "@/components/admin/modals/PopupCalculadoraOrcamento";
 import { useOrcamentoForm } from "@/hooks/use-orcamento-form";
-import { bloquearTeclaNaoNumerica, calcularCreditoMaquininha, parseMoneyBr, sanitizarDescontoPct } from "@/lib/orcamento.server";
+import { bloquearTeclaNaoNumerica, calcularCreditoMaquininha, parseMoneyBr, sanitizarDescontoPct, sanitizarNumeroBr } from "@/lib/orcamento.server";
+import {
+  formatBrl,
+  formatMultLabel,
+  indiceMultCalculadora,
+  montarDescricaoCalculadora,
+  multsParaEdicaoCalculadora,
+  normalizarMultCalculadora,
+  parseDescricaoCalculadora,
+  valorUnitarioCalculadora,
+  type LinhaOrcamentoCalculadaInfo,
+} from "@/lib/calculadora-bobina";
 import {
   fetchMateriais,
   fetchOrcamentoInventario,
@@ -67,6 +80,7 @@ function PopupParcelasCredito({
     <AdminModal
       open={open}
       onClose={onClose}
+      closeOnBackdrop={false}
       layerClass="visitas-orc-parcelas-layer"
       dialogClass="visitas-orc-parcelas-modal__dialog"
     >
@@ -192,8 +206,75 @@ export function ModalOrcamento({
   const [parcelasDraft, setParcelasDraft] = useState("1");
   const [parcelasDraftTaxa, setParcelasDraftTaxa] = useState("");
   const [parcelasDraftTaxaModo, setParcelasDraftTaxaModo] = useState<"sem" | "com">("sem");
+  const [calculadoraOpen, setCalculadoraOpen] = useState(false);
+  const [editingLinhaIdx, setEditingLinhaIdx] = useState<number | null>(null);
+  const [editMetros, setEditMetros] = useState("");
+  const [editValor, setEditValor] = useState("");
+  const [editCalcInfo, setEditCalcInfo] = useState<LinhaOrcamentoCalculadaInfo | null>(null);
+  const [editMultIdx, setEditMultIdx] = useState(0);
 
   const form = useOrcamentoForm(materiais);
+
+  function formatEditNum(n: number): string {
+    return n.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  }
+
+  function iniciarEdicaoLinha(idx: number) {
+    const linha = form.partData[idx];
+    if (!linha) return;
+    const calcInfo = parseDescricaoCalculadora(linha.material);
+    setEditingLinhaIdx(idx);
+    setEditMetros(formatEditNum(linha.metros));
+    setEditCalcInfo(calcInfo);
+    if (calcInfo) {
+      const multNormalizado = normalizarMultCalculadora(calcInfo.tipo, calcInfo.mult);
+      const idxMult = indiceMultCalculadora(calcInfo.tipo, calcInfo.mult);
+      setEditMultIdx(idxMult);
+      const mults = multsParaEdicaoCalculadora(calcInfo.tipo);
+      setEditValor(formatEditNum(valorUnitarioCalculadora(calcInfo.corteCm, mults[idxMult] ?? multNormalizado)));
+    } else {
+      setEditMultIdx(0);
+      setEditValor(formatEditNum(linha.valor));
+    }
+  }
+
+  function cancelarEdicaoLinha() {
+    setEditingLinhaIdx(null);
+    setEditMetros("");
+    setEditValor("");
+    setEditCalcInfo(null);
+    setEditMultIdx(0);
+  }
+
+  function selecionarMultEdicao(idx: number) {
+    if (!editCalcInfo) return;
+    const mults = multsParaEdicaoCalculadora(editCalcInfo.tipo);
+    const mult = mults[idx];
+    if (mult == null) return;
+    setEditMultIdx(idx);
+    setEditValor(formatEditNum(valorUnitarioCalculadora(editCalcInfo.corteCm, mult)));
+  }
+
+  function salvarEdicaoLinha() {
+    if (editingLinhaIdx === null) return;
+    const metros = Number.parseFloat(editMetros.replace(",", ".")) || 0;
+    const valor = parseMoneyBr(editValor);
+    if (metros <= 0 || valor <= 0) return;
+
+    if (editCalcInfo) {
+      const mults = multsParaEdicaoCalculadora(editCalcInfo.tipo);
+      const mult = mults[editMultIdx] ?? editCalcInfo.mult;
+      form.updateLinha(editingLinhaIdx, {
+        material: montarDescricaoCalculadora(editCalcInfo.tipo, editCalcInfo.corteCm, mult),
+        metros,
+        valor: valorUnitarioCalculadora(editCalcInfo.corteCm, mult),
+      });
+    } else {
+      form.updateLinha(editingLinhaIdx, { metros, valor });
+    }
+
+    cancelarEdicaoLinha();
+  }
 
   function abrirPopupParcelas() {
     setParcelasDraft(form.qtdParcelas || "1");
@@ -219,7 +300,13 @@ export function ModalOrcamento({
   }
 
   useEffect(() => {
-    if (!open) setParcelasOpen(false);
+    if (!open) {
+      setParcelasOpen(false);
+      setCalculadoraOpen(false);
+      setEditingLinhaIdx(null);
+      setEditMetros("");
+      setEditValor("");
+    }
   }, [open]);
 
   useEffect(() => {
@@ -243,6 +330,9 @@ export function ModalOrcamento({
   useEffect(() => {
     if (!open || !inventarioId) return;
     form.resetForm();
+    setEditingLinhaIdx(null);
+    setEditMetros("");
+    setEditValor("");
     setError("");
     if (mode === "novo") {
       form.setCpfCnpj(cpfInicial.replace(/\D/g, "") === "00000000000" ? "" : cpfInicial);
@@ -301,7 +391,7 @@ export function ModalOrcamento({
 
   return (
     <>
-      <AdminModal open={open} onClose={onClose} dialogClass="visitas-orc-modal__dialog modal-lg">
+      <AdminModal open={open} onClose={onClose} closeOnBackdrop={false} dialogClass="visitas-orc-modal__dialog modal-lg">
       <div className="modal-content visitas-orc-modal__content">
         <div className="modal-header visitas-orc-modal__header flex-shrink-0">
           <div className="visitas-orc-modal__head">
@@ -456,6 +546,9 @@ export function ModalOrcamento({
                       {materiaisErro}
                     </p>
                   ) : null}
+                  <p className="visitas-orc-panel__hint small mb-2">
+                    Lance manualmente pelo material cadastrado ou use a calculadora de bobina para gerar os itens.
+                  </p>
                   <div className="visitas-orc-toolbar row g-2 align-items-end mb-2">
                     <div className="col-12 col-md-4">
                       <label className="visitas-orc-label">Buscar</label>
@@ -467,29 +560,23 @@ export function ModalOrcamento({
                         onChange={(e) => form.setPesquisa(e.target.value)}
                       />
                     </div>
-                    <div className="col-12 col-md-5">
+                    <div className="col-12 col-md-4">
                       <label className="visitas-orc-label">Material</label>
-                      <select
-                        className="form-select visitas-orc-input"
+                      <OrcMaterialSelect
                         value={form.materialId}
-                        onChange={(e) => form.setMaterialId(e.target.value)}
+                        onChange={form.setMaterialId}
+                        options={form.materiaisFiltrados}
                         disabled={materiaisLoading || materiais.length === 0}
-                      >
-                        <option value="">
-                          {materiaisLoading
+                        placeholder={
+                          materiaisLoading
                             ? "Carregando…"
                             : materiais.length === 0
                               ? "Sem materiais"
-                              : "Selecione…"}
-                        </option>
-                        {form.materiaisFiltrados.map((m) => (
-                          <option key={m.id} value={m.id}>
-                            {m.material}
-                          </option>
-                        ))}
-                      </select>
+                              : "Selecione…"
+                        }
+                      />
                     </div>
-                    <div className="col-6 col-md-2">
+                    <div className="col-12 col-md-2">
                       <label className="visitas-orc-label">Metros</label>
                       <input
                         type="text"
@@ -499,8 +586,27 @@ export function ModalOrcamento({
                       />
                     </div>
                     <div className="col-6 col-md-1 d-grid">
-                      <button type="button" className="btn visitas-orc-add-btn" onClick={form.addMaterial}>
+                      <button
+                        type="button"
+                        className="btn visitas-orc-add-btn"
+                        onClick={form.addMaterial}
+                        title="Adicionar material"
+                        aria-label="Adicionar material"
+                      >
                         <i className="bi bi-plus-lg" aria-hidden="true" />
+                        <span className="visitas-orc-act-label">Adicionar</span>
+                      </button>
+                    </div>
+                    <div className="col-6 col-md-1 d-grid">
+                      <button
+                        type="button"
+                        className="btn visitas-orc-calc-btn"
+                        onClick={() => setCalculadoraOpen(true)}
+                        title="Abrir calculadora de bobina"
+                        aria-label="Abrir calculadora de bobina"
+                      >
+                        <i className="bi bi-calculator" aria-hidden="true" />
+                        <span className="visitas-orc-act-label">Calculadora</span>
                       </button>
                     </div>
                   </div>
@@ -510,30 +616,158 @@ export function ModalOrcamento({
                         <tr>
                           <th>#</th>
                           <th>Material</th>
-                          <th className="text-end">Venda</th>
+                          <th className="text-end" title="Valor por metro (corte × multiplicador)">
+                            R$/m
+                          </th>
                           <th className="text-end">Metros</th>
+                          <th className="text-end">Total</th>
                           <th />
                         </tr>
                       </thead>
                       <tbody>
                         {form.partData.map((linha, i) => (
-                          <tr key={i}>
+                          <tr key={i} className={editingLinhaIdx === i ? "visitas-orc-table__row--editing" : undefined}>
                             <td>{i + 1}</td>
                             <td>{linha.material}</td>
-                            <td className="text-end">
-                              {linha.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                            </td>
-                            <td className="text-end">{linha.metros}</td>
-                            <td className="text-center">
-                              <button
-                                type="button"
-                                className="btn btn-sm btn-outline-danger"
-                                onClick={() => form.removeLinha(i)}
-                                aria-label="Remover"
-                              >
-                                <i className="bi bi-trash" />
-                              </button>
-                            </td>
+                            {editingLinhaIdx === i ? (
+                              editCalcInfo ? (
+                                <td colSpan={4} className="visitas-orc-table__edit-calc">
+                                  <div className="visitas-orc-edit-bar">
+                                    <div
+                                      className="visitas-orc-edit-pills"
+                                      role="radiogroup"
+                                      aria-label={`Multiplicador ${editCalcInfo.tipo === "material" ? "material" : "serviço instalado"}`}
+                                    >
+                                      {multsParaEdicaoCalculadora(editCalcInfo.tipo).map((mult, mi) => {
+                                        const unit = valorUnitarioCalculadora(editCalcInfo.corteCm, mult);
+                                        const metros = Number.parseFloat(editMetros.replace(",", ".")) || 0;
+                                        const total = Math.round(unit * (metros > 0 ? metros : 1) * 100) / 100;
+                                        const active = editMultIdx === mi;
+                                        return (
+                                          <button
+                                            key={`${editCalcInfo.tipo}-${mult}`}
+                                            type="button"
+                                            role="radio"
+                                            aria-checked={active}
+                                            className={`visitas-orc-edit-pill visitas-orc-edit-pill--${editCalcInfo.tipo}${active ? " is-active" : ""}`}
+                                            onClick={() => selecionarMultEdicao(mi)}
+                                          >
+                                            <span className="visitas-orc-edit-pill__mult">{formatMultLabel(mult)}</span>
+                                            <span className="visitas-orc-edit-pill__val">{formatBrl(total)}</span>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                    <div className="visitas-orc-row-actions visitas-orc-row-actions--inline">
+                                      <button
+                                        type="button"
+                                        className="visitas-orc-save-row-btn"
+                                        onClick={salvarEdicaoLinha}
+                                        aria-label="Salvar alterações"
+                                        title="Salvar"
+                                      >
+                                        <i className="bi bi-check-lg" aria-hidden="true" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="visitas-orc-cancel-row-btn"
+                                        onClick={cancelarEdicaoLinha}
+                                        aria-label="Cancelar edição"
+                                        title="Cancelar"
+                                      >
+                                        <i className="bi bi-x-lg" aria-hidden="true" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </td>
+                              ) : (
+                                <>
+                                  <td className="text-end">
+                                    <input
+                                      type="text"
+                                      className="form-control form-control-sm visitas-orc-input visitas-orc-inline-input text-end"
+                                      value={editValor}
+                                      onChange={(e) => setEditValor(sanitizarNumeroBr(e.target.value))}
+                                      onKeyDown={bloquearTeclaNaoNumerica}
+                                      aria-label="Valor unitário"
+                                    />
+                                  </td>
+                                  <td className="text-end">
+                                    <input
+                                      type="text"
+                                      className="form-control form-control-sm visitas-orc-input visitas-orc-inline-input text-end"
+                                      value={editMetros}
+                                      onChange={(e) => setEditMetros(sanitizarNumeroBr(e.target.value))}
+                                      onKeyDown={bloquearTeclaNaoNumerica}
+                                      aria-label="Metros"
+                                    />
+                                  </td>
+                                  <td className="text-end visitas-orc-table__line-total">
+                                    {(
+                                      parseMoneyBr(editValor) *
+                                      (Number.parseFloat(editMetros.replace(",", ".")) || 0)
+                                    ).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                                  </td>
+                                  <td className="text-center">
+                                    <div className="visitas-orc-row-actions">
+                                      <button
+                                        type="button"
+                                        className="visitas-orc-save-row-btn"
+                                        onClick={salvarEdicaoLinha}
+                                        aria-label="Salvar alterações"
+                                        title="Salvar"
+                                      >
+                                        <i className="bi bi-check-lg" aria-hidden="true" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="visitas-orc-cancel-row-btn"
+                                        onClick={cancelarEdicaoLinha}
+                                        aria-label="Cancelar edição"
+                                        title="Cancelar"
+                                      >
+                                        <i className="bi bi-x-lg" aria-hidden="true" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </>
+                              )
+                            ) : (
+                              <>
+                                <td className="text-end">
+                                  {linha.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                                </td>
+                                <td className="text-end">{linha.metros}</td>
+                                <td className="text-end visitas-orc-table__line-total">
+                                  {(linha.valor * linha.metros).toLocaleString("pt-BR", {
+                                    style: "currency",
+                                    currency: "BRL",
+                                  })}
+                                </td>
+                                <td className="text-center">
+                                  <div className="visitas-orc-row-actions">
+                                    <button
+                                      type="button"
+                                      className="visitas-orc-edit-btn"
+                                      onClick={() => iniciarEdicaoLinha(i)}
+                                      aria-label="Editar item"
+                                      title="Editar"
+                                    >
+                                      <i className="bi bi-pencil-square" aria-hidden="true" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="visitas-orc-del-btn"
+                                      onClick={() => form.removeLinha(i)}
+                                      aria-label="Remover item"
+                                      title="Remover"
+                                    >
+                                      <i className="bi bi-trash" aria-hidden="true" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </>
+                            )}
                           </tr>
                         ))}
                       </tbody>
@@ -620,6 +854,12 @@ export function ModalOrcamento({
         onDraftTaxaModoChange={setParcelasDraftTaxaModo}
         onConfirm={confirmarParcelas}
         onClose={() => setParcelasOpen(false)}
+      />
+
+      <PopupCalculadoraOrcamento
+        open={open && calculadoraOpen}
+        onClose={() => setCalculadoraOpen(false)}
+        onImportar={(linhas) => form.addLinhas(linhas)}
       />
     </>
   );

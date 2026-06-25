@@ -223,8 +223,19 @@ export function useOrcamentoForm(materiais: MaterialItem[]) {
     setMetros("1");
   }, [materiais, materialId, metros]);
 
+  const addLinhas = useCallback((linhas: OrcamentoLinha[]) => {
+    if (linhas.length === 0) return;
+    setPartData((prev) => mesclarLinhasOrcamento([...prev, ...linhas]));
+  }, []);
+
   const removeLinha = useCallback((idx: number) => {
     setPartData((prev) => prev.filter((_, i) => i !== idx));
+  }, []);
+
+  const updateLinha = useCallback((idx: number, patch: Partial<OrcamentoLinha>) => {
+    setPartData((prev) =>
+      prev.map((linha, i) => (i === idx ? { ...linha, ...patch } : linha)),
+    );
   }, []);
 
   const resetForm = useCallback(() => {
@@ -366,7 +377,9 @@ export function useOrcamentoForm(materiais: MaterialItem[]) {
     onMetrosInput,
     materiaisFiltrados,
     addMaterial,
+    addLinhas,
     removeLinha,
+    updateLinha,
     resetForm,
     loadExisting,
     buildPayload,

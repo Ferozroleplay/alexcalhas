@@ -31,6 +31,7 @@ import { Route as PainelFinanceiroRouteImport } from './routes/painel/financeiro
 import { Route as PainelFinalizadoRouteImport } from './routes/painel/finalizado'
 import { Route as PainelConfirmadoRouteImport } from './routes/painel/confirmado'
 import { Route as PainelClientesRouteImport } from './routes/painel/clientes'
+import { Route as PainelCalculadoraBobinaRouteImport } from './routes/painel/calculadora-bobina'
 import { Route as PainelAgendarRouteImport } from './routes/painel/agendar'
 import { Route as ApiOsRouteImport } from './routes/api/os'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
@@ -177,6 +178,11 @@ const PainelConfirmadoRoute = PainelConfirmadoRouteImport.update({
 const PainelClientesRoute = PainelClientesRouteImport.update({
   id: '/clientes',
   path: '/clientes',
+  getParentRoute: () => PainelRouteRoute,
+} as any)
+const PainelCalculadoraBobinaRoute = PainelCalculadoraBobinaRouteImport.update({
+  id: '/calculadora-bobina',
+  path: '/calculadora-bobina',
   getParentRoute: () => PainelRouteRoute,
 } as any)
 const PainelAgendarRoute = PainelAgendarRouteImport.update({
@@ -385,6 +391,7 @@ export interface FileRoutesByFullPath {
   '/api/health': typeof ApiHealthRoute
   '/api/os': typeof ApiOsRoute
   '/painel/agendar': typeof PainelAgendarRoute
+  '/painel/calculadora-bobina': typeof PainelCalculadoraBobinaRoute
   '/painel/clientes': typeof PainelClientesRoute
   '/painel/confirmado': typeof PainelConfirmadoRoute
   '/painel/finalizado': typeof PainelFinalizadoRoute
@@ -445,6 +452,7 @@ export interface FileRoutesByTo {
   '/api/health': typeof ApiHealthRoute
   '/api/os': typeof ApiOsRoute
   '/painel/agendar': typeof PainelAgendarRoute
+  '/painel/calculadora-bobina': typeof PainelCalculadoraBobinaRoute
   '/painel/clientes': typeof PainelClientesRoute
   '/painel/confirmado': typeof PainelConfirmadoRoute
   '/painel/finalizado': typeof PainelFinalizadoRoute
@@ -507,6 +515,7 @@ export interface FileRoutesById {
   '/api/health': typeof ApiHealthRoute
   '/api/os': typeof ApiOsRoute
   '/painel/agendar': typeof PainelAgendarRoute
+  '/painel/calculadora-bobina': typeof PainelCalculadoraBobinaRoute
   '/painel/clientes': typeof PainelClientesRoute
   '/painel/confirmado': typeof PainelConfirmadoRoute
   '/painel/finalizado': typeof PainelFinalizadoRoute
@@ -570,6 +579,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/os'
     | '/painel/agendar'
+    | '/painel/calculadora-bobina'
     | '/painel/clientes'
     | '/painel/confirmado'
     | '/painel/finalizado'
@@ -630,6 +640,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/os'
     | '/painel/agendar'
+    | '/painel/calculadora-bobina'
     | '/painel/clientes'
     | '/painel/confirmado'
     | '/painel/finalizado'
@@ -691,6 +702,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/os'
     | '/painel/agendar'
+    | '/painel/calculadora-bobina'
     | '/painel/clientes'
     | '/painel/confirmado'
     | '/painel/finalizado'
@@ -930,6 +942,13 @@ declare module '@tanstack/react-router' {
       path: '/clientes'
       fullPath: '/painel/clientes'
       preLoaderRoute: typeof PainelClientesRouteImport
+      parentRoute: typeof PainelRouteRoute
+    }
+    '/painel/calculadora-bobina': {
+      id: '/painel/calculadora-bobina'
+      path: '/calculadora-bobina'
+      fullPath: '/painel/calculadora-bobina'
+      preLoaderRoute: typeof PainelCalculadoraBobinaRouteImport
       parentRoute: typeof PainelRouteRoute
     }
     '/painel/agendar': {
@@ -1196,6 +1215,7 @@ declare module '@tanstack/react-router' {
 
 interface PainelRouteRouteChildren {
   PainelAgendarRoute: typeof PainelAgendarRoute
+  PainelCalculadoraBobinaRoute: typeof PainelCalculadoraBobinaRoute
   PainelClientesRoute: typeof PainelClientesRoute
   PainelConfirmadoRoute: typeof PainelConfirmadoRoute
   PainelFinalizadoRoute: typeof PainelFinalizadoRoute
@@ -1217,6 +1237,7 @@ interface PainelRouteRouteChildren {
 
 const PainelRouteRouteChildren: PainelRouteRouteChildren = {
   PainelAgendarRoute: PainelAgendarRoute,
+  PainelCalculadoraBobinaRoute: PainelCalculadoraBobinaRoute,
   PainelClientesRoute: PainelClientesRoute,
   PainelConfirmadoRoute: PainelConfirmadoRoute,
   PainelFinalizadoRoute: PainelFinalizadoRoute,
