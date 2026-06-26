@@ -3,8 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { HOME_SITE } from "@/data/home-config";
 import type { EntregaDetalhe } from "@/lib/fornecedores.server";
 import {
+  baixarImagemNotaEntrega,
   baixarPdfNotaEntrega,
-  enviarWhatsappPdfNotaEntrega,
 } from "@/lib/fornecedor-nota-pdf";
 import {
   documentoRotulo,
@@ -32,9 +32,9 @@ function formatDataHoraAgora(): string {
   });
 }
 
-export function FornecedorNotaImpressao({ entrega, autoPrint = true }: Props) {
+export function FornecedorNotaImpressao({ entrega, autoPrint = false }: Props) {
   const sheetRef = useRef<HTMLDivElement>(null);
-  const [busy, setBusy] = useState<"pdf" | "whatsapp" | null>(null);
+  const [busy, setBusy] = useState<"pdf" | "imagem" | null>(null);
   const [acaoMsg, setAcaoMsg] = useState("");
   const numeroNota = entregaNumeroNota(entrega.id);
   const empresa = fornecedorRotuloEmpresa(entrega);
@@ -82,20 +82,15 @@ export function FornecedorNotaImpressao({ entrega, autoPrint = true }: Props) {
     }
   }
 
-  async function handleWhatsapp() {
+  async function handleBaixarImagem() {
     if (!sheetRef.current || busy) return;
     setAcaoMsg("");
-    setBusy("whatsapp");
+    setBusy("imagem");
     try {
-      const modo = await enviarWhatsappPdfNotaEntrega(sheetRef.current, entrega);
-      setAcaoMsg(
-        modo === "shared"
-          ? "PDF compartilhado."
-          : "PDF baixado e WhatsApp aberto — anexe o arquivo na conversa.",
-      );
+      await baixarImagemNotaEntrega(sheetRef.current, entrega.id);
+      setAcaoMsg("Imagem baixada com sucesso.");
     } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") return;
-      setAcaoMsg(err instanceof Error ? err.message : "Erro ao enviar pelo WhatsApp.");
+      setAcaoMsg(err instanceof Error ? err.message : "Erro ao gerar imagem.");
     } finally {
       setBusy(null);
     }
@@ -123,12 +118,12 @@ export function FornecedorNotaImpressao({ entrega, autoPrint = true }: Props) {
         </button>
         <button
           type="button"
-          className="forn-nota__btn forn-nota__btn--whatsapp"
-          onClick={() => void handleWhatsapp()}
+          className="forn-nota__btn forn-nota__btn--imagem"
+          onClick={() => void handleBaixarImagem()}
           disabled={busy != null}
         >
-          <i className="bi bi-whatsapp" aria-hidden="true" />{" "}
-          {busy === "whatsapp" ? "Preparando…" : "WhatsApp (PDF)"}
+          <i className="bi bi-image" aria-hidden="true" />{" "}
+          {busy === "imagem" ? "Gerando imagem…" : "Baixar imagem"}
         </button>
         <button
           type="button"

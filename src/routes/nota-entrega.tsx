@@ -8,6 +8,7 @@ import type { EntregaDetalhe } from "@/lib/fornecedores.server";
 
 const searchSchema = z.object({
   nota: z.coerce.number().optional().catch(undefined),
+  print: z.coerce.number().optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/nota-entrega")({
@@ -26,7 +27,7 @@ export const Route = createFileRoute("/nota-entrega")({
 });
 
 function NotaEntregaPage() {
-  const { nota } = Route.useSearch();
+  const { nota, print } = Route.useSearch();
   const [entrega, setEntrega] = useState<EntregaDetalhe | null>(null);
   const [erro, setErro] = useState("");
 
@@ -48,5 +49,5 @@ function NotaEntregaPage() {
     return <p className="forn-nota__loading">Carregando nota de entrega…</p>;
   }
 
-  return <FornecedorNotaImpressao entrega={entrega} />;
+  return <FornecedorNotaImpressao entrega={entrega} autoPrint={print === 1} />;
 }

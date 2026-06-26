@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { useAdminAuth } from "@/components/admin/admin-auth";
 import { DashPageHero } from "@/components/admin/DashPageHero";
-import { formatMoeda } from "@/lib/fornecedores-display";
+import { formatMoeda, entregaNumeroNota } from "@/lib/fornecedores-display";
 import { Route as InicioFornecedorRoute } from "@/routes/painel/inicio-fornecedor";
 
 type Resumo = {
@@ -109,7 +109,7 @@ export function FornecedorInicioPage() {
     : "Resumo das entregas da sua empresa";
 
   return (
-    <div className="dash-form-page dash-form-page--pro dash-func-inicio-page dash-forn-inicio-page">
+    <div className="dash-form-page dash-form-page--pro analytics-page dash-func-inicio-page dash-forn-inicio-page">
       <DashPageHero
         title={`Olá, ${nome}`}
         subtitle={subtitulo}
@@ -143,84 +143,68 @@ export function FornecedorInicioPage() {
 
         {!loading && data && data.fornecedor_id > 0 ? (
           <>
-            <section className="analytics-section dash-forn-inicio-finance" aria-labelledby="forn-finance-title">
-              <div className="analytics-section__head">
-                <div>
-                  <h2 id="forn-finance-title" className="analytics-section__title">
-                    Negócio com Alex Calhas
-                  </h2>
-                  <p className="analytics-section__meta">
-                    Quanto a empresa já recebeu e comprou com você
-                  </p>
-                </div>
-              </div>
-
-              <div className="dash-forn-inicio-finance__grid">
-                <article className="dash-forn-finance-hero metric-card metric-card--static metric-card--finance">
+            <section
+              className="analytics-section dash-forn-inicio-finance"
+              aria-label="Resumo financeiro"
+            >
+              <div className="analytics-metrics dash-forn-inicio-finance__metrics">
+                <div className="metric-card metric-card--static metric-card--finance">
                   <div className="metric-card__top">
-                    <span className="metric-card__label">Alex Calhas já recebeu</span>
+                    <span className="metric-card__label">Valor recebido</span>
                     <span className="metric-card__icon metric-card__icon--green">
                       <i className="bi bi-bag-check" aria-hidden="true" />
                     </span>
                   </div>
-                  <strong className="metric-card__value dash-forn-finance-hero__value">
+                  <strong className="metric-card__value">
                     R$ {formatMoeda(data.financeiro.valor_recebido)}
                   </strong>
-                  <span className="metric-card__hint">
-                    Materiais conferidos e recebidos pela empresa
-                  </span>
-                </article>
+                </div>
 
-                <div className="dash-forn-inicio-finance__cards">
-                  <article className="metric-card metric-card--static metric-card--func">
-                    <div className="metric-card__top">
-                      <span className="metric-card__label">Total enviado</span>
-                      <span className="metric-card__icon metric-card__icon--blue">
-                        <i className="bi bi-send" aria-hidden="true" />
-                      </span>
-                    </div>
-                    <strong className="metric-card__value metric-card__value--money">
-                      R$ {formatMoeda(data.financeiro.valor_enviado)}
-                    </strong>
-                    <span className="metric-card__hint">Soma de todas as suas notas</span>
-                  </article>
-
-                  <article className="metric-card metric-card--static metric-card--func">
-                    <div className="metric-card__top">
-                      <span className="metric-card__label">Aguardando visto</span>
-                      <span className="metric-card__icon metric-card__icon--amber">
-                        <i className="bi bi-hourglass-split" aria-hidden="true" />
-                      </span>
-                    </div>
-                    <strong className="metric-card__value metric-card__value--money">
-                      R$ {formatMoeda(data.financeiro.valor_aguardando)}
-                    </strong>
-                    <span className="metric-card__hint">Ainda não conferido pela Alex Calhas</span>
-                  </article>
-
-                  <article className="metric-card metric-card--static metric-card--func">
-                    <div className="metric-card__top">
-                      <span className="metric-card__label">Pagamento confirmado</span>
-                      <span className="metric-card__icon metric-card__icon--purple">
-                        <i className="bi bi-cash-coin" aria-hidden="true" />
-                      </span>
-                    </div>
-                    <strong className="metric-card__value metric-card__value--money">
-                      R$ {formatMoeda(data.financeiro.valor_pago_confirmado)}
-                    </strong>
-                    <span className="metric-card__hint">
-                      {data.financeiro.valor_pago > data.financeiro.valor_pago_confirmado
-                        ? `R$ ${formatMoeda(data.financeiro.valor_pago)} informado como pago`
-                        : "Você confirmou o recebimento"}
+                <div className="metric-card metric-card--static metric-card--finance">
+                  <div className="metric-card__top">
+                    <span className="metric-card__label">Total enviado</span>
+                    <span className="metric-card__icon metric-card__icon--blue">
+                      <i className="bi bi-send" aria-hidden="true" />
                     </span>
-                  </article>
+                  </div>
+                  <strong className="metric-card__value">
+                    R$ {formatMoeda(data.financeiro.valor_enviado)}
+                  </strong>
+                </div>
+
+                <div className="metric-card metric-card--static metric-card--finance">
+                  <div className="metric-card__top">
+                    <span className="metric-card__label">Aguardando visto</span>
+                    <span className="metric-card__icon metric-card__icon--amber">
+                      <i className="bi bi-hourglass-split" aria-hidden="true" />
+                    </span>
+                  </div>
+                  <strong className="metric-card__value">
+                    R$ {formatMoeda(data.financeiro.valor_aguardando)}
+                  </strong>
+                </div>
+
+                <div className="metric-card metric-card--static metric-card--finance">
+                  <div className="metric-card__top">
+                    <span className="metric-card__label">Pagamento confirmado</span>
+                    <span className="metric-card__icon metric-card__icon--purple">
+                      <i className="bi bi-cash-coin" aria-hidden="true" />
+                    </span>
+                  </div>
+                  <strong className="metric-card__value">
+                    R$ {formatMoeda(data.financeiro.valor_pago_confirmado)}
+                  </strong>
                 </div>
               </div>
 
               {data.financeiro.valor_enviado > 0 ? (
-                <div className="dash-func-inicio-progress dash-forn-inicio-finance__progress" role="group" aria-label="Valor recebido">
+                <div
+                  className="dash-func-inicio-progress dash-forn-inicio-finance__progress"
+                  role="group"
+                  aria-label="Percentual recebido"
+                >
                   <div className="dash-func-inicio-progress__head">
-                    <span>Do total enviado, quanto já foi recebido</span>
+                    <span>Recebido do total enviado</span>
                     <strong>{data.percentual_valor}%</strong>
                   </div>
                   <div className="dash-func-inicio-progress__bar" aria-hidden="true">
@@ -313,56 +297,66 @@ export function FornecedorInicioPage() {
             </section>
 
             {data.por_usuario.length > 0 ? (
-              <section className="dash-edit-modal__panel">
-                <h2 className="dash-edit-modal__panel-title">
-                  <i className="bi bi-people" aria-hidden="true" /> Entregas por usuário
-                </h2>
-                <p className="small text-secondary mb-2">
-                  Cada login do fornecedor e quantas notas enviou.
-                </p>
-                <div className="table-responsive dash-forn-inicio-usuarios-wrap">
-                  <table className="table table-sm dash-forn-inicio-usuarios mb-0">
-                    <thead>
-                      <tr>
-                        <th>Usuário</th>
-                        <th className="text-end">Feitas</th>
-                        <th className="text-end">Recebidas</th>
-                        <th className="text-end">Aguardando</th>
-                        <th className="text-end">Valor recebido</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.por_usuario.map((pu) => (
-                        <tr
-                          key={pu.usuario_id}
-                          className={pu.usuario_id === user?.id ? "table-active" : undefined}
-                        >
-                          <td>
-                            {pu.usuario_nome}
-                            {pu.usuario_id === user?.id ? (
-                              <span className="dash-forn-badge-voce">você</span>
-                            ) : null}
-                          </td>
-                          <td className="text-end fw-semibold">{pu.total}</td>
-                          <td className="text-end">{pu.recebidas}</td>
-                          <td className="text-end">{pu.aguardando}</td>
-                          <td className="text-end fw-semibold text-success">
-                            R$ {formatMoeda(pu.valor_recebido)}
-                          </td>
+              <section className="analytics-section" aria-labelledby="forn-usuarios-title">
+                <div className="analytics-section__head">
+                  <div>
+                    <h2 id="forn-usuarios-title" className="analytics-section__title">
+                      Entregas por usuário
+                    </h2>
+                    <p className="analytics-section__meta">
+                      Cada login do fornecedor e quantas notas enviou
+                    </p>
+                  </div>
+                </div>
+                <div className="inv-table-shell dash-forn-inicio-table-shell">
+                  <div className="table-responsive">
+                    <table className="table inv-data-table inv-data-table--balanced dash-forn-inicio-usuarios mb-0">
+                      <thead>
+                        <tr>
+                          <th>Usuário</th>
+                          <th className="text-end">Feitas</th>
+                          <th className="text-end">Recebidas</th>
+                          <th className="text-end">Aguardando</th>
+                          <th className="text-end">Valor recebido</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {data.por_usuario.map((pu) => (
+                          <tr
+                            key={pu.usuario_id}
+                            className={`inv-data-row${pu.usuario_id === user?.id ? " table-active" : ""}`}
+                          >
+                            <td>
+                              {pu.usuario_nome}
+                              {pu.usuario_id === user?.id ? (
+                                <span className="dash-forn-badge-voce">você</span>
+                              ) : null}
+                            </td>
+                            <td className="text-end fw-semibold">{pu.total}</td>
+                            <td className="text-end">{pu.recebidas}</td>
+                            <td className="text-end">{pu.aguardando}</td>
+                            <td className="text-end fw-semibold dash-forn-inicio-valor">
+                              R$ {formatMoeda(pu.valor_recebido)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </section>
             ) : null}
 
-            <section className="dash-edit-modal__panel">
-              <h2 className="dash-edit-modal__panel-title">
-                <i className="bi bi-list-ul" aria-hidden="true" /> Últimas entregas
-              </h2>
+            <section className="analytics-section" aria-labelledby="forn-ultimas-title">
+              <div className="analytics-section__head">
+                <div>
+                  <h2 id="forn-ultimas-title" className="analytics-section__title">
+                    Últimas entregas
+                  </h2>
+                </div>
+              </div>
               {data.ultimas.length === 0 ? (
-                <p className="text-secondary mb-0">Nenhuma entrega registrada ainda.</p>
+                <p className="analytics-section__meta mb-0">Nenhuma entrega registrada ainda.</p>
               ) : (
                 <>
                   <div className="dash-func-inicio-visitas-mobile" aria-label="Últimas entregas">
@@ -371,7 +365,9 @@ export function FornecedorInicioPage() {
                       return (
                         <article key={ent.id} className="dash-func-inicio-visita-card dash-forn-entrega-card">
                           <div className="dash-forn-entrega-card__head">
-                            <p className="dash-func-inicio-visita-card__nome mb-0">Nota #{ent.id}</p>
+                            <p className="dash-func-inicio-visita-card__nome mb-0">
+                              {entregaNumeroNota(ent.id)}
+                            </p>
                             <span
                               className={`dash-forn-entrega-st ${ok ? "dash-forn-entrega-st--ok" : "dash-forn-entrega-st--wait"}`}
                             >
@@ -400,37 +396,46 @@ export function FornecedorInicioPage() {
                       );
                     })}
                   </div>
-                  <div className="dash-func-inicio-visitas-desktop table-responsive">
-                    <table className="table table-sm dash-func-inicio-table mb-0">
-                      <thead>
-                        <tr>
-                          <th>#</th>
-                          <th>Enviada em</th>
-                          <th>Itens</th>
-                          <th className="text-end">Total</th>
-                          <th>Usuário</th>
-                          <th>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {data.ultimas.map((ent) => (
-                          <tr key={ent.id}>
-                            <td>{ent.id}</td>
-                            <td>{ent.enviado_em_fmt}</td>
-                            <td>{ent.qtd_itens}</td>
-                            <td className="text-end fw-semibold">R$ {formatMoeda(ent.total_valor)}</td>
-                            <td>{ent.usuario_nome}</td>
-                            <td>
-                              {ent.status === "recebido" ? (
-                                <span className="badge text-bg-success">Recebida</span>
-                              ) : (
-                                <span className="badge text-bg-warning">Aguardando</span>
-                              )}
-                            </td>
+                  <div className="inv-table-shell dash-forn-inicio-table-shell dash-func-inicio-visitas-desktop">
+                    <div className="table-responsive">
+                      <table className="table inv-data-table inv-data-table--balanced dash-func-inicio-table mb-0">
+                        <thead>
+                          <tr>
+                            <th>Nota</th>
+                            <th>Enviada em</th>
+                            <th className="text-end">Itens</th>
+                            <th className="text-end">Total</th>
+                            <th>Usuário</th>
+                            <th>Status</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {data.ultimas.map((ent) => {
+                            const ok = ent.status === "recebido";
+                            return (
+                              <tr key={ent.id} className="inv-data-row">
+                                <td>
+                                  <span className="inv-id-badge">{entregaNumeroNota(ent.id)}</span>
+                                </td>
+                                <td>{ent.enviado_em_fmt}</td>
+                                <td className="text-end">{ent.qtd_itens}</td>
+                                <td className="text-end fw-semibold dash-forn-inicio-valor">
+                                  R$ {formatMoeda(ent.total_valor)}
+                                </td>
+                                <td>{ent.usuario_nome}</td>
+                                <td>
+                                  <span
+                                    className={`dash-forn-entrega-st ${ok ? "dash-forn-entrega-st--ok" : "dash-forn-entrega-st--wait"}`}
+                                  >
+                                    {ok ? "Recebida" : "Aguardando"}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                   <div className="dash-func-inicio-visitas-cta">
                     <Link

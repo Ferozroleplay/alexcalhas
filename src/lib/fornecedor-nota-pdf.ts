@@ -1,14 +1,16 @@
-import { HOME_SITE } from "@/data/home-config";
-import {
-  entregaNumeroNota,
-  formatMoeda,
-  fornecedorRotuloEmpresa,
-} from "@/lib/fornecedores-display";
-import { telefoneWhatsappLink } from "@/lib/format-br";
-import type { EntregaDetalhe } from "@/lib/fornecedores.server";
-
+import { entregaNumeroNota } from "@/lib/fornecedores-display";
 export function nomeArquivoNotaPdf(entregaId: number): string {
   return `${entregaNumeroNota(entregaId).replace(/\s+/g, "-")}.pdf`;
+}
+
+export function nomeArquivoNotaPng(entregaId: number): string {
+  return `${entregaNumeroNota(entregaId).replace(/\s+/g, "-")}.png`;
+}
+
+export function abrirNotaEntrega(entregaId: number, opts?: { print?: boolean }): void {
+  const params = new URLSearchParams({ nota: String(entregaId) });
+  if (opts?.print) params.set("print", "1");
+  window.open(`/nota-entrega?${params}`, "_blank", "noopener,noreferrer");
 }
 
 function baixarBlob(blob: Blob, filename: string): void {
@@ -42,27 +44,6 @@ async function aguardarImagens(el: HTMLElement): Promise<void> {
   );
 }
 
-export function linkNotaEntrega(entregaId: number): string {
-  if (typeof window === "undefined") return `/nota-entrega?nota=${entregaId}`;
-  return `${window.location.origin}/nota-entrega?nota=${entregaId}`;
-}
-
-export function mensagemWhatsappNota(entrega: EntregaDetalhe): string {
-  const numero = entregaNumeroNota(entrega.id);
-  const empresa = fornecedorRotuloEmpresa(entrega);
-  const total = formatMoeda(entrega.total_geral);
-  const link = linkNotaEntrega(entrega.id);
-  return (
-    `Olá! Segue a *${numero}* (${empresa}) — total *R$ ${total}*.\n` +
-    `Nota de entrega Alex Calhas:\n${link}`
-  );
-}
-
-function telefoneWhatsappNota(entrega: EntregaDetalhe): string {
-  const forn = telefoneWhatsappLink(entrega.telefone ?? "");
-  if (forn) return forn;
-  return `https://wa.me/${HOME_SITE.whatsapp}`;
-}
 
 export async function gerarPdfBlobNotaEntrega(el: HTMLElement, filename: string): Promise<Blob> {
   await aguardarImagens(el);
@@ -102,31 +83,28 @@ export async function baixarPdfNotaEntrega(el: HTMLElement, entregaId: number): 
   baixarBlob(blob, filename);
 }
 
-export async function enviarWhatsappPdfNotaEntrega(
-  el: HTMLElement,
-  entrega: EntregaDetalhe,
-): Promise<"shared" | "download"> {
-  const filename = nomeArquivoNotaPdf(entrega.id);
-  const blob = await gerarPdfBlobNotaEntrega(el, filename);
-  const file = new File([blob], filename, { type: "application/pdf" });
-  const text = mensagemWhatsappNota(entrega);
+export async function baixarImagemNotaEntrega(el: HTMLElement, entregaId: number): Promise<void> {
+  await aguardarImagens(el);
 
-  if (typeof navigator !== "undefined" && navigator.canShare?.({ files: [file] })) {
-    await navigator.share({
-      files: [file],
-      text,
-      title: entregaNumeroNota(entrega.id),
-    });
-    return "shared";
+  const mod = await import("html2canvas");
+  const html2canvas = mod.default;
+  if (!html2canvas) throw new Error("Biblioteca de imagem indisponível.");
+
+  const canvas = await html2canvas(el, {
+    scale: 2,
+    useCORS: true,
+    logging: false,
+    backgroundColor: "#ffffff",
+    scrollX: 0,
+    scrollY: 0,
+    width: el.scrollWidth,
+    height: el.scrollHeight,
+  });
+
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+  if (!blob || blob.size < 500) {
+    throw new Error("Imagem gerada está vazia. Tente novamente.");
   }
 
-  baixarBlob(blob, filename);
-  const waBase = telefoneWhatsappNota(entrega);
-  const msg =
-    `${text}\n\n` +
-    "(O PDF foi baixado — anexe o arquivo *" +
-    filename +
-    "* na conversa do WhatsApp.)";
-  window.open(`${waBase}?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
-  return "download";
+  baixarBlob(blob, nomeArquivoNotaPng(entregaId));
 }

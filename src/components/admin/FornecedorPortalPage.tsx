@@ -20,6 +20,7 @@ import {
   fornecedorRotuloEmpresa,
 } from "@/lib/fornecedores-display";
 import { dashConfirm, dashToast } from "@/lib/dash-ui";
+import { abrirNotaEntrega } from "@/lib/fornecedor-nota-pdf";
 
 function badgePagamentoFornecedor(ent: EntregaListaRow | EntregaDetalhe) {
   if (ent.status !== "recebido" && ent.status !== "parcial") {
@@ -57,7 +58,7 @@ export function FornecedorPortalPage() {
   const [detalhe, setDetalhe] = useState<EntregaDetalhe | null>(null);
   const [materiais, setMateriais] = useState<MaterialLiberadoRow[]>([]);
   const [carrinho, setCarrinho] = useState<CarrinhoItemEntrega[]>([]);
-  const [confirmandoPag, setConfirmandoPag] = useState(false);
+  const [confirmandoPagId, setConfirmandoPagId] = useState(0);
   const fid = fornecedorId || controleUrl || user?.fornecedorPreviewId || 0;
   const baseSearch = controleSearch(fid);
 
@@ -111,21 +112,19 @@ export function FornecedorPortalPage() {
 
   const titulo = nomeEmpresa || "Minhas entregas";
 
-  async function confirmarRecebimentoPagamento() {
-    if (!detalhe) return;
+  async function confirmarRecebimentoPagamento(entregaId: number) {
     const ok = await dashConfirm({
       title: "Confirmar recebimento do pagamento?",
-      message:
-        "Confirma que sua empresa já recebeu o pagamento desta nota? Esta ação fica registrada no sistema.",
+      message: `Confirma que sua empresa já recebeu o pagamento da nota ${entregaNumeroNota(entregaId)}? Esta ação fica registrada no sistema.`,
       confirmText: "Sim, recebi o pagamento",
       variant: "success",
       icon: "bi-cash-coin",
     });
     if (!ok) return;
-    setConfirmandoPag(true);
+    setConfirmandoPagId(entregaId);
     try {
       const res = await postFornecedorPortalAction(
-        { action: "confirmar_pagamento", entrega_id: detalhe.id },
+        { action: "confirmar_pagamento", entrega_id: entregaId },
         controleUrl > 0 ? controleUrl : undefined,
       );
       dashToast(res.message, res.ok ? "success" : "danger");
@@ -133,7 +132,7 @@ export function FornecedorPortalPage() {
     } catch (e) {
       dashToast(e instanceof Error ? e.message : "Erro ao confirmar.", "danger");
     } finally {
-      setConfirmandoPag(false);
+      setConfirmandoPagId(0);
     }
   }
 
@@ -181,15 +180,20 @@ export function FornecedorPortalPage() {
                 </p>
               </div>
               <div className="d-flex flex-wrap gap-2">
-                <Link
-                  to="/nota-entrega"
-                  search={{ nota: detalhe.id }}
+                <button
+                  type="button"
                   className="analytics-btn analytics-btn--outline analytics-btn--sm"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  onClick={() => abrirNotaEntrega(detalhe.id)}
+                >
+                  <i className="bi bi-file-text" aria-hidden="true" /> Ver nota
+                </button>
+                <button
+                  type="button"
+                  className="analytics-btn analytics-btn--outline analytics-btn--sm"
+                  onClick={() => abrirNotaEntrega(detalhe.id, { print: true })}
                 >
                   <i className="bi bi-printer" aria-hidden="true" /> Imprimir
-                </Link>
+                </button>
                 <Link
                   to="/painel/fornecedores"
                   search={baseSearch}
@@ -208,11 +212,13 @@ export function FornecedorPortalPage() {
                 <button
                   type="button"
                   className="analytics-btn analytics-btn--primary analytics-btn--sm"
-                  disabled={confirmandoPag}
-                  onClick={() => void confirmarRecebimentoPagamento()}
+                  disabled={confirmandoPagId === detalhe.id}
+                  onClick={() => void confirmarRecebimentoPagamento(detalhe.id)}
                 >
                   <i className="bi bi-check2-circle" aria-hidden="true" />{" "}
-                  {confirmandoPag ? "Confirmando…" : "Confirmar recebimento do pagamento"}
+                  {confirmandoPagId === detalhe.id
+                    ? "Confirmando…"
+                    : "Confirmar recebimento do pagamento"}
                 </button>
               </div>
             ) : null}
@@ -340,7 +346,7 @@ export function FornecedorPortalPage() {
                         <th className="text-end">Total</th>
                         <th>Status</th>
                         <th>Pagamento</th>
-                        <th />
+                        <th className="inv-col-actions text-end">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -362,14 +368,42 @@ export function FornecedorPortalPage() {
                             )}
                           </td>
                           <td>{badgePagamentoFornecedor(ent)}</td>
-                          <td className="text-end">
-                            <Link
-                              to="/painel/fornecedores"
-                              search={{ ...baseSearch, ver: ent.id, status }}
-                              className="analytics-btn analytics-btn--outline analytics-btn--sm"
-                            >
-                              Ver
-                            </Link>
+                          <td className="text-end inv-col-actions">
+                            <div className="inv-action-group inv-action-group--row-end forn-portal-entregas-actions">
+                              {ent.qtd_itens_pago_aguard_conf > 0 ? (
+                                <button
+                                  type="button"
+                                  className="inv-action-btn inv-action-btn--confirm"
+                                  title="Confirmar recebimento do pagamento"
+                                  aria-label="Confirmar recebimento do pagamento"
+                                  disabled={confirmandoPagId === ent.id}
+                                  onClick={() => void confirmarRecebimentoPagamento(ent.id)}
+                                >
+                                  <i
+                                    className={`bi ${confirmandoPagId === ent.id ? "bi-arrow-repeat forn-portal-action-spin" : "bi-check2-circle"}`}
+                                    aria-hidden="true"
+                                  />
+                                </button>
+                              ) : null}
+                              <button
+                                type="button"
+                                className="inv-action-btn inv-action-btn--secondary"
+                                title="Ver nota de entrega"
+                                aria-label="Ver nota de entrega"
+                                onClick={() => abrirNotaEntrega(ent.id)}
+                              >
+                                <i className="bi bi-file-text" aria-hidden="true" />
+                              </button>
+                              <Link
+                                to="/painel/fornecedores"
+                                search={{ ...baseSearch, ver: ent.id, status }}
+                                className="inv-action-btn inv-action-btn--secondary"
+                                title="Ver detalhes"
+                                aria-label="Ver detalhes da nota"
+                              >
+                                <i className="bi bi-eye" aria-hidden="true" />
+                              </Link>
+                            </div>
                           </td>
                         </tr>
                       ))}

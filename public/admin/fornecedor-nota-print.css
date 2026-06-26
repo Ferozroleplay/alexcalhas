@@ -80,10 +80,10 @@ body.fornecedor-nota-print-page {
     gap: 0.35rem;
 }
 
-.forn-nota__btn--whatsapp {
-    background: #25d366;
+.forn-nota__btn--imagem {
+    background: var(--forn-nota-green);
     color: #fff;
-    border-color: #1da851;
+    border-color: var(--forn-nota-green-dark);
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;

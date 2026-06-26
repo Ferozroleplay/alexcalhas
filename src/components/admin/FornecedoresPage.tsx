@@ -27,6 +27,7 @@ import {
   fornecedorRotuloEmpresa,
 } from "@/lib/fornecedores-display";
 import { dashAlert, dashConfirm, dashToast } from "@/lib/dash-ui";
+import { abrirNotaEntrega } from "@/lib/fornecedor-nota-pdf";
 
 function badgeRecebimento(status: string, qtdItens: number, qtdRecebidos: number) {
   if (status === "recebido") {
@@ -204,15 +205,20 @@ function EntregaDetalheView({
           </p>
         </div>
         <div className="d-flex flex-wrap gap-2">
-          <Link
-            to="/nota-entrega"
-            search={{ nota: entrega.id }}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
             className="analytics-btn analytics-btn--outline analytics-btn--sm"
+            onClick={() => abrirNotaEntrega(entrega.id)}
+          >
+            <i className="bi bi-file-text" aria-hidden="true" /> Ver nota
+          </button>
+          <button
+            type="button"
+            className="analytics-btn analytics-btn--outline analytics-btn--sm"
+            onClick={() => abrirNotaEntrega(entrega.id, { print: true })}
           >
             <i className="bi bi-printer" aria-hidden="true" /> Imprimir nota
-          </Link>
+          </button>
           {pendentes.length > 0 ? (
             <button
               type="button"
@@ -760,16 +766,22 @@ export function FornecedoresPage() {
                                   >
                                     <i className="bi bi-eye" aria-hidden="true" />
                                   </Link>
-                                  <Link
-                                    to="/nota-entrega"
-                                    search={{ nota: ent.id }}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                  <button
+                                    type="button"
+                                    className="inv-action-btn inv-action-btn--secondary"
+                                    title="Ver nota de entrega"
+                                    onClick={() => abrirNotaEntrega(ent.id)}
+                                  >
+                                    <i className="bi bi-file-text" aria-hidden="true" />
+                                  </button>
+                                  <button
+                                    type="button"
                                     className="inv-action-btn inv-action-btn--secondary"
                                     title="Imprimir"
+                                    onClick={() => abrirNotaEntrega(ent.id, { print: true })}
                                   >
                                     <i className="bi bi-printer" aria-hidden="true" />
-                                  </Link>
+                                  </button>
                                   {ent.status !== "recebido" ? (
                                     <Link
                                       to="/painel/fornecedores"
