@@ -1,3 +1,13 @@
+:root {
+    --forn-nota-green: #16ca85;
+    --forn-nota-green-dark: #0a9f6a;
+    --forn-nota-green-soft: rgba(22, 202, 133, 0.1);
+    --forn-nota-green-muted: rgba(22, 202, 133, 0.18);
+    --forn-nota-text: #1e293b;
+    --forn-nota-text-muted: #64748b;
+    --forn-nota-border: #e2e8f0;
+}
+
 *,
 *::before,
 *::after {
@@ -11,16 +21,27 @@ body {
 }
 
 body.fornecedor-nota-print-page {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    color: #111;
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    color: var(--forn-nota-text);
     font-size: 14px;
-    background: #fff;
+    background: #eef2f6;
+    line-height: 1.45;
 }
 
 .forn-nota {
-    max-width: 720px;
+    max-width: 820px;
     margin: 0 auto;
-    padding: 24px;
+    padding: 24px 20px 40px;
+}
+
+.forn-nota__sheet {
+    position: relative;
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid var(--forn-nota-border);
+    padding: 28px 32px 36px;
+    box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
 }
 
 .forn-nota__actions {
@@ -33,153 +54,415 @@ body.fornecedor-nota-print-page {
 .forn-nota__btn {
     padding: 8px 16px;
     cursor: pointer;
-    border: 1px solid #ccc;
-    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
     background: #fff;
     font-size: 14px;
-    font-weight: 500;
-    color: #111;
+    font-weight: 600;
+    color: var(--forn-nota-text);
 }
 
 .forn-nota__btn--primary {
-    background: #1a7f37;
+    background: var(--forn-nota-green);
     color: #fff;
-    border-color: #1a7f37;
+    border-color: var(--forn-nota-green-dark);
 }
 
 .forn-nota__btn:hover {
     filter: brightness(0.97);
 }
 
-.forn-nota__head {
-    border-bottom: 2px solid #1a7f37;
-    padding-bottom: 12px;
-    margin-bottom: 20px;
+.forn-nota__topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
 }
 
-.forn-nota__brand img {
+.forn-nota__datetime {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8125rem;
+    color: var(--forn-nota-text-muted);
+}
+
+.forn-nota__datetime .bi {
+    color: var(--forn-nota-green);
+}
+
+.forn-nota__decor {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    opacity: 0.45;
+}
+
+.forn-nota__decor span {
     display: block;
-    max-width: 220px;
-    max-height: 64px;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--forn-nota-green);
+}
+
+.forn-nota__decor span:nth-child(1) {
+    height: 18px;
+    opacity: 0.35;
+}
+
+.forn-nota__decor span:nth-child(2) {
+    height: 26px;
+    opacity: 0.6;
+}
+
+.forn-nota__decor span:nth-child(3) {
+    height: 14px;
+    opacity: 0.25;
+}
+
+.forn-nota__title {
+    margin: 0 0 1rem;
+    text-align: center;
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--forn-nota-green-dark);
+}
+
+.forn-nota__logo {
+    margin-bottom: 1.25rem;
+}
+
+.forn-nota__logo img {
+    display: block;
+    max-width: 200px;
+    max-height: 58px;
     width: auto;
     height: auto;
     object-fit: contain;
 }
 
-.forn-nota__meta {
-    margin-top: 8px;
-    color: #444;
-    font-size: 13px;
+.forn-nota__card {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--forn-nota-border);
+    margin-bottom: 0.75rem;
+}
+
+.forn-nota__card--meta {
+    background: var(--forn-nota-green-soft);
+    border-color: var(--forn-nota-green-muted);
+}
+
+.forn-nota__card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 8px;
+    background: rgba(22, 202, 133, 0.15);
+    color: var(--forn-nota-green-dark);
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.forn-nota__card-body p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--forn-nota-green-dark);
     line-height: 1.5;
 }
 
-.forn-nota__meta strong {
-    color: #111;
+.forn-nota__card-body p + p {
+    margin-top: 0.15rem;
+    color: var(--forn-nota-text-muted);
 }
 
-.forn-nota__badges {
+.forn-nota__card-body strong {
+    color: var(--forn-nota-green-dark);
+}
+
+.forn-nota__card--status {
+    align-items: center;
+    background: #fff;
+}
+
+.forn-nota__card--status.is-recebido .forn-nota__icon-circle {
+    background: var(--forn-nota-green);
+}
+
+.forn-nota__icon-circle {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 10px;
-}
-
-.forn-nota__status {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.forn-nota__status--ok {
-    background: #d4edda;
-    color: #155724;
-}
-
-.forn-nota__status--pend {
-    background: #fff3cd;
-    color: #856404;
-}
-
-.forn-nota__status--pago {
-    background: #dbeafe;
-    color: #1e40af;
-}
-
-.forn-nota__status--pg-pend {
-    background: #fee2e2;
-    color: #991b1b;
-}
-
-.forn-nota__empresa {
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background: var(--forn-nota-green);
+    color: #fff;
     font-size: 1.1rem;
-    font-weight: 600;
-    margin: 0 0 4px;
+    flex-shrink: 0;
+}
+
+.forn-nota__icon-circle--lg {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.35rem;
+}
+
+.forn-nota__status-text {
+    font-weight: 700;
+    font-size: 0.9375rem;
+    color: var(--forn-nota-green-dark);
+}
+
+.forn-nota__card--forn {
+    position: relative;
+    padding: 0;
+    overflow: hidden;
+}
+
+.forn-nota__forn-accent {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: linear-gradient(180deg, var(--forn-nota-green-dark), var(--forn-nota-green));
+}
+
+.forn-nota__forn-inner {
+    padding: 1rem 1rem 1rem 1.15rem;
+    margin-left: 5px;
+}
+
+.forn-nota__forn-head {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.forn-nota__forn-nome {
+    display: block;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--forn-nota-green-dark);
     text-transform: uppercase;
     letter-spacing: 0.02em;
+    line-height: 1.25;
 }
 
-.forn-nota__linha {
-    color: #555;
-    font-size: 13px;
-    margin: 0 0 8px;
-    line-height: 1.45;
+.forn-nota__forn-razao {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 0.8125rem;
+    color: var(--forn-nota-text-muted);
+    font-weight: 500;
 }
 
-.forn-nota__linha--tight {
-    margin-top: -6px;
+.forn-nota__forn-divider {
+    margin: 0.85rem 0;
+    border: none;
+    border-top: 1px solid var(--forn-nota-border);
+}
+
+.forn-nota__forn-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.forn-nota__forn-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    font-size: 0.875rem;
+    color: var(--forn-nota-green-dark);
+}
+
+.forn-nota__forn-row .bi {
+    margin-top: 0.15rem;
+    color: var(--forn-nota-green);
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.forn-nota__forn-label {
+    display: block;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--forn-nota-text-muted);
+    margin-bottom: 0.1rem;
+}
+
+.forn-nota__table-wrap {
+    margin: 1.25rem 0 1rem;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--forn-nota-border);
 }
 
 .forn-nota__table {
     width: 100%;
     border-collapse: collapse;
-    margin: 16px 0;
 }
 
 .forn-nota__table th,
 .forn-nota__table td {
-    border: 1px solid #ccc;
-    padding: 8px 10px;
+    padding: 0.65rem 0.85rem;
     text-align: left;
+    border-bottom: 1px solid var(--forn-nota-border);
 }
 
 .forn-nota__table th {
-    background: #f4f4f4;
-    font-size: 12px;
+    background: var(--forn-nota-green);
+    color: #fff;
+    font-size: 0.6875rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.06em;
+    border-bottom: none;
+}
+
+.forn-nota__table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.forn-nota__table td {
+    font-size: 0.875rem;
+    color: var(--forn-nota-green-dark);
+    vertical-align: top;
 }
 
 .forn-nota__table .text-end {
     text-align: right;
+    white-space: nowrap;
+}
+
+.forn-nota__cell-total strong {
+    color: var(--forn-nota-green-dark);
 }
 
 .forn-nota__table small {
-    color: #666;
+    color: var(--forn-nota-text-muted);
+    font-size: 0.8125rem;
 }
 
-.forn-nota__total {
-    text-align: right;
-    font-size: 1.05rem;
-    margin-top: 12px;
+.forn-nota__total-box {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 0.85rem 1.15rem;
+    border-radius: 12px;
+    border: 1px solid var(--forn-nota-border);
+    background: #fff;
+}
+
+.forn-nota__total-label {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--forn-nota-text-muted);
+    padding-right: 1rem;
+    border-right: 2px solid var(--forn-nota-border);
+}
+
+.forn-nota__total-val {
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: var(--forn-nota-green-dark);
+    letter-spacing: -0.02em;
+    line-height: 1;
 }
 
 .forn-nota__obs {
-    margin-top: 16px;
-    padding: 10px;
-    background: #f9f9f9;
-    border-radius: 6px;
-    font-size: 13px;
-    line-height: 1.45;
+    margin-top: 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    background: var(--forn-nota-green-soft);
+    border: 1px solid var(--forn-nota-green-muted);
+    font-size: 0.875rem;
+}
+
+.forn-nota__obs strong {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: var(--forn-nota-green-dark);
+}
+
+.forn-nota__obs p {
+    margin: 0;
+    color: var(--forn-nota-text);
 }
 
 .forn-nota__foot {
-    margin-top: 32px;
-    padding-top: 16px;
-    border-top: 1px dashed #aaa;
-    font-size: 12px;
-    color: #666;
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.forn-nota__foot-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+}
+
+.forn-nota__foot-line {
+    flex: 1;
+    height: 1px;
+    background: var(--forn-nota-border);
+}
+
+.forn-nota__foot-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: var(--forn-nota-green);
+    color: #fff;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.forn-nota__foot p {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--forn-nota-text-muted);
+    line-height: 1.5;
+    max-width: 36rem;
+    margin-inline: auto;
+}
+
+.forn-nota__corner {
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    pointer-events: none;
+}
+
+.forn-nota__corner--bl {
+    left: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--forn-nota-green) 50%, transparent 50%);
+    opacity: 0.2;
+    border-bottom-left-radius: 16px;
+}
+
+.forn-nota__corner--br {
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(225deg, #94a3b8 50%, transparent 50%);
+    opacity: 0.15;
+    border-bottom-right-radius: 16px;
 }
 
 .forn-nota__loading,
@@ -205,8 +488,25 @@ body.fornecedor-nota-print-page {
         max-width: none;
     }
 
+    .forn-nota__sheet {
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+    }
+
     .forn-nota__actions {
         display: none !important;
+    }
+
+    .forn-nota__corner {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+
+    .forn-nota__table th {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
     }
 
     @page {

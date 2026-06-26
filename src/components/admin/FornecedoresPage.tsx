@@ -424,10 +424,8 @@ export function FornecedoresPage() {
     return () => document.body.classList.remove("dashboard-page--fornecedores");
   }, []);
 
-  const load = useCallback(async () => {
+  const refreshPainel = useCallback(async () => {
     if (notaId > 0) return;
-    setLoading(true);
-    setErro("");
     try {
       if (verId > 0) {
         const entrega = await fetchEntregaDetalhe(verId);
@@ -451,10 +449,19 @@ export function FornecedoresPage() {
       setEntregaDetalhe(null);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro ao carregar.");
+    }
+  }, [status, verId, controleId, notaId]);
+
+  const load = useCallback(async () => {
+    if (notaId > 0) return;
+    setLoading(true);
+    setErro("");
+    try {
+      await refreshPainel();
     } finally {
       setLoading(false);
     }
-  }, [status, verId, controleId, notaId]);
+  }, [notaId, refreshPainel]);
 
   useEffect(() => {
     void load();
@@ -479,7 +486,10 @@ export function FornecedoresPage() {
     if (!okExcluir) return;
     const res = await postFornecedoresAction({ action: "excluir", id });
     dashToast(res.message, res.ok ? "success" : "danger");
-    if (res.ok) void load();
+    if (res.ok) {
+      setFornecedores((prev) => prev.filter((f) => f.id !== id));
+      void refreshPainel();
+    }
   }
 
   async function excluirEntrega(id: number) {
@@ -497,7 +507,15 @@ export function FornecedoresPage() {
     const res = await postFornecedoresAction({ action: "excluir_entrega", entrega_id: id });
     dashToast(res.message, res.ok ? "success" : "danger");
     if (res.ok) {
-      void navigate({ search: { status } });
+      const removida = entregas.find((e) => e.id === id);
+      setEntregas((prev) => prev.filter((e) => e.id !== id));
+      if (removida && removida.status !== "recebido") {
+        setPendentesTotal((prev) => Math.max(0, prev - 1));
+      }
+      if (verId === id) {
+        void navigate({ search: { status } });
+      }
+      void refreshPainel();
     }
   }
 
@@ -538,7 +556,7 @@ export function FornecedoresPage() {
               controleId={controleId}
               data={controle}
               status={status}
-              onReload={() => void load()}
+              onReload={() => void refreshPainel()}
               onEditar={() => {
                 setModalForn(controle.fornecedor);
                 setModalOpen(true);
@@ -594,7 +612,7 @@ export function FornecedoresPage() {
                 <EntregaDetalheView
                   entrega={entregaDetalhe}
                   statusTab={status}
-                  onReload={() => void load()}
+                  onReload={() => void refreshPainel()}
                   onVoltar={() => void navigate({ search: { status } })}
                 />
               ) : null}
