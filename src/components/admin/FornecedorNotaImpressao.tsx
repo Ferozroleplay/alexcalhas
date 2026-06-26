@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { UserThumb } from "@/components/admin/UserThumb";
 import { HOME_SITE } from "@/data/home-config";
 import type { EntregaDetalhe } from "@/lib/fornecedores.server";
 import {
@@ -22,16 +23,6 @@ type Props = {
   autoPrint?: boolean;
 };
 
-function formatDataHoraAgora(): string {
-  return new Date().toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 export function FornecedorNotaImpressao({ entrega, autoPrint = false }: Props) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState<"pdf" | "imagem" | null>(null);
@@ -45,7 +36,14 @@ export function FornecedorNotaImpressao({ entrega, autoPrint = false }: Props) {
   const fantasia = (entrega.nome_fantasia ?? "").trim();
   const endereco = formatEnderecoFornecedor(entrega);
   const doc = (entrega.cnpj ?? "").trim();
-  const emitidoEm = useMemo(() => formatDataHoraAgora(), []);
+  const usuarioNome = (entrega.usuario_nome ?? "").trim();
+
+  const statusLabel = useMemo(() => {
+    if (!recebido) return "Aguardando conferência";
+    if (entrega.qtd_itens_pg_pendentes > 0) return "Recebido · pagamento pendente";
+    if (entrega.qtd_itens_pago_aguard_conf > 0) return "Recebido · pagamento enviado";
+    return "Recebido · pagamento confirmado";
+  }, [entrega, recebido]);
 
   useEffect(() => {
     document.body.classList.add("fornecedor-nota-print-page");
@@ -57,16 +55,6 @@ export function FornecedorNotaImpressao({ entrega, autoPrint = false }: Props) {
     const t = window.setTimeout(() => window.print(), 450);
     return () => window.clearTimeout(t);
   }, [autoPrint, entrega.id]);
-
-  const statusLabel = recebido
-    ? entrega.qtd_itens_pg_pendentes > 0
-      ? "Recebido · pagamento pendente"
-      : entrega.qtd_itens_pago_aguard_conf > 0
-        ? "Recebido · pagamento enviado (aguard. confirmação fornec.)"
-        : "Recebido · pagamento confirmado pelo fornecedor"
-    : "Aguardando conferência";
-
-  const statusIcon = recebido ? "bi-check-circle-fill" : "bi-hourglass-split";
 
   async function handleBaixarPdf() {
     if (!sheetRef.current || busy) return;
@@ -95,6 +83,17 @@ export function FornecedorNotaImpressao({ entrega, autoPrint = false }: Props) {
       setBusy(null);
     }
   }
+
+  const contatoRows = [
+    (entrega.contato_nome ?? "").trim()
+      ? { icon: "bi-person", label: "Responsável", value: entrega.contato_nome }
+      : null,
+    doc ? { icon: "bi-card-text", label: documentoRotulo(doc), value: formatDocumentoExib(doc) } : null,
+    (entrega.telefone ?? "").trim()
+      ? { icon: "bi-telephone", label: "Telefone", value: entrega.telefone }
+      : null,
+    endereco ? { icon: "bi-geo-alt", label: "Endereço", value: endereco } : null,
+  ].filter(Boolean) as Array<{ icon: string; label: string; value: string }>;
 
   return (
     <div className="forn-nota">
@@ -141,104 +140,77 @@ export function FornecedorNotaImpressao({ entrega, autoPrint = false }: Props) {
       ) : null}
 
       <div className="forn-nota__sheet" ref={sheetRef}>
-        <div className="forn-nota__topbar">
-          <span className="forn-nota__datetime">
-            <i className="bi bi-calendar3" aria-hidden="true" /> {emitidoEm}
-          </span>
-          <div className="forn-nota__decor" aria-hidden="true">
-            <span />
-            <span />
-            <span />
+        <div className="forn-nota__corner-tr" aria-hidden="true" />
+
+        <header className="forn-nota__header">
+          <div className="forn-nota__logo">
+            <img src={HOME_SITE.img.logoHeader} width={168} height={48} alt="Alex Calhas" />
           </div>
-        </div>
+          <h1 className="forn-nota__title">Nota de entrega — Alex Calhas</h1>
+        </header>
 
-        <h1 className="forn-nota__title">Nota de entrega — Alex Calhas</h1>
-
-        <div className="forn-nota__logo">
-          <img src={HOME_SITE.img.logoHeader} width={220} height={64} alt="Alex Calhas" />
-        </div>
-
-        <div className="forn-nota__card forn-nota__card--meta">
-          <span className="forn-nota__card-icon" aria-hidden="true">
-            <i className="bi bi-file-earmark-text" />
-          </span>
-          <div className="forn-nota__card-body">
-            <p>
-              <strong>Nota de entrega:</strong> {numeroNota}
-            </p>
-            {enviadoEm !== "—" ? <p>Enviado em {enviadoEm}</p> : null}
-            {entrega.usuario_nome ? <p>Por {entrega.usuario_nome}</p> : null}
-          </div>
-        </div>
-
-        <div className={`forn-nota__card forn-nota__card--status${recebido ? " is-recebido" : ""}`}>
-          <span className="forn-nota__icon-circle" aria-hidden="true">
-            <i className={`bi ${statusIcon}`} />
-          </span>
-          <span className="forn-nota__status-text">{statusLabel}</span>
-        </div>
-
-        <div className="forn-nota__card forn-nota__card--forn">
-          <div className="forn-nota__forn-accent" aria-hidden="true" />
-          <div className="forn-nota__forn-inner">
-            <div className="forn-nota__forn-head">
-              <span className="forn-nota__icon-circle forn-nota__icon-circle--lg" aria-hidden="true">
-                <i className="bi bi-building" />
-              </span>
-              <div>
-                <strong className="forn-nota__forn-nome">{nomeExibicao || empresa}</strong>
-                {razao && fantasia && razao !== fantasia ? (
-                  <span className="forn-nota__forn-razao">{razao}</span>
-                ) : null}
-                {!fantasia && razao ? <span className="forn-nota__forn-razao">{razao}</span> : null}
-              </div>
+        <section className="forn-nota__info-card">
+          <div className="forn-nota__info-main">
+            <span className="forn-nota__info-icon" aria-hidden="true">
+              <i className="bi bi-file-earmark-text" />
+            </span>
+            <div className="forn-nota__info-text">
+              <p className="forn-nota__info-nota">
+                Nota de entrega: <strong>{numeroNota}</strong>
+              </p>
+              {enviadoEm !== "—" ? (
+                <p className="forn-nota__info-meta">
+                  <i className="bi bi-calendar3" aria-hidden="true" /> Enviado em {enviadoEm}
+                </p>
+              ) : null}
+              {usuarioNome ? (
+                <p className="forn-nota__info-meta">
+                  <i className="bi bi-person" aria-hidden="true" /> Por {usuarioNome}
+                </p>
+              ) : null}
             </div>
-
-            {(entrega.contato_nome ?? "").trim() || doc || (entrega.telefone ?? "").trim() || endereco ? (
-              <>
-                <hr className="forn-nota__forn-divider" />
-                <div className="forn-nota__forn-rows">
-                  {(entrega.contato_nome ?? "").trim() ? (
-                    <div className="forn-nota__forn-row">
-                      <i className="bi bi-person" aria-hidden="true" />
-                      <div>
-                        <span className="forn-nota__forn-label">Responsável</span>
-                        <span>{entrega.contato_nome}</span>
-                      </div>
-                    </div>
-                  ) : null}
-                  {doc ? (
-                    <div className="forn-nota__forn-row">
-                      <i className="bi bi-card-text" aria-hidden="true" />
-                      <div>
-                        <span className="forn-nota__forn-label">{documentoRotulo(doc)}</span>
-                        <span>{formatDocumentoExib(doc)}</span>
-                      </div>
-                    </div>
-                  ) : null}
-                  {(entrega.telefone ?? "").trim() ? (
-                    <div className="forn-nota__forn-row">
-                      <i className="bi bi-telephone" aria-hidden="true" />
-                      <div>
-                        <span className="forn-nota__forn-label">Telefone</span>
-                        <span>{entrega.telefone}</span>
-                      </div>
-                    </div>
-                  ) : null}
-                  {endereco ? (
-                    <div className="forn-nota__forn-row">
-                      <i className="bi bi-geo-alt" aria-hidden="true" />
-                      <div>
-                        <span className="forn-nota__forn-label">Endereço</span>
-                        <span>{endereco}</span>
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              </>
-            ) : null}
           </div>
-        </div>
+          <div className={`forn-nota__status-pill${recebido ? " is-recebido" : ""}`}>
+            <span className="forn-nota__status-dot" aria-hidden="true" />
+            {statusLabel}
+          </div>
+        </section>
+
+        <section className="forn-nota__forn-card">
+          <div className="forn-nota__forn-brand">
+            <div className="forn-nota__forn-avatar">
+              <UserThumb
+                nome={usuarioNome || nomeExibicao || empresa}
+                thumb={entrega.usuario_thumb ?? "nao.png"}
+                className="forn-nota__user-thumb"
+              />
+            </div>
+            <div className="forn-nota__forn-brand-text">
+              <p className="forn-nota__forn-nome">{nomeExibicao || empresa}</p>
+              {razao && fantasia && razao !== fantasia ? (
+                <p className="forn-nota__forn-razao">{razao}</p>
+              ) : null}
+              {!fantasia && razao ? <p className="forn-nota__forn-razao">{razao}</p> : null}
+              <span className="forn-nota__forn-line" aria-hidden="true" />
+            </div>
+          </div>
+
+          {contatoRows.length > 0 ? (
+            <div className="forn-nota__forn-details">
+              {contatoRows.map((row) => (
+                <div key={row.label} className="forn-nota__forn-detail">
+                  <span className="forn-nota__forn-detail-icon" aria-hidden="true">
+                    <i className={`bi ${row.icon}`} />
+                  </span>
+                  <div>
+                    <span className="forn-nota__forn-detail-label">{row.label}</span>
+                    <span className="forn-nota__forn-detail-value">{row.value}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </section>
 
         <div className="forn-nota__table-wrap">
           <table className="forn-nota__table">
@@ -273,8 +245,11 @@ export function FornecedorNotaImpressao({ entrega, autoPrint = false }: Props) {
           </table>
         </div>
 
-        <div className="forn-nota__total-box">
-          <span className="forn-nota__total-label">Total geral:</span>
+        <div className="forn-nota__total-card">
+          <span className="forn-nota__total-icon" aria-hidden="true">
+            <i className="bi bi-currency-dollar" />
+          </span>
+          <span className="forn-nota__total-label">Total geral</span>
           <span className="forn-nota__total-val">R$ {formatMoeda(entrega.total_geral)}</span>
         </div>
 
@@ -289,7 +264,7 @@ export function FornecedorNotaImpressao({ entrega, autoPrint = false }: Props) {
           <div className="forn-nota__foot-divider" aria-hidden="true">
             <span className="forn-nota__foot-line" />
             <span className="forn-nota__foot-icon">
-              <i className="bi bi-check-circle-fill" />
+              <i className="bi bi-shield-check" />
             </span>
             <span className="forn-nota__foot-line" />
           </div>

@@ -50,6 +50,7 @@ export type EntregaItemRow = {
 export type EntregaDetalhe = EntregaListaRow & {
   observacao: string | null;
   usuario_nome: string | null;
+  usuario_thumb: string | null;
   cnpj: string | null;
   telefone: string | null;
   email: string | null;
@@ -190,7 +191,7 @@ export async function obterEntregaCompleta(entregaId: number): Promise<EntregaDe
 
   const entRows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
     `SELECT e.*, f.razao_social, f.nome_fantasia, f.cnpj, f.telefone, f.email, f.contato_nome,
-            u.nome AS usuario_nome
+            u.nome AS usuario_nome, u.thumb AS usuario_thumb
      FROM fornecedor_entregas e
      LEFT JOIN fornecedores f ON f.id = e.fornecedor_id
      LEFT JOIN usuarios u ON u.id = e.usuario_id
@@ -248,6 +249,8 @@ export async function obterEntregaCompleta(entregaId: number): Promise<EntregaDe
   return {
     ...base,
     observacao: row.observacao ? str(row.observacao) : null,
+    usuario_nome: row.usuario_nome ? str(row.usuario_nome) : null,
+    usuario_thumb: row.usuario_thumb ? str(row.usuario_thumb) : null,
     cnpj: row.cnpj ? str(row.cnpj) : null,
     telefone: row.telefone ? str(row.telefone) : null,
     email: row.email ? str(row.email) : null,

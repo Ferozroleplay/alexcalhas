@@ -112,8 +112,13 @@ export async function fetchFornecedoresPainel(params: {
   return data;
 }
 
-export async function fetchEntregaDetalhe(verId: number): Promise<EntregaDetalhe> {
-  const res = await fetch(`/api/admin/fornecedores?ver=${verId}`, { credentials: "include" });
+export async function fetchEntregaDetalhe(
+  verId: number,
+  opts?: { controle?: number },
+): Promise<EntregaDetalhe> {
+  const qs = new URLSearchParams({ nota: String(verId) });
+  if (opts?.controle && opts.controle > 0) qs.set("controle", String(opts.controle));
+  const res = await fetch(`/api/admin/nota-entrega?${qs}`, { credentials: "include" });
   const data = await parseJson<{ ok?: boolean; entrega?: EntregaDetalhe; message?: string }>(res);
   if (!res.ok || !data.entrega) throw new Error(data.message ?? "Entrega não encontrada.");
   return data.entrega;

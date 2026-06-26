@@ -7,9 +7,13 @@ export function nomeArquivoNotaPng(entregaId: number): string {
   return `${entregaNumeroNota(entregaId).replace(/\s+/g, "-")}.png`;
 }
 
-export function abrirNotaEntrega(entregaId: number, opts?: { print?: boolean }): void {
+export function abrirNotaEntrega(
+  entregaId: number,
+  opts?: { print?: boolean; controle?: number },
+): void {
   const params = new URLSearchParams({ nota: String(entregaId) });
   if (opts?.print) params.set("print", "1");
+  if (opts?.controle && opts.controle > 0) params.set("controle", String(opts.controle));
   window.open(`/nota-entrega?${params}`, "_blank", "noopener,noreferrer");
 }
 

@@ -46,6 +46,7 @@ import { Route as ApiAdminProdutosMenuRouteImport } from './routes/api/admin/pro
 import { Route as ApiAdminProdutosRouteImport } from './routes/api/admin/produtos'
 import { Route as ApiAdminPontoControleRouteImport } from './routes/api/admin/ponto-controle'
 import { Route as ApiAdminPontoRouteImport } from './routes/api/admin/ponto'
+import { Route as ApiAdminNotaEntregaRouteImport } from './routes/api/admin/nota-entrega'
 import { Route as ApiAdminMateriaisRouteImport } from './routes/api/admin/materiais'
 import { Route as ApiAdminLogsRouteImport } from './routes/api/admin/logs'
 import { Route as ApiAdminLogoutRouteImport } from './routes/api/admin/logout'
@@ -255,6 +256,11 @@ const ApiAdminPontoRoute = ApiAdminPontoRouteImport.update({
   path: '/api/admin/ponto',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminNotaEntregaRoute = ApiAdminNotaEntregaRouteImport.update({
+  id: '/api/admin/nota-entrega',
+  path: '/api/admin/nota-entrega',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminMateriaisRoute = ApiAdminMateriaisRouteImport.update({
   id: '/api/admin/materiais',
   path: '/api/admin/materiais',
@@ -423,6 +429,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/logout': typeof ApiAdminLogoutRoute
   '/api/admin/logs': typeof ApiAdminLogsRoute
   '/api/admin/materiais': typeof ApiAdminMateriaisRoute
+  '/api/admin/nota-entrega': typeof ApiAdminNotaEntregaRoute
   '/api/admin/ponto': typeof ApiAdminPontoRoute
   '/api/admin/ponto-controle': typeof ApiAdminPontoControleRoute
   '/api/admin/produtos': typeof ApiAdminProdutosRouteWithChildren
@@ -484,6 +491,7 @@ export interface FileRoutesByTo {
   '/api/admin/logout': typeof ApiAdminLogoutRoute
   '/api/admin/logs': typeof ApiAdminLogsRoute
   '/api/admin/materiais': typeof ApiAdminMateriaisRoute
+  '/api/admin/nota-entrega': typeof ApiAdminNotaEntregaRoute
   '/api/admin/ponto': typeof ApiAdminPontoRoute
   '/api/admin/ponto-controle': typeof ApiAdminPontoControleRoute
   '/api/admin/produtos': typeof ApiAdminProdutosRouteWithChildren
@@ -547,6 +555,7 @@ export interface FileRoutesById {
   '/api/admin/logout': typeof ApiAdminLogoutRoute
   '/api/admin/logs': typeof ApiAdminLogsRoute
   '/api/admin/materiais': typeof ApiAdminMateriaisRoute
+  '/api/admin/nota-entrega': typeof ApiAdminNotaEntregaRoute
   '/api/admin/ponto': typeof ApiAdminPontoRoute
   '/api/admin/ponto-controle': typeof ApiAdminPontoControleRoute
   '/api/admin/produtos': typeof ApiAdminProdutosRouteWithChildren
@@ -611,6 +620,7 @@ export interface FileRouteTypes {
     | '/api/admin/logout'
     | '/api/admin/logs'
     | '/api/admin/materiais'
+    | '/api/admin/nota-entrega'
     | '/api/admin/ponto'
     | '/api/admin/ponto-controle'
     | '/api/admin/produtos'
@@ -672,6 +682,7 @@ export interface FileRouteTypes {
     | '/api/admin/logout'
     | '/api/admin/logs'
     | '/api/admin/materiais'
+    | '/api/admin/nota-entrega'
     | '/api/admin/ponto'
     | '/api/admin/ponto-controle'
     | '/api/admin/produtos'
@@ -734,6 +745,7 @@ export interface FileRouteTypes {
     | '/api/admin/logout'
     | '/api/admin/logs'
     | '/api/admin/materiais'
+    | '/api/admin/nota-entrega'
     | '/api/admin/ponto'
     | '/api/admin/ponto-controle'
     | '/api/admin/produtos'
@@ -778,6 +790,7 @@ export interface RootRouteChildren {
   ApiAdminLogoutRoute: typeof ApiAdminLogoutRoute
   ApiAdminLogsRoute: typeof ApiAdminLogsRoute
   ApiAdminMateriaisRoute: typeof ApiAdminMateriaisRoute
+  ApiAdminNotaEntregaRoute: typeof ApiAdminNotaEntregaRoute
   ApiAdminPontoRoute: typeof ApiAdminPontoRoute
   ApiAdminPontoControleRoute: typeof ApiAdminPontoControleRoute
   ApiAdminProdutosRoute: typeof ApiAdminProdutosRouteWithChildren
@@ -1047,6 +1060,13 @@ declare module '@tanstack/react-router' {
       path: '/api/admin/ponto'
       fullPath: '/api/admin/ponto'
       preLoaderRoute: typeof ApiAdminPontoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/nota-entrega': {
+      id: '/api/admin/nota-entrega'
+      path: '/api/admin/nota-entrega'
+      fullPath: '/api/admin/nota-entrega'
+      preLoaderRoute: typeof ApiAdminNotaEntregaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/materiais': {
@@ -1373,6 +1393,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminLogoutRoute: ApiAdminLogoutRoute,
   ApiAdminLogsRoute: ApiAdminLogsRoute,
   ApiAdminMateriaisRoute: ApiAdminMateriaisRoute,
+  ApiAdminNotaEntregaRoute: ApiAdminNotaEntregaRoute,
   ApiAdminPontoRoute: ApiAdminPontoRoute,
   ApiAdminPontoControleRoute: ApiAdminPontoControleRoute,
   ApiAdminProdutosRoute: ApiAdminProdutosRouteWithChildren,

@@ -9,6 +9,7 @@ import type { EntregaDetalhe } from "@/lib/fornecedores.server";
 const searchSchema = z.object({
   nota: z.coerce.number().optional().catch(undefined),
   print: z.coerce.number().optional().catch(undefined),
+  controle: z.coerce.number().optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/nota-entrega")({
@@ -27,7 +28,7 @@ export const Route = createFileRoute("/nota-entrega")({
 });
 
 function NotaEntregaPage() {
-  const { nota, print } = Route.useSearch();
+  const { nota, print, controle } = Route.useSearch();
   const [entrega, setEntrega] = useState<EntregaDetalhe | null>(null);
   const [erro, setErro] = useState("");
 
@@ -36,10 +37,10 @@ function NotaEntregaPage() {
       setErro("Informe o número da nota na URL (?nota=ID).");
       return;
     }
-    void fetchEntregaDetalhe(nota)
+    void fetchEntregaDetalhe(nota, { controle: controle ?? 0 })
       .then(setEntrega)
       .catch((e) => setErro(e instanceof Error ? e.message : "Não foi possível carregar a nota."));
-  }, [nota]);
+  }, [nota, controle]);
 
   if (erro) {
     return <p className="forn-nota__erro">{erro}</p>;

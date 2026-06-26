@@ -111,6 +111,7 @@ export function FornecedorPortalPage() {
   }, []);
 
   const titulo = nomeEmpresa || "Minhas entregas";
+  const notaOpts = controleUrl > 0 ? { controle: controleUrl } : undefined;
 
   async function confirmarRecebimentoPagamento(entregaId: number) {
     const ok = await dashConfirm({
@@ -183,14 +184,14 @@ export function FornecedorPortalPage() {
                 <button
                   type="button"
                   className="analytics-btn analytics-btn--outline analytics-btn--sm"
-                  onClick={() => abrirNotaEntrega(detalhe.id)}
+                  onClick={() => abrirNotaEntrega(detalhe.id, notaOpts)}
                 >
                   <i className="bi bi-file-text" aria-hidden="true" /> Ver nota
                 </button>
                 <button
                   type="button"
                   className="analytics-btn analytics-btn--outline analytics-btn--sm"
-                  onClick={() => abrirNotaEntrega(detalhe.id, { print: true })}
+                  onClick={() => abrirNotaEntrega(detalhe.id, { ...notaOpts, print: true })}
                 >
                   <i className="bi bi-printer" aria-hidden="true" /> Imprimir
                 </button>
@@ -390,7 +391,7 @@ export function FornecedorPortalPage() {
                                 className="inv-action-btn inv-action-btn--secondary"
                                 title="Ver nota de entrega"
                                 aria-label="Ver nota de entrega"
-                                onClick={() => abrirNotaEntrega(ent.id)}
+                                onClick={() => abrirNotaEntrega(ent.id, notaOpts)}
                               >
                                 <i className="bi bi-file-text" aria-hidden="true" />
                               </button>
