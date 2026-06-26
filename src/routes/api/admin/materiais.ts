@@ -19,6 +19,18 @@ function parseMoney(raw: unknown): number {
   return Number.isFinite(n) ? Math.round(n * 100) / 100 : 0;
 }
 
+function materialValidationMessage(err: z.ZodError): string {
+  for (const issue of err.issues) {
+    if (issue.path[0] === "material" && issue.code === "too_big") {
+      return "A descrição do material pode ter no máximo 50 caracteres.";
+    }
+    if (issue.path[0] === "material" && issue.code === "too_small") {
+      return "Informe a descrição do material.";
+    }
+  }
+  return "Dados inválidos.";
+}
+
 const postSchema = z.object({
   material: z.string().trim().min(1).max(50),
   valor_custo: z.union([z.number(), z.string()]).optional(),
@@ -49,7 +61,9 @@ export const Route = createFileRoute("/api/admin/materiais")({
       POST: async ({ request }) => {
         if (!isAdminRequest(request)) return jsonResponse({ ok: false }, 401);
         const parsed = postSchema.safeParse(await request.json().catch(() => null));
-        if (!parsed.success) return jsonResponse({ ok: false, message: "Dados inválidos." }, 422);
+        if (!parsed.success) {
+          return jsonResponse({ ok: false, message: materialValidationMessage(parsed.error) }, 422);
+        }
         try {
           const dup = await findMaterialByNome(parsed.data.material);
           if (dup) {
@@ -71,7 +85,9 @@ export const Route = createFileRoute("/api/admin/materiais")({
       PATCH: async ({ request }) => {
         if (!isAdminRequest(request)) return jsonResponse({ ok: false }, 401);
         const parsed = patchSchema.safeParse(await request.json().catch(() => null));
-        if (!parsed.success) return jsonResponse({ ok: false, message: "Dados inválidos." }, 422);
+        if (!parsed.success) {
+          return jsonResponse({ ok: false, message: materialValidationMessage(parsed.error) }, 422);
+        }
         try {
           await updateMaterial(parsed.data.id, {
             material: parsed.data.material,

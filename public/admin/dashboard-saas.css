@@ -5262,6 +5262,19 @@ html[data-bs-theme="dark"] .dash-entregas-alerta--destaque {
     background: var(--dash-surface-elevated, #f8fafc);
 }
 
+html[data-bs-theme="dark"] .forn-carrinho {
+    background: var(--dash-surface-elevated, #1c2330);
+    border-color: var(--dash-card-border, #2a3342);
+}
+
+html[data-bs-theme="dark"] .forn-carrinho .dash-form-block__title {
+    color: var(--text-secundary, #c4cedd);
+}
+
+html[data-bs-theme="dark"] .forn-carrinho .text-muted {
+    color: var(--text-anexo, #8a96a8) !important;
+}
+
 html[data-bs-theme="dark"] .forn-entrega-badge--pend {
     background: rgba(250, 204, 21, 0.15);
     color: #fcd34d;

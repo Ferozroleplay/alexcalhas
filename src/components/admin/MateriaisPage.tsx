@@ -101,8 +101,14 @@ export function MateriaisPage() {
     setSalvando(true);
     setMsg("");
     setErro("");
+    const nomeTrim = nome.trim();
+    if (nomeTrim.length > 50) {
+      setErro("A descrição do material pode ter no máximo 50 caracteres.");
+      setSalvando(false);
+      return;
+    }
     try {
-      await criarMaterial({ material: nome.trim(), valor_custo: custo, valor: venda });
+      await criarMaterial({ material: nomeTrim, valor_custo: custo, valor: venda });
       setNome("");
       setCusto("");
       setVenda("");
@@ -238,6 +244,7 @@ export function MateriaisPage() {
                     id="mat-nome"
                     className="form-control dash-edit-modal__input"
                     placeholder="Ex.: Chapa Galvalume 0,43 mm"
+                    maxLength={50}
                     value={nome}
                     onChange={(e) => setNome(e.target.value)}
                     required

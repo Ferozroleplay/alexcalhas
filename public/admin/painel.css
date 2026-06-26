@@ -36,6 +36,7 @@ html[data-bs-theme="dark"] {
     --dash-card-bg: #161c26;
     --dash-card-border: #2a3342;
     --dash-page-bg: #0d1117;
+    --dash-surface-elevated: var(--dashboard-surface-elevated);
     --dash-nav-text: #c4cedd;
     --dash-nav-icon: #8a96a8;
     --dash-nav-hover: #1e2734;
@@ -82,6 +83,7 @@ html[data-bs-theme="light"] {
     --dash-nav-icon: #64748b;
     --dash-page-bg: #e7eef0;
     --dash-card-bg: #ffffff;
+    --dash-surface-elevated: var(--dashboard-surface-elevated);
     --dashboard-surface: rgba(255, 255, 255, 0.92);
     --dashboard-surface-elevated: #ffffff;
     --primary-soft: rgba(22, 202, 133, 0.12);
