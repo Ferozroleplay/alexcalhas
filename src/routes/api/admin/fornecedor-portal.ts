@@ -15,6 +15,7 @@ import {
 import { fornecedorDashNomeEmpresa, resolverFornecedorIdSessao } from "@/lib/fornecedor-dashboard.server";
 import { listarMateriaisLiberadosFornecedor } from "@/lib/fornecedor-materiais.server";
 import {
+  confirmarPagamentoFornecedor,
   listarEntregasAdmin,
   listarFornecedores,
   obterEntregaCompleta,
@@ -36,6 +37,11 @@ const postSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("enviar_entrega"),
     observacao_entrega: z.string().optional().default(""),
+  }),
+  z.object({
+    action: z.literal("confirmar_pagamento"),
+    entrega_id: z.number().int().positive(),
+    item_ids: z.array(z.number().int().positive()).optional(),
   }),
 ]);
 
@@ -169,6 +175,15 @@ export const Route = createFileRoute("/api/admin/fornecedor-portal")({
               200,
               cookies,
             );
+          }
+
+          if (parsed.data.action === "confirmar_pagamento") {
+            const res = await confirmarPagamentoFornecedor(
+              parsed.data.entrega_id,
+              fornecedorId,
+              parsed.data.item_ids,
+            );
+            return jsonWithCookies({ ok: res.ok, message: res.message }, res.ok ? 200 : 400, cookies);
           }
 
           const res = await enviarCarrinhoEntrega(

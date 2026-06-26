@@ -60,7 +60,8 @@ type FornecedorPortalActionBody =
       observacao?: string;
     }
   | { action: "remover_item"; temp_id: string }
-  | { action: "enviar_entrega"; observacao_entrega?: string };
+  | { action: "enviar_entrega"; observacao_entrega?: string }
+  | { action: "confirmar_pagamento"; entrega_id: number; item_ids?: number[] };
 
 export async function postFornecedorPortalAction(
   body: FornecedorPortalActionBody,

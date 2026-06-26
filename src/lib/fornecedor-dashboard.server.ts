@@ -16,12 +16,22 @@ export type FornecedorDashResumo = {
   suas_recebidas: number;
 };
 
+export type FornecedorDashFinanceiro = {
+  valor_enviado: number;
+  valor_recebido: number;
+  valor_aguardando: number;
+  valor_pago: number;
+  valor_pago_confirmado: number;
+};
+
 export type FornecedorDashPorUsuario = {
   usuario_id: number;
   usuario_nome: string;
   total: number;
   recebidas: number;
   aguardando: number;
+  valor_enviado: number;
+  valor_recebido: number;
 };
 
 /** Resolve ID do fornecedor na visão fornecedor (simulação ou login futuro). */
@@ -76,6 +86,51 @@ export async function fornecedorDashResumo(
   return { total, recebidas, aguardando, suas_entregas, suas_recebidas };
 }
 
+function num(v: unknown): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+export async function fornecedorDashFinanceiro(
+  fornecedorId: number,
+): Promise<FornecedorDashFinanceiro> {
+  if (fornecedorId <= 0) {
+    return {
+      valor_enviado: 0,
+      valor_recebido: 0,
+      valor_aguardando: 0,
+      valor_pago: 0,
+      valor_pago_confirmado: 0,
+    };
+  }
+
+  const prisma = await getPrisma();
+  const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+    `SELECT
+        COALESCE(SUM(i.metros * i.valor_unitario), 0) AS valor_enviado,
+        COALESCE(SUM(CASE WHEN i.recebido = 1 THEN i.metros * i.valor_unitario ELSE 0 END), 0) AS valor_recebido,
+        COALESCE(SUM(CASE WHEN i.recebido = 0 THEN i.metros * i.valor_unitario ELSE 0 END), 0) AS valor_aguardando,
+        COALESCE(SUM(CASE WHEN i.recebido = 1 AND i.pagamento_status = 'pago' THEN i.metros * i.valor_unitario ELSE 0 END), 0) AS valor_pago,
+        COALESCE(SUM(CASE WHEN i.recebido = 1 AND i.pagamento_status = 'pago' AND i.pagamento_confirmado_forn = 1 THEN i.metros * i.valor_unitario ELSE 0 END), 0) AS valor_pago_confirmado
+      FROM fornecedor_entrega_itens i
+      INNER JOIN fornecedor_entregas e ON e.id = i.entrega_id
+      WHERE e.fornecedor_id = ${fornecedorId}`,
+  );
+  const row = rows[0] ?? {};
+  return {
+    valor_enviado: num(row.valor_enviado),
+    valor_recebido: num(row.valor_recebido),
+    valor_aguardando: num(row.valor_aguardando),
+    valor_pago: num(row.valor_pago),
+    valor_pago_confirmado: num(row.valor_pago_confirmado),
+  };
+}
+
+export function fornecedorDashPercentualValorRecebido(financeiro: FornecedorDashFinanceiro): number {
+  if (financeiro.valor_enviado <= 0) return 0;
+  return Math.round((financeiro.valor_recebido / financeiro.valor_enviado) * 100);
+}
+
 export async function fornecedorDashNomeEmpresa(fornecedorId: number): Promise<string> {
   if (fornecedorId <= 0) return "";
   const prisma = await getPrisma();
@@ -99,14 +154,17 @@ export async function fornecedorDashEntregasPorUsuario(
   >(`SELECT
         COALESCE(e.usuario_id, 0) AS usuario_id,
         COALESCE(NULLIF(TRIM(MAX(u.nome)), ''), 'Sem usuário vinculado') AS usuario_nome,
-        COUNT(*) AS total,
+        COUNT(DISTINCT e.id) AS total,
         SUM(CASE WHEN e.status = 'recebido' THEN 1 ELSE 0 END) AS recebidas,
-        SUM(CASE WHEN e.status = 'enviado' THEN 1 ELSE 0 END) AS aguardando
+        SUM(CASE WHEN e.status IN ('enviado', 'parcial') THEN 1 ELSE 0 END) AS aguardando,
+        COALESCE(SUM(i.metros * i.valor_unitario), 0) AS valor_enviado,
+        COALESCE(SUM(CASE WHEN i.recebido = 1 THEN i.metros * i.valor_unitario ELSE 0 END), 0) AS valor_recebido
       FROM fornecedor_entregas e
       LEFT JOIN usuarios u ON u.id = e.usuario_id
+      LEFT JOIN fornecedor_entrega_itens i ON i.entrega_id = e.id
       WHERE e.fornecedor_id = ${fornecedorId}
       GROUP BY COALESCE(e.usuario_id, 0)
-      ORDER BY total DESC, usuario_nome ASC`);
+      ORDER BY valor_recebido DESC, total DESC, usuario_nome ASC`);
 
   return rows.map((r) => ({
     usuario_id: int(r.usuario_id),
@@ -114,6 +172,8 @@ export async function fornecedorDashEntregasPorUsuario(
     total: int(r.total),
     recebidas: int(r.recebidas),
     aguardando: int(r.aguardando),
+    valor_enviado: num(r.valor_enviado),
+    valor_recebido: num(r.valor_recebido),
   }));
 }
 

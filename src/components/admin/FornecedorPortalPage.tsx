@@ -7,6 +7,7 @@ import { Route as FornecedoresRoute } from "@/routes/painel/fornecedores";
 import { FornecedorNovaEntregaSection } from "@/components/admin/FornecedorNovaEntregaSection";
 import {
   fetchFornecedorPortal,
+  postFornecedorPortalAction,
   type CarrinhoItemEntrega,
   type EntregaDetalhe,
   type EntregaListaRow,
@@ -18,6 +19,23 @@ import {
   formatMoeda,
   fornecedorRotuloEmpresa,
 } from "@/lib/fornecedores-display";
+import { dashConfirm, dashToast } from "@/lib/dash-ui";
+
+function badgePagamentoFornecedor(ent: EntregaListaRow | EntregaDetalhe) {
+  if (ent.status !== "recebido" && ent.status !== "parcial") {
+    return <span className="badge text-bg-secondary">Aguardando</span>;
+  }
+  if (ent.qtd_itens_recebidos === 0) {
+    return <span className="badge text-bg-secondary">—</span>;
+  }
+  if (ent.qtd_itens_pg_pendentes > 0) {
+    return <span className="badge text-bg-warning">Pagamento pendente</span>;
+  }
+  if (ent.qtd_itens_pago_aguard_conf > 0) {
+    return <span className="badge text-bg-info">Confirme o recebimento</span>;
+  }
+  return <span className="badge text-bg-success">Pagamento confirmado</span>;
+}
 
 function controleSearch(fid: number) {
   return fid > 0 ? { controle: fid } : {};
@@ -39,6 +57,7 @@ export function FornecedorPortalPage() {
   const [detalhe, setDetalhe] = useState<EntregaDetalhe | null>(null);
   const [materiais, setMateriais] = useState<MaterialLiberadoRow[]>([]);
   const [carrinho, setCarrinho] = useState<CarrinhoItemEntrega[]>([]);
+  const [confirmandoPag, setConfirmandoPag] = useState(false);
   const fid = fornecedorId || controleUrl || user?.fornecedorPreviewId || 0;
   const baseSearch = controleSearch(fid);
 
@@ -91,6 +110,32 @@ export function FornecedorPortalPage() {
   }, []);
 
   const titulo = nomeEmpresa || "Minhas entregas";
+
+  async function confirmarRecebimentoPagamento() {
+    if (!detalhe) return;
+    const ok = await dashConfirm({
+      title: "Confirmar recebimento do pagamento?",
+      message:
+        "Confirma que sua empresa já recebeu o pagamento desta nota? Esta ação fica registrada no sistema.",
+      confirmText: "Sim, recebi o pagamento",
+      variant: "success",
+      icon: "bi-cash-coin",
+    });
+    if (!ok) return;
+    setConfirmandoPag(true);
+    try {
+      const res = await postFornecedorPortalAction(
+        { action: "confirmar_pagamento", entrega_id: detalhe.id },
+        controleUrl > 0 ? controleUrl : undefined,
+      );
+      dashToast(res.message, res.ok ? "success" : "danger");
+      if (res.ok) void load();
+    } catch (e) {
+      dashToast(e instanceof Error ? e.message : "Erro ao confirmar.", "danger");
+    } finally {
+      setConfirmandoPag(false);
+    }
+  }
 
   return (
     <div className="analytics-page dash-form-page--pro dashboard-page--fornecedores">
@@ -154,6 +199,31 @@ export function FornecedorPortalPage() {
                 </Link>
               </div>
             </div>
+            {detalhe.qtd_itens_pago_aguard_conf > 0 ? (
+              <div className="dash-entregas-alerta dash-entregas-alerta--destaque mb-3" role="status">
+                <div className="dash-entregas-alerta__text">
+                  <i className="bi bi-cash-coin" aria-hidden="true" /> A Alex Calhas informou o pagamento
+                  desta nota. Confirme quando o valor cair na conta da sua empresa.
+                </div>
+                <button
+                  type="button"
+                  className="analytics-btn analytics-btn--primary analytics-btn--sm"
+                  disabled={confirmandoPag}
+                  onClick={() => void confirmarRecebimentoPagamento()}
+                >
+                  <i className="bi bi-check2-circle" aria-hidden="true" />{" "}
+                  {confirmandoPag ? "Confirmando…" : "Confirmar recebimento do pagamento"}
+                </button>
+              </div>
+            ) : null}
+            <div className="d-flex flex-wrap gap-2 mb-3">
+              {badgePagamentoFornecedor(detalhe)}
+              {detalhe.status === "recebido" || detalhe.status === "parcial" ? (
+                <span className="badge text-bg-success">Recebida pela Alex Calhas</span>
+              ) : (
+                <span className="badge text-bg-warning">Aguardando conferência</span>
+              )}
+            </div>
             <div className="table-responsive">
               <table className="table inv-data-table table-sm align-middle mb-0 forn-entrega-itens-table">
                 <thead>
@@ -162,6 +232,7 @@ export function FornecedorPortalPage() {
                     <th className="text-end">Metros</th>
                     <th className="text-end">R$/metro</th>
                     <th className="text-end">Total</th>
+                    <th>Pagamento</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -172,6 +243,23 @@ export function FornecedorPortalPage() {
                       <td className="text-end">R$ {formatMoeda(item.valor_unitario)}</td>
                       <td className="text-end">
                         <strong>R$ {formatMoeda(item.total)}</strong>
+                      </td>
+                      <td>
+                        {!item.recebido ? (
+                          <span className="text-muted small">Aguardando recebimento</span>
+                        ) : item.pagamento_status !== "pago" ? (
+                          <span className="forn-entrega-badge forn-entrega-badge--pg-pend">
+                            Pendente
+                          </span>
+                        ) : item.pagamento_confirmado_forn ? (
+                          <span className="forn-entrega-badge forn-entrega-badge--pago">
+                            Confirmado
+                          </span>
+                        ) : (
+                          <span className="forn-entrega-badge forn-entrega-badge--aguard-conf">
+                            Aguard. confirmação
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -251,6 +339,7 @@ export function FornecedorPortalPage() {
                         <th className="text-end">Itens</th>
                         <th className="text-end">Total</th>
                         <th>Status</th>
+                        <th>Pagamento</th>
                         <th />
                       </tr>
                     </thead>
@@ -272,6 +361,7 @@ export function FornecedorPortalPage() {
                               <span className="badge text-bg-warning">Aguardando</span>
                             )}
                           </td>
+                          <td>{badgePagamentoFornecedor(ent)}</td>
                           <td className="text-end">
                             <Link
                               to="/painel/fornecedores"

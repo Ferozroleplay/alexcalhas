@@ -4,9 +4,11 @@ import { dbErrorMessage } from "@/lib/agendamento.server";
 import { getAdminSessionFromRequest, isAdminRequest } from "@/lib/auth.server";
 import {
   fornecedorDashEntregasPorUsuario,
+  fornecedorDashFinanceiro,
   fornecedorDashFormatarDataHora,
   fornecedorDashNomeEmpresa,
   fornecedorDashPercentualRecebidas,
+  fornecedorDashPercentualValorRecebido,
   fornecedorDashResumo,
   fornecedorDashUltimasEntregas,
   resolverFornecedorIdSessao,
@@ -42,6 +44,14 @@ export const Route = createFileRoute("/api/admin/fornecedor-inicio")({
                 suas_recebidas: 0,
               },
               percentual: 0,
+              percentual_valor: 0,
+              financeiro: {
+                valor_enviado: 0,
+                valor_recebido: 0,
+                valor_aguardando: 0,
+                valor_pago: 0,
+                valor_pago_confirmado: 0,
+              },
               por_usuario: [],
               ultimas: [],
               updated_at: new Date().toLocaleString("pt-BR"),
@@ -50,6 +60,7 @@ export const Route = createFileRoute("/api/admin/fornecedor-inicio")({
 
           const nomeEmpresa = await fornecedorDashNomeEmpresa(fornecedorId);
           const resumo = await fornecedorDashResumo(fornecedorId, session.userId);
+          const financeiro = await fornecedorDashFinanceiro(fornecedorId);
           const porUsuario = await fornecedorDashEntregasPorUsuario(fornecedorId);
           const ultimasRaw = await fornecedorDashUltimasEntregas(fornecedorId, 5);
           const ultimas = ultimasRaw.map((e) => ({
@@ -58,6 +69,7 @@ export const Route = createFileRoute("/api/admin/fornecedor-inicio")({
             enviado_em: e.enviado_em,
             enviado_em_fmt: fornecedorDashFormatarDataHora(e.enviado_em),
             qtd_itens: e.qtd_itens,
+            total_valor: e.total_valor,
             usuario_nome: e.usuario_nome ?? "—",
           }));
 
@@ -66,7 +78,9 @@ export const Route = createFileRoute("/api/admin/fornecedor-inicio")({
             fornecedor_id: fornecedorId,
             nome_empresa: nomeEmpresa,
             resumo,
+            financeiro,
             percentual: fornecedorDashPercentualRecebidas(resumo),
+            percentual_valor: fornecedorDashPercentualValorRecebido(financeiro),
             por_usuario: porUsuario,
             ultimas,
             updated_at: new Date().toLocaleString("pt-BR"),

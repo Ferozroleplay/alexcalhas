@@ -1,7 +1,11 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { HOME_SITE } from "@/data/home-config";
 import type { EntregaDetalhe } from "@/lib/fornecedores.server";
+import {
+  baixarPdfNotaEntrega,
+  enviarWhatsappPdfNotaEntrega,
+} from "@/lib/fornecedor-nota-pdf";
 import {
   documentoRotulo,
   entregaNumeroNota,
@@ -29,6 +33,9 @@ function formatDataHoraAgora(): string {
 }
 
 export function FornecedorNotaImpressao({ entrega, autoPrint = true }: Props) {
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const [busy, setBusy] = useState<"pdf" | "whatsapp" | null>(null);
+  const [acaoMsg, setAcaoMsg] = useState("");
   const numeroNota = entregaNumeroNota(entrega.id);
   const empresa = fornecedorRotuloEmpresa(entrega);
   const nomeExibicao = fornecedorRotulo(entrega);
@@ -52,25 +59,93 @@ export function FornecedorNotaImpressao({ entrega, autoPrint = true }: Props) {
   }, [autoPrint, entrega.id]);
 
   const statusLabel = recebido
-    ? entrega.pagamento_status === "pago"
-      ? "Recebido · pagamento confirmado"
-      : "Recebido · pagamento pendente"
+    ? entrega.qtd_itens_pg_pendentes > 0
+      ? "Recebido · pagamento pendente"
+      : entrega.qtd_itens_pago_aguard_conf > 0
+        ? "Recebido · pagamento enviado (aguard. confirmação fornec.)"
+        : "Recebido · pagamento confirmado pelo fornecedor"
     : "Aguardando conferência";
 
   const statusIcon = recebido ? "bi-check-circle-fill" : "bi-hourglass-split";
 
+  async function handleBaixarPdf() {
+    if (!sheetRef.current || busy) return;
+    setAcaoMsg("");
+    setBusy("pdf");
+    try {
+      await baixarPdfNotaEntrega(sheetRef.current, entrega.id);
+      setAcaoMsg("PDF baixado com sucesso.");
+    } catch (err) {
+      setAcaoMsg(err instanceof Error ? err.message : "Erro ao gerar PDF.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleWhatsapp() {
+    if (!sheetRef.current || busy) return;
+    setAcaoMsg("");
+    setBusy("whatsapp");
+    try {
+      const modo = await enviarWhatsappPdfNotaEntrega(sheetRef.current, entrega);
+      setAcaoMsg(
+        modo === "shared"
+          ? "PDF compartilhado."
+          : "PDF baixado e WhatsApp aberto — anexe o arquivo na conversa.",
+      );
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") return;
+      setAcaoMsg(err instanceof Error ? err.message : "Erro ao enviar pelo WhatsApp.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   return (
     <div className="forn-nota">
       <div className="forn-nota__actions no-print">
-        <button type="button" className="forn-nota__btn forn-nota__btn--primary" onClick={() => window.print()}>
-          Imprimir
+        <button
+          type="button"
+          className="forn-nota__btn forn-nota__btn--primary"
+          onClick={() => window.print()}
+          disabled={busy != null}
+        >
+          <i className="bi bi-printer" aria-hidden="true" /> Imprimir
         </button>
-        <button type="button" className="forn-nota__btn" onClick={() => window.close()}>
+        <button
+          type="button"
+          className="forn-nota__btn forn-nota__btn--outline"
+          onClick={() => void handleBaixarPdf()}
+          disabled={busy != null}
+        >
+          <i className="bi bi-file-earmark-pdf" aria-hidden="true" />{" "}
+          {busy === "pdf" ? "Gerando PDF…" : "Baixar PDF"}
+        </button>
+        <button
+          type="button"
+          className="forn-nota__btn forn-nota__btn--whatsapp"
+          onClick={() => void handleWhatsapp()}
+          disabled={busy != null}
+        >
+          <i className="bi bi-whatsapp" aria-hidden="true" />{" "}
+          {busy === "whatsapp" ? "Preparando…" : "WhatsApp (PDF)"}
+        </button>
+        <button
+          type="button"
+          className="forn-nota__btn"
+          onClick={() => window.close()}
+          disabled={busy != null}
+        >
           Fechar
         </button>
       </div>
+      {acaoMsg ? (
+        <p className="forn-nota__acao-msg no-print" role="status">
+          {acaoMsg}
+        </p>
+      ) : null}
 
-      <div className="forn-nota__sheet">
+      <div className="forn-nota__sheet" ref={sheetRef}>
         <div className="forn-nota__topbar">
           <span className="forn-nota__datetime">
             <i className="bi bi-calendar3" aria-hidden="true" /> {emitidoEm}

@@ -45,14 +45,29 @@ function badgeRecebimento(status: string, qtdItens: number, qtdRecebidos: number
   return <span className="forn-entrega-badge forn-entrega-badge--pend">Aguardando</span>;
 }
 
-function badgePagamento(status: string, pagSt: string | null) {
-  if (status !== "recebido" && status !== "parcial") {
+function badgePagamento(ent: {
+  status: string;
+  qtd_itens_recebidos: number;
+  qtd_itens_pg_pendentes: number;
+  qtd_itens_pago_aguard_conf: number;
+}) {
+  if (ent.status !== "recebido" && ent.status !== "parcial") {
     return <span className="text-muted">—</span>;
   }
-  if (pagSt === "pago") {
-    return <span className="forn-entrega-badge forn-entrega-badge--pago">Pago</span>;
+  if (ent.qtd_itens_recebidos === 0) {
+    return <span className="text-muted">—</span>;
   }
-  return <span className="forn-entrega-badge forn-entrega-badge--pg-pend">Pendente</span>;
+  if (ent.qtd_itens_pg_pendentes > 0) {
+    return <span className="forn-entrega-badge forn-entrega-badge--pg-pend">Pendente</span>;
+  }
+  if (ent.qtd_itens_pago_aguard_conf > 0) {
+    return (
+      <span className="forn-entrega-badge forn-entrega-badge--aguard-conf">
+        Pago · aguard. fornec.
+      </span>
+    );
+  }
+  return <span className="forn-entrega-badge forn-entrega-badge--pago">Confirmado</span>;
 }
 
 function EntregaDetalheView({
@@ -296,9 +311,15 @@ function EntregaDetalheView({
                         <>
                           <span className="forn-entrega-badge forn-entrega-badge--ok">Recebido</span>
                           {item.pagamento_status === "pago" ? (
-                            <span className="forn-entrega-badge forn-entrega-badge--pago ms-1">
-                              Pago
-                            </span>
+                            item.pagamento_confirmado_forn ? (
+                              <span className="forn-entrega-badge forn-entrega-badge--pago ms-1">
+                                Pago · confirmado
+                              </span>
+                            ) : (
+                              <span className="forn-entrega-badge forn-entrega-badge--aguard-conf ms-1">
+                                Pago · aguard. fornec.
+                              </span>
+                            )
                           ) : (
                             <span className="forn-entrega-badge forn-entrega-badge--pg-pend ms-1">
                               Pendente
@@ -385,7 +406,7 @@ function EntregaDetalheView({
             disabled={busy}
             onClick={() => void marcarPago()}
           >
-            <i className="bi bi-cash-coin" aria-hidden="true" /> Marcar como pago
+            <i className="bi bi-cash-coin" aria-hidden="true" /> Marcar como pago (fornecedor confirma depois)
           </button>
         </div>
       ) : null}
@@ -728,7 +749,7 @@ export function FornecedoresPage() {
                                   ent.qtd_itens_recebidos,
                                 )}
                               </td>
-                              <td>{badgePagamento(ent.status, ent.pagamento_status)}</td>
+                              <td>{badgePagamento(ent)}</td>
                               <td className="inv-col-actions forn-col-acoes">
                                 <div className="inv-action-group inv-action-group--row-end forn-entregas-actions">
                                   <Link

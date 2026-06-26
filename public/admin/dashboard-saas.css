@@ -3431,8 +3431,13 @@ html[data-bs-theme="dark"] .dash-forn-collapse__summary {
 }
 
 .forn-entrega-badge--pago {
-    background: #dbeafe;
-    color: #1e40af;
+    background: rgba(22, 202, 133, 0.15);
+    color: #0a9f6a;
+}
+
+.forn-entrega-badge--aguard-conf {
+    background: rgba(59, 130, 246, 0.12);
+    color: #1d4ed8;
 }
 
 .forn-entrega-badge--pg-pend {
@@ -3637,6 +3642,11 @@ html[data-bs-theme="dark"] .forn-pagar-itens-bar__text strong {
 }
 
 html[data-bs-theme="dark"] .forn-entrega-badge--pago {
+    background: rgba(22, 202, 133, 0.15);
+    color: #6ee7b7;
+}
+
+html[data-bs-theme="dark"] .forn-entrega-badge--aguard-conf {
     background: rgba(59, 130, 246, 0.15);
     color: #93c5fd;
 }
@@ -9772,6 +9782,82 @@ html[data-bs-theme="dark"] .dash-func-inicio-page .dash-func-inicio-metrics .met
 }
 
 /* Início fornecedor */
+.dash-forn-inicio-finance {
+    border: 1px solid rgba(22, 202, 133, 0.22);
+    background: linear-gradient(135deg, rgba(22, 202, 133, 0.06) 0%, transparent 55%);
+}
+
+.dash-forn-inicio-finance__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+    gap: 0.85rem;
+    align-items: stretch;
+}
+
+.dash-forn-finance-hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100%;
+    border-color: rgba(22, 202, 133, 0.35);
+    background: rgba(22, 202, 133, 0.08);
+}
+
+.dash-forn-finance-hero__value {
+    font-size: clamp(1.35rem, 3.5vw, 1.85rem) !important;
+    color: #047857;
+    line-height: 1.15;
+}
+
+.dash-forn-inicio-finance__cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.dash-forn-inicio-finance .metric-card__value--money {
+    font-size: clamp(0.95rem, 2vw, 1.15rem);
+    letter-spacing: -0.01em;
+}
+
+.dash-forn-inicio-finance__progress {
+    margin-top: 0.85rem;
+}
+
+html[data-bs-theme="dark"] .dash-forn-inicio-finance {
+    border-color: rgba(22, 202, 133, 0.28);
+    background: linear-gradient(135deg, rgba(22, 202, 133, 0.08) 0%, transparent 55%);
+}
+
+html[data-bs-theme="dark"] .dash-forn-finance-hero {
+    background: rgba(22, 202, 133, 0.1);
+    border-color: rgba(22, 202, 133, 0.32);
+}
+
+html[data-bs-theme="dark"] .dash-forn-finance-hero__value {
+    color: #4ade9a;
+}
+
+@media (max-width: 899px) {
+    .dash-forn-inicio-finance__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dash-forn-inicio-finance__cards {
+        grid-template-columns: 1fr;
+    }
+
+    .dash-forn-finance-hero__value {
+        font-size: 1.45rem !important;
+    }
+}
+
+@media (min-width: 900px) and (max-width: 1099px) {
+    .dash-forn-inicio-finance__cards {
+        grid-template-columns: 1fr;
+    }
+}
+
 .dash-forn-inicio-page .dash-forn-entrega-card__head {
     display: flex;
     align-items: flex-start;
