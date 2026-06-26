@@ -29,6 +29,8 @@ export type EntregaListaRow = {
   usuario_nome: string | null;
   qtd_itens: number;
   qtd_itens_recebidos: number;
+  qtd_itens_pg_pendentes: number;
+  qtd_itens_pago_aguard_conf: number;
   total_valor: number;
 };
 
@@ -64,6 +66,7 @@ export type EntregaDetalhe = EntregaListaRow & {
   total_pago: number;
   qtd_itens_pendentes: number;
   qtd_itens_pg_pendentes: number;
+  qtd_itens_pago_aguard_conf: number;
 };
 
 function int(v: unknown): number {
@@ -122,6 +125,8 @@ function rowEntregaLista(r: Record<string, unknown>): EntregaListaRow {
     usuario_nome: r.usuario_nome ? str(r.usuario_nome) : null,
     qtd_itens: int(r.qtd_itens),
     qtd_itens_recebidos: int(r.qtd_itens_recebidos),
+    qtd_itens_pg_pendentes: int(r.qtd_itens_pg_pendentes),
+    qtd_itens_pago_aguard_conf: int(r.qtd_itens_pago_aguard_conf),
     total_valor: num(r.total_valor),
   };
 }
@@ -165,6 +170,8 @@ export async function listarEntregasAdmin(
                    u.nome AS usuario_nome,
                    (SELECT COUNT(*) FROM fornecedor_entrega_itens i WHERE i.entrega_id = e.id) AS qtd_itens,
                    (SELECT COUNT(*) FROM fornecedor_entrega_itens i WHERE i.entrega_id = e.id AND i.recebido = 1) AS qtd_itens_recebidos,
+                   (SELECT COUNT(*) FROM fornecedor_entrega_itens i WHERE i.entrega_id = e.id AND i.recebido = 1 AND (i.pagamento_status IS NULL OR i.pagamento_status <> 'pago')) AS qtd_itens_pg_pendentes,
+                   (SELECT COUNT(*) FROM fornecedor_entrega_itens i WHERE i.entrega_id = e.id AND i.recebido = 1 AND i.pagamento_status = 'pago' AND i.pagamento_confirmado_forn = 0) AS qtd_itens_pago_aguard_conf,
                    (SELECT COALESCE(SUM(i.metros * i.valor_unitario), 0) FROM fornecedor_entrega_itens i WHERE i.entrega_id = e.id) AS total_valor
             FROM fornecedor_entregas e
             LEFT JOIN fornecedores f ON f.id = e.fornecedor_id
@@ -221,12 +228,17 @@ export async function obterEntregaCompleta(entregaId: number): Promise<EntregaDe
   let total_pago = 0;
   let qtd_itens_pendentes = 0;
   let qtd_itens_pg_pendentes = 0;
+  let qtd_itens_pago_aguard_conf = 0;
 
   for (const it of itens) {
     if (it.recebido) {
       total_recebido += it.total;
-      if (it.pagamento_status === "pago") total_pago += it.total;
-      else qtd_itens_pg_pendentes++;
+      if (it.pagamento_status === "pago") {
+        total_pago += it.total;
+        if (!it.pagamento_confirmado_forn) qtd_itens_pago_aguard_conf++;
+      } else {
+        qtd_itens_pg_pendentes++;
+      }
     } else {
       qtd_itens_pendentes++;
     }
@@ -252,6 +264,7 @@ export async function obterEntregaCompleta(entregaId: number): Promise<EntregaDe
     total_pago,
     qtd_itens_pendentes,
     qtd_itens_pg_pendentes,
+    qtd_itens_pago_aguard_conf,
   };
 }
 
@@ -402,7 +415,8 @@ export async function marcarItensEntregaRecebidos(
 
     await prisma.$executeRawUnsafe(
       `UPDATE fornecedor_entrega_itens
-       SET recebido = 1, recebido_em = NOW(), recebido_por = ${admin}, pagamento_status = '${pag}'
+       SET recebido = 1, recebido_em = NOW(), recebido_por = ${admin},
+           pagamento_status = '${pag}', pagamento_confirmado_forn = 0
        WHERE id = ${itemId} AND entrega_id = ${eid} AND recebido = 0`,
     );
 
@@ -459,7 +473,8 @@ export async function marcarItensEntregaPagos(
     const item = map.get(int(itemId));
     if (!item || !item.recebido || item.pagamento_status === "pago") continue;
     await prisma.$executeRawUnsafe(
-      `UPDATE fornecedor_entrega_itens SET pagamento_status = 'pago'
+      `UPDATE fornecedor_entrega_itens
+       SET pagamento_status = 'pago', pagamento_confirmado_forn = 0
        WHERE id = ${int(itemId)} AND entrega_id = ${eid} AND recebido = 1`,
     );
     processados++;
@@ -480,7 +495,62 @@ export async function marcarItensEntregaPagos(
 
   return {
     ok: true,
-    message: processados === 1 ? "1 item marcado como pago." : `${processados} itens marcados como pagos.`,
+    message:
+      processados === 1
+        ? "1 item marcado como pago. O fornecedor precisa confirmar o recebimento."
+        : `${processados} itens marcados como pagos. O fornecedor precisa confirmar o recebimento.`,
+  };
+}
+
+export async function confirmarPagamentoFornecedor(
+  entregaId: number,
+  fornecedorId: number,
+  itemIds?: number[],
+): Promise<{ ok: boolean; message: string }> {
+  const entrega = await obterEntregaCompleta(entregaId);
+  if (!entrega) return { ok: false, message: "Entrega não encontrada." };
+  if (entrega.fornecedor_id !== int(fornecedorId)) {
+    return { ok: false, message: "Esta entrega não pertence à sua empresa." };
+  }
+
+  const candidatos = entrega.itens.filter(
+    (i) => i.recebido && i.pagamento_status === "pago" && !i.pagamento_confirmado_forn,
+  );
+  const ids =
+    itemIds && itemIds.length > 0
+      ? [...new Set(itemIds.map(int).filter((id) => id > 0))]
+      : candidatos.map((i) => i.id);
+
+  if (ids.length === 0) {
+    return { ok: false, message: "Nenhum pagamento aguardando confirmação." };
+  }
+
+  const prisma = await getPrisma();
+  const eid = int(entregaId);
+  const map = new Map(entrega.itens.map((it) => [it.id, it]));
+  let processados = 0;
+
+  for (const itemId of ids) {
+    const item = map.get(itemId);
+    if (!item || item.pagamento_status !== "pago" || item.pagamento_confirmado_forn) continue;
+    await prisma.$executeRawUnsafe(
+      `UPDATE fornecedor_entrega_itens
+       SET pagamento_confirmado_forn = 1
+       WHERE id = ${itemId} AND entrega_id = ${eid} AND pagamento_status = 'pago'`,
+    );
+    processados++;
+  }
+
+  if (processados === 0) {
+    return { ok: false, message: "Nenhum item válido para confirmar." };
+  }
+
+  return {
+    ok: true,
+    message:
+      processados === 1
+        ? "Pagamento confirmado com sucesso."
+        : `${processados} pagamentos confirmados com sucesso.`,
   };
 }
 
@@ -491,11 +561,13 @@ export async function atualizarPagamentoEntrega(
   const prisma = await getPrisma();
   const eid = int(entregaId);
   const pag = pagamento === "pago" ? "pago" : "pendente";
+  const confForn = pag === "pago" ? 0 : 0;
   await prisma.$executeRawUnsafe(
     `UPDATE fornecedor_entregas SET pagamento_status = '${pag}' WHERE id = ${eid}`,
   );
   await prisma.$executeRawUnsafe(
-    `UPDATE fornecedor_entrega_itens SET pagamento_status = '${pag}'
+    `UPDATE fornecedor_entrega_itens
+     SET pagamento_status = '${pag}', pagamento_confirmado_forn = ${confForn}
      WHERE entrega_id = ${eid} AND recebido = 1`,
   );
   return true;
