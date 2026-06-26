@@ -9,8 +9,10 @@ import {
   fornecedorDashNomeEmpresa,
   fornecedorDashPercentualRecebidas,
   fornecedorDashPercentualValorRecebido,
+  fornecedorDashPercentualPagamentoConfirmado,
   fornecedorDashResumo,
   fornecedorDashUltimasEntregas,
+  fornecedorDashValorPendente,
   resolverFornecedorIdSessao,
 } from "@/lib/fornecedor-dashboard.server";
 import { jsonResponse } from "@/lib/http.server";
@@ -45,6 +47,8 @@ export const Route = createFileRoute("/api/admin/fornecedor-inicio")({
               },
               percentual: 0,
               percentual_valor: 0,
+              percentual_pagamento: 0,
+              valor_pendente: 0,
               financeiro: {
                 valor_enviado: 0,
                 valor_recebido: 0,
@@ -81,6 +85,8 @@ export const Route = createFileRoute("/api/admin/fornecedor-inicio")({
             financeiro,
             percentual: fornecedorDashPercentualRecebidas(resumo),
             percentual_valor: fornecedorDashPercentualValorRecebido(financeiro),
+            percentual_pagamento: fornecedorDashPercentualPagamentoConfirmado(financeiro),
+            valor_pendente: fornecedorDashValorPendente(financeiro),
             por_usuario: porUsuario,
             ultimas,
             updated_at: new Date().toLocaleString("pt-BR"),

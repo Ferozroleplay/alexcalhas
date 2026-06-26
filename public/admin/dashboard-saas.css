@@ -9857,6 +9857,7 @@ html[data-bs-theme="dark"] .dash-func-inicio-page .dash-func-inicio-metrics .met
 
 .dash-forn-inicio-finance__metrics {
     margin-bottom: 0;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .dash-forn-inicio-finance__progress {
@@ -9871,7 +9872,38 @@ html[data-bs-theme="dark"] .dash-func-inicio-page .dash-func-inicio-metrics .met
     font-size: clamp(1rem, 2.2vw, 1.25rem);
 }
 
+.dash-forn-inicio-page .dash-forn-inicio-finance .metric-card--finance-pendente {
+    border-color: rgba(245, 158, 11, 0.35);
+}
+
+.dash-forn-inicio-page .dash-forn-inicio-finance .metric-card__value--pendente {
+    color: #b45309;
+}
+
+html[data-bs-theme="dark"] .dash-forn-inicio-page .dash-forn-inicio-finance .metric-card__value--pendente {
+    color: #fbbf24;
+}
+
+.dash-forn-inicio-page .dash-forn-inicio-finance .metric-card--finance-pendente .metric-card__hint {
+    font-size: 0.68rem;
+    margin-top: 0.25rem;
+    color: var(--dash-muted, #64748b);
+    line-height: 1.35;
+}
+
+.dash-func-inicio-progress__fill--pay {
+    background: linear-gradient(90deg, #7c3aed, #a78bfa, #c4b5fd);
+}
+
+html[data-bs-theme="dark"] .dash-func-inicio-progress__fill--pay {
+    background: linear-gradient(90deg, #6d28d9, #8b5cf6, #a78bfa);
+}
+
 @media (max-width: 899px) {
+    .dash-forn-inicio-finance__metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .dash-forn-inicio-page .dash-forn-inicio-finance .metric-card__value {
         font-size: 1.05rem;
     }

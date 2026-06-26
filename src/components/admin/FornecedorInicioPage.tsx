@@ -49,6 +49,8 @@ type InicioData = {
   financeiro: Financeiro;
   percentual: number;
   percentual_valor: number;
+  percentual_pagamento: number;
+  valor_pendente: number;
   por_usuario: PorUsuario[];
   ultimas: Ultima[];
   updated_at: string;
@@ -150,18 +152,6 @@ export function FornecedorInicioPage() {
               <div className="analytics-metrics dash-forn-inicio-finance__metrics">
                 <div className="metric-card metric-card--static metric-card--finance">
                   <div className="metric-card__top">
-                    <span className="metric-card__label">Valor recebido</span>
-                    <span className="metric-card__icon metric-card__icon--green">
-                      <i className="bi bi-bag-check" aria-hidden="true" />
-                    </span>
-                  </div>
-                  <strong className="metric-card__value">
-                    R$ {formatMoeda(data.financeiro.valor_recebido)}
-                  </strong>
-                </div>
-
-                <div className="metric-card metric-card--static metric-card--finance">
-                  <div className="metric-card__top">
                     <span className="metric-card__label">Total enviado</span>
                     <span className="metric-card__icon metric-card__icon--blue">
                       <i className="bi bi-send" aria-hidden="true" />
@@ -195,9 +185,63 @@ export function FornecedorInicioPage() {
                     R$ {formatMoeda(data.financeiro.valor_pago_confirmado)}
                   </strong>
                 </div>
+
+                <div className="metric-card metric-card--static metric-card--finance metric-card--finance-pendente">
+                  <div className="metric-card__top">
+                    <span className="metric-card__label">Saldo pendente</span>
+                    <span className="metric-card__icon metric-card__icon--amber">
+                      <i className="bi bi-wallet2" aria-hidden="true" />
+                    </span>
+                  </div>
+                  <strong className="metric-card__value metric-card__value--pendente">
+                    R$ {formatMoeda(data.valor_pendente)}
+                  </strong>
+                  <span className="metric-card__hint">
+                    {data.valor_pendente > 0
+                      ? "A receber ou aguardando confirmação"
+                      : "Nada pendente no momento"}
+                  </span>
+                </div>
               </div>
 
               {data.financeiro.valor_enviado > 0 ? (
+                <div
+                  className="dash-func-inicio-progress dash-forn-inicio-finance__progress"
+                  role="group"
+                  aria-label="Pagamento confirmado"
+                >
+                  <div className="dash-func-inicio-progress__head">
+                    <span>Pagamento confirmado do total enviado</span>
+                    <strong>
+                      {Math.round(
+                        (data.financeiro.valor_pago_confirmado / data.financeiro.valor_enviado) *
+                          100,
+                      )}
+                      %
+                    </strong>
+                  </div>
+                  <div className="dash-func-inicio-progress__bar" aria-hidden="true">
+                    <span
+                      className="dash-func-inicio-progress__fill dash-func-inicio-progress__fill--pay"
+                      style={{
+                        width: `${Math.min(
+                          100,
+                          Math.max(
+                            0,
+                            Math.round(
+                              (data.financeiro.valor_pago_confirmado /
+                                data.financeiro.valor_enviado) *
+                                100,
+                            ),
+                          ),
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : null}
+
+              {data.financeiro.valor_enviado > 0 && data.percentual_valor < 100 ? (
                 <div
                   className="dash-func-inicio-progress dash-forn-inicio-finance__progress"
                   role="group"

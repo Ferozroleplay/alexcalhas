@@ -131,6 +131,18 @@ export function fornecedorDashPercentualValorRecebido(financeiro: FornecedorDash
   return Math.round((financeiro.valor_recebido / financeiro.valor_enviado) * 100);
 }
 
+/** Quanto ainda falta receber/confirmar (materiais recebidos − pagamento confirmado pelo fornecedor). */
+export function fornecedorDashValorPendente(financeiro: FornecedorDashFinanceiro): number {
+  return Math.max(0, financeiro.valor_recebido - financeiro.valor_pago_confirmado);
+}
+
+export function fornecedorDashPercentualPagamentoConfirmado(
+  financeiro: FornecedorDashFinanceiro,
+): number {
+  if (financeiro.valor_recebido <= 0) return 0;
+  return Math.round((financeiro.valor_pago_confirmado / financeiro.valor_recebido) * 100);
+}
+
 export async function fornecedorDashNomeEmpresa(fornecedorId: number): Promise<string> {
   if (fornecedorId <= 0) return "";
   const prisma = await getPrisma();
