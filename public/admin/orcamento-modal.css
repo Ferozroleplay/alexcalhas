@@ -1,0 +1,619 @@
+/* Modal de orçamento — layout largo em 2 colunas (referência visual) */
+
+.visitas-orc-modal__dialog {
+    width: min(96vw, 1400px) !important;
+    max-width: min(96vw, 1400px) !important;
+    height: 92vh;
+    max-height: 92vh;
+    margin: 4vh auto !important;
+}
+
+.visitas-orc-modal__dialog.modal-fullscreen-md-down {
+    width: min(96vw, 1400px) !important;
+    max-width: min(96vw, 1400px) !important;
+    height: 92vh;
+    max-height: 92vh;
+    margin: 4vh auto !important;
+}
+
+.modal-orcamento {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    width: 100%;
+    height: 100%;
+    max-height: 92vh;
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 28px 56px rgba(0, 0, 0, 0.45);
+    background: var(--dash-card-bg, #fff);
+}
+
+.modal-orcamento .visitas-orc-form {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.modal-orcamento .visitas-orc-modal__header {
+    flex-shrink: 0;
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid var(--dash-card-border, #e8ecf4);
+}
+
+.modal-orcamento .visitas-orc-modal__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 20px;
+    padding: 20px 24px;
+    overflow: hidden;
+    min-height: 0;
+    background: var(--dash-page-bg, #f1f5f9);
+}
+
+@media (min-width: 1200px) {
+    .modal-orcamento .visitas-orc-modal__body {
+        grid-template-columns: minmax(0, 1.05fr) minmax(520px, 0.95fr);
+    }
+}
+
+.modal-orcamento .visitas-orc-col-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 2px;
+}
+
+.modal-orcamento .visitas-orc-col-materiais {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* Painéis */
+.modal-orcamento .visitas-orc-panel {
+    background: var(--dash-card-bg, #fff);
+    border: 1px solid var(--dash-card-border, #e2e8f0);
+    border-radius: 14px;
+    padding: 1rem 1.1rem;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+    margin-bottom: 0;
+}
+
+.modal-orcamento .visitas-orc-panel__title {
+    margin: 0 0 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.modal-orcamento .visitas-orc-panel__hint {
+    margin: 0 0 0.85rem;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--dash-muted, #64748b);
+}
+
+/* Resumo — 4 campos em linha */
+.modal-orcamento .visitas-orc-resumo-grid {
+    display: grid;
+    grid-template-columns: 120px 1fr 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.modal-orcamento .visitas-orc-resumo-grid--novo {
+    grid-template-columns: 120px 1fr;
+}
+
+.modal-orcamento .visitas-orc-resumo-field {
+    min-width: 0;
+}
+
+.modal-orcamento .visitas-orc-resumo-cpf {
+    width: 100%;
+}
+
+.modal-orcamento .visitas-orc-valor {
+    font-weight: 700;
+    color: var(--primary, #16ca85) !important;
+}
+
+/* Pagamento */
+.modal-orcamento .visitas-orc-panel--pay {
+    border-color: rgba(22, 202, 133, 0.28);
+    background:
+        linear-gradient(180deg, rgba(22, 202, 133, 0.07) 0%, transparent 48%),
+        var(--dash-card-bg, #fff);
+}
+
+.modal-orcamento .visitas-orc-panel--pay .visitas-orc-panel__head {
+    margin-bottom: 0.75rem;
+}
+
+.modal-orcamento .visitas-orc-panel--pay .visitas-orc-panel__title {
+    margin-bottom: 0.35rem;
+}
+
+.modal-orcamento .visitas-orc-pay-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    width: 100%;
+}
+
+.modal-orcamento .visitas-orc-pay-card {
+    min-height: 6.25rem;
+    border-radius: 12px;
+}
+
+.modal-orcamento .visitas-orc-pay-card--active {
+    border-color: var(--primary, #16ca85);
+    background: rgba(22, 202, 133, 0.1);
+    box-shadow: 0 0 0 1px rgba(22, 202, 133, 0.35);
+}
+
+.modal-orcamento .visitas-orc-parcelas-link {
+    margin-top: 0.65rem;
+    padding-left: 0;
+    color: var(--primary, #16ca85);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.modal-orcamento .visitas-orc-parcelas-link:hover {
+    color: #0d9660;
+    text-decoration: underline;
+}
+
+/* Observação */
+.modal-orcamento .visitas-orc-panel--obs {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-orcamento .visitas-orc-panel--obs .visitas-orc-input {
+    flex: 1 1 auto;
+    min-height: 88px;
+    resize: vertical;
+}
+
+.modal-orcamento .visitas-orc-obs__count {
+    display: block;
+    margin-top: 0.35rem;
+    text-align: right;
+    font-size: 0.6875rem;
+    color: var(--dash-muted, #94a3b8);
+}
+
+/* Materiais — coluna direita */
+.modal-orcamento .visitas-orc-panel--materiais {
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    padding: 1rem 1.1rem 0.85rem;
+}
+
+.modal-orcamento .materiais-panel__head {
+    min-width: 0;
+}
+
+.modal-orcamento .materiais-panel__toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.35fr) 76px auto;
+    gap: 12px;
+    align-items: end;
+    margin-bottom: 12px;
+}
+
+.modal-orcamento .materiais-panel__toolbar-field {
+    min-width: 0;
+}
+
+.modal-orcamento .materiais-panel__toolbar-actions {
+    display: flex;
+    gap: 8px;
+    align-items: end;
+}
+
+.modal-orcamento .materiais-panel__toolbar-actions .visitas-orc-add-btn,
+.modal-orcamento .materiais-panel__toolbar-actions .visitas-orc-calc-btn {
+    min-width: 42px;
+    width: 42px;
+    height: 38px;
+    padding: 0;
+}
+
+.modal-orcamento .materiais-panel__toolbar-actions .visitas-orc-act-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+}
+
+.modal-orcamento .materiais-table-wrapper {
+    overflow-y: auto;
+    overflow-x: auto;
+    min-height: 0;
+    max-height: none !important;
+    border-radius: 10px;
+    border: 1px solid var(--dash-card-border, #e2e8f0);
+    background: var(--dash-card-bg, #fff);
+}
+
+.modal-orcamento .visitas-orc-table thead {
+    background: #eef2f7;
+}
+
+.modal-orcamento .visitas-orc-table thead th {
+    padding: 0.55rem 0.65rem;
+    font-size: 0.6875rem;
+    border-bottom: 1px solid var(--dash-card-border, #e2e8f0);
+}
+
+.modal-orcamento .visitas-orc-table__material {
+    min-width: 10rem;
+    max-width: 16rem;
+}
+
+.modal-orcamento .visitas-orc-material-nome {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    line-height: 1.35;
+}
+
+.modal-orcamento .visitas-orc-material-nome__titulo {
+    display: block;
+}
+
+.modal-orcamento .visitas-orc-material-nome__perfil {
+    display: block;
+    font-size: 0.8125rem;
+    color: var(--dash-muted, #64748b);
+}
+
+html[data-bs-theme="dark"] .modal-orcamento .visitas-orc-material-nome__perfil {
+    color: #94a3b8;
+}
+
+.modal-orcamento .visitas-orc-table tbody td {
+    padding: 0.5rem 0.65rem;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+    vertical-align: middle;
+}
+
+.modal-orcamento .visitas-orc-table__line-total {
+    font-weight: 600;
+    color: var(--text-secundary, #1e293b);
+}
+
+.modal-orcamento .visitas-orc-materiais-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 12px;
+    padding: 0.75rem 0.15rem 0.15rem;
+    border-top: 1px solid var(--dash-card-border, #e2e8f0);
+    font-size: 0.8125rem;
+    color: var(--dash-muted, #64748b);
+}
+
+.modal-orcamento .visitas-orc-materiais-footer__total strong {
+    color: var(--primary, #16ca85);
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+/* Footer fixo */
+.modal-orcamento .visitas-orc-modal__footer {
+    flex-shrink: 0;
+    display: flex !important;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.9rem 1.5rem !important;
+    border-top: 1px solid var(--dash-card-border, #e2e8f0);
+    background: var(--dash-card-bg, #fff);
+    box-shadow: 0 -6px 18px rgba(15, 23, 42, 0.06);
+}
+
+.modal-orcamento .visitas-orc-save-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-width: 11rem;
+    min-height: 42px;
+    border-radius: 10px;
+    font-weight: 700;
+}
+
+.modal-orcamento .visitas-orc-modal__loading,
+.modal-orcamento .visitas-orc-modal__alert {
+    grid-column: 1 / -1;
+}
+
+/* Dark theme */
+html[data-bs-theme="dark"] .modal-orcamento {
+    box-shadow: 0 28px 56px rgba(0, 0, 0, 0.65);
+}
+
+html[data-bs-theme="dark"] .modal-orcamento .visitas-orc-modal__body {
+    background: #0f1419;
+}
+
+html[data-bs-theme="dark"] .modal-orcamento .visitas-orc-panel {
+    background: #171b22;
+    border-color: #2a3140;
+}
+
+html[data-bs-theme="dark"] .modal-orcamento .visitas-orc-panel--pay {
+    border-color: rgba(22, 202, 133, 0.35);
+    background:
+        linear-gradient(180deg, rgba(22, 202, 133, 0.1) 0%, transparent 50%),
+        #171b22;
+}
+
+html[data-bs-theme="dark"] .modal-orcamento .materiais-table-wrapper {
+    background: #12161d;
+    border-color: #2a3140;
+}
+
+html[data-bs-theme="dark"] .modal-orcamento .visitas-orc-table thead {
+    background: #1e2430;
+}
+
+html[data-bs-theme="dark"] .modal-orcamento .visitas-orc-table tbody td {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+    color: #e2e8f0;
+}
+
+html[data-bs-theme="dark"] .modal-orcamento .visitas-orc-modal__footer {
+    background: #171b22;
+    border-top-color: #2a3140;
+}
+
+@media (max-width: 1100px) {
+    .modal-orcamento .visitas-orc-modal__body {
+        grid-template-columns: 1fr;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .modal-orcamento .visitas-orc-col-form {
+        overflow: visible;
+    }
+
+    .modal-orcamento .visitas-orc-col-materiais {
+        min-height: 0;
+        overflow: visible;
+    }
+
+    .modal-orcamento .visitas-orc-panel--materiais {
+        height: auto;
+    }
+
+    .modal-orcamento .visitas-orc-resumo-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .modal-orcamento .visitas-orc-resumo-grid--novo {
+        grid-template-columns: 120px 1fr;
+    }
+
+    .modal-orcamento .materiais-panel__toolbar {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .modal-orcamento .materiais-panel__toolbar-field--metros {
+        grid-column: span 1;
+    }
+
+    .modal-orcamento .materiais-panel__toolbar-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+    }
+
+    .modal-orcamento .materiais-table-wrapper {
+        min-height: 200px;
+        max-height: 50vh !important;
+    }
+}
+
+/* Celular — modal fullscreen e conteúdo rolável */
+@media (max-width: 767.98px) {
+    .visitas-orc-modal__dialog,
+    .visitas-orc-modal__dialog.modal-fullscreen-md-down {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        margin: 0 !important;
+    }
+
+    .dash-edit-modal .visitas-orc-modal__dialog.modal-dialog {
+        align-items: stretch;
+        min-height: 100dvh;
+    }
+
+    .modal-orcamento {
+        max-height: 100dvh;
+        border-radius: 0;
+    }
+
+    .modal-orcamento .visitas-orc-modal__header {
+        padding: 0.85rem 1rem;
+    }
+
+    .modal-orcamento .visitas-orc-form {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .modal-orcamento .visitas-orc-modal__body {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 12px 14px 16px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
+
+    .modal-orcamento .visitas-orc-col-form,
+    .modal-orcamento .visitas-orc-col-materiais {
+        flex: 0 0 auto;
+        width: 100%;
+        overflow: visible;
+    }
+
+    .modal-orcamento .visitas-orc-panel {
+        padding: 0.85rem 0.9rem;
+    }
+
+    .modal-orcamento .visitas-orc-resumo-grid,
+    .modal-orcamento .visitas-orc-resumo-grid--novo {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .modal-orcamento .visitas-orc-resumo-cpf {
+        margin-top: 2px;
+    }
+
+    .modal-orcamento .visitas-orc-pay-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .modal-orcamento .visitas-orc-pay-card {
+        min-height: 0;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 0.9rem;
+        text-align: left;
+    }
+
+    .modal-orcamento .visitas-orc-pay-card__icon {
+        margin: 0;
+        flex-shrink: 0;
+    }
+
+    .modal-orcamento .visitas-orc-panel--obs .visitas-orc-input {
+        min-height: 72px;
+    }
+
+    .modal-orcamento .visitas-orc-panel--materiais {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+        padding: 0.85rem 0.9rem;
+    }
+
+    .modal-orcamento .materiais-panel__toolbar {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+        margin-bottom: 10px;
+    }
+
+    .modal-orcamento .materiais-panel__toolbar-field {
+        width: 100%;
+    }
+
+    .modal-orcamento .materiais-panel__toolbar-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .modal-orcamento .materiais-panel__toolbar-actions .visitas-orc-add-btn,
+    .modal-orcamento .materiais-panel__toolbar-actions .visitas-orc-calc-btn {
+        width: 100%;
+        min-width: 0;
+        min-height: 42px;
+        height: 42px;
+    }
+
+    .modal-orcamento .materiais-panel__toolbar-actions .visitas-orc-act-label {
+        position: static;
+        width: auto;
+        height: auto;
+        overflow: visible;
+        clip: auto;
+        font-size: 0.75rem;
+    }
+
+    .modal-orcamento .materiais-table-wrapper {
+        min-height: 180px;
+        max-height: none !important;
+        overflow-x: auto;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .modal-orcamento .visitas-orc-table {
+        min-width: 520px;
+    }
+
+    .modal-orcamento .visitas-orc-table__material {
+        min-width: 8rem;
+        max-width: 12rem;
+    }
+
+    .modal-orcamento .visitas-orc-materiais-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.35rem;
+    }
+
+    .modal-orcamento .visitas-orc-modal__footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+        gap: 0.5rem;
+        padding: 0.75rem 14px calc(0.75rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    .modal-orcamento .visitas-orc-modal__footer .btn {
+        width: 100%;
+        min-height: 44px;
+    }
+
+    .modal-orcamento .visitas-orc-save-btn {
+        min-width: 0;
+    }
+
+    body.dashboard-app--react .modal.show.d-block:has(.modal-orcamento) {
+        overflow: hidden !important;
+    }
+
+    body.dashboard-app--react .visitas-orc-modal__dialog.modal-dialog {
+        max-height: 100dvh !important;
+        height: 100dvh !important;
+        align-items: stretch;
+    }
+}

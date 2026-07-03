@@ -3833,7 +3833,103 @@ html[data-bs-theme="dark"] .inv-action-btn--muted:hover {
 
 .visitas-orc-modal__dialog {
     max-height: calc(100vh - 1.5rem);
+    max-width: min(1140px, calc(100vw - 1.5rem));
     margin: 0.75rem auto;
+}
+
+.visitas-orc-layout {
+    display: grid;
+    grid-template-columns: minmax(260px, 34%) minmax(0, 1fr);
+    gap: 0.85rem;
+    align-items: stretch;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.visitas-orc-layout__aside {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    min-width: 0;
+}
+
+.visitas-orc-layout__main {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+}
+
+.visitas-orc-panel--summary {
+    margin-bottom: 0;
+}
+
+.visitas-orc-panel--summary .visitas-orc-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 0.5rem !important;
+}
+
+.visitas-orc-panel--summary .visitas-orc-summary > [class*="col-"] {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.visitas-orc-panel--materiais {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    margin-bottom: 0;
+}
+
+.visitas-orc-panel--materiais .visitas-orc-table-wrap {
+    flex: 1 1 auto;
+    min-height: 200px;
+    max-height: min(460px, calc(100vh - 22rem));
+}
+
+.visitas-orc-materiais-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: 0.65rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid var(--dash-card-border, #e8ecf4);
+    font-size: 0.8125rem;
+    color: var(--dash-muted, #64748b);
+}
+
+.visitas-orc-materiais-footer__total strong {
+    color: var(--primary, #16ca85);
+    font-weight: 700;
+}
+
+.visitas-orc-obs {
+    position: relative;
+}
+
+.visitas-orc-obs__count {
+    display: block;
+    margin-top: 0.25rem;
+    text-align: right;
+    font-size: 0.6875rem;
+    color: var(--dash-muted, #94a3b8);
+}
+
+@media (max-width: 991.98px) {
+    .visitas-orc-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .visitas-orc-panel--materiais .visitas-orc-table-wrap {
+        max-height: min(320px, 45vh);
+    }
 }
 
 .visitas-orc-modal__content {
@@ -11186,7 +11282,7 @@ html[data-bs-theme="dark"] .flatpickr-rContainer {
     position: fixed;
     right: 1rem;
     bottom: 1.25rem;
-    z-index: 1200;
+    z-index: 22000;
     display: flex;
     flex-direction: column;
     gap: 0.65rem;

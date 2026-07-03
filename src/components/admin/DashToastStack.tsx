@@ -1,3 +1,5 @@
+import { createPortal } from "react-dom";
+
 import type { DashToastItem, DashToastVariant } from "@/lib/dash-ui-store";
 import { removeDashToast } from "@/lib/dash-ui-store";
 
@@ -14,8 +16,9 @@ type Props = {
 
 export function DashToastStack({ toasts }: Props) {
   if (toasts.length === 0) return null;
+  if (typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <div className="dash-toast-stack" aria-live="polite" aria-relevant="additions">
       {toasts.map((t) => (
         <div
@@ -37,6 +40,7 @@ export function DashToastStack({ toasts }: Props) {
           </button>
         </div>
       ))}
-    </div>
+    </div>,
+    document.body,
   );
 }

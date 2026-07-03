@@ -5,7 +5,7 @@ import { AdminModal } from "@/components/admin/modals/AdminModal";
 import { OrcMaterialSelect } from "@/components/admin/modals/OrcMaterialSelect";
 import { PopupCalculadoraOrcamento } from "@/components/admin/modals/PopupCalculadoraOrcamento";
 import { useOrcamentoForm } from "@/hooks/use-orcamento-form";
-import { bloquearTeclaNaoNumerica, calcularCreditoMaquininha, parseMoneyBr, sanitizarDescontoPct, sanitizarNumeroBr } from "@/lib/orcamento.server";
+import { bloquearTeclaNaoNumerica, calcularCreditoMaquininha, parseMoneyBr, sanitizarDescontoPct, sanitizarNumeroBr, splitMaterialOrcamentoLabel } from "@/lib/orcamento.server";
 import {
   formatBrl,
   formatMultLabel,
@@ -42,6 +42,17 @@ const PAY_OPTIONS: PayOption[] = [
   { value: "debito", label: "Débito", desc: "Cartão na hora", icon: "bi-credit-card" },
   { value: "credito", label: "Crédito", desc: "Parcelado no cartão", icon: "bi-credit-card-2-front" },
 ];
+
+function MaterialOrcamentoNome({ material }: { material: string }) {
+  const { titulo, perfil } = splitMaterialOrcamentoLabel(material);
+  if (!perfil) return <>{titulo}</>;
+  return (
+    <span className="visitas-orc-material-nome">
+      <span className="visitas-orc-material-nome__titulo">{titulo}</span>
+      <span className="visitas-orc-material-nome__perfil">{perfil}</span>
+    </span>
+  );
+}
 
 type TaxaModo = "sem" | "com";
 
@@ -388,11 +399,13 @@ export function ModalOrcamento({
         ? `${qtdParcelasNum}x • ${valorParcela.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} (+${taxaNum.toLocaleString("pt-BR")}%)`
         : `${qtdParcelasNum}x • ${valorParcela.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`
       : "";
+  const totalMateriais = form.partData.reduce((sum, l) => sum + l.valor * l.metros, 0);
+  const qtdItens = form.partData.length;
 
   return (
     <>
-      <AdminModal open={open} onClose={onClose} closeOnBackdrop={false} dialogClass="visitas-orc-modal__dialog modal-lg">
-      <div className="modal-content visitas-orc-modal__content">
+      <AdminModal open={open} onClose={onClose} closeOnBackdrop={false} dialogClass="visitas-orc-modal__dialog">
+      <div className="modal-content visitas-orc-modal__content modal-orcamento">
         <div className="modal-header visitas-orc-modal__header flex-shrink-0">
           <div className="visitas-orc-modal__head">
             <span className="visitas-orc-modal__head-icon" aria-hidden="true">
@@ -408,133 +421,200 @@ export function ModalOrcamento({
           <button type="button" className="btn-close" aria-label="Fechar" onClick={onClose} />
         </div>
 
-        <form className="visitas-orc-form d-flex flex-column flex-grow-1 min-h-0" onSubmit={handleSubmit}>
-          <div className="modal-body visitas-orc-modal__body flex-grow-1">
-            {error ? <div className="alert alert-danger py-2">{error}</div> : null}
+        <form className="visitas-orc-form" onSubmit={handleSubmit}>
+          <div className="modal-body visitas-orc-modal__body">
+            {error ? <div className="alert alert-danger py-2 visitas-orc-modal__alert">{error}</div> : null}
             {loading ? (
-              <div className="d-flex justify-content-center py-4">
+              <div className="visitas-orc-modal__loading d-flex justify-content-center py-4">
                 <Loader2 className="spin" size={28} aria-label="Carregando" />
               </div>
             ) : (
               <>
-                <div className="visitas-orc-summary row g-2 mb-2">
-                  <div className="col-4 col-sm-2">
-                    <label className="visitas-orc-label">ID</label>
-                    <input
-                      type="text"
-                      className="form-control visitas-orc-input"
-                      readOnly
-                      value={inventarioId ?? ""}
-                    />
-                  </div>
-                  <div className={mostrarDescontos ? "col-8 col-sm-4" : "col-8 col-sm-10"}>
-                    <label className="visitas-orc-label" htmlFor="modal-value-mostrar">
-                      Valor total
-                    </label>
-                    <input
-                      id="modal-value-mostrar"
-                      type="text"
-                      inputMode="decimal"
-                      autoComplete="off"
-                      className="form-control visitas-orc-input visitas-orc-valor text-center"
-                      placeholder="0,00"
-                      title={
-                        mostrarDescontos
-                          ? "Valor final para o cliente — o desconto é calculado automaticamente"
-                          : "Soma dos materiais do orçamento"
-                      }
-                      value={form.valorMostrar}
-                      readOnly={!mostrarDescontos}
-                      onChange={(e) => form.onValorTotalInput(e.target.value)}
-                      onBlur={form.onValorTotalBlur}
-                      onFocus={(e) => {
-                        if (mostrarDescontos) {
-                          form.onValorTotalFocus();
-                          e.target.select();
-                        }
-                      }}
-                      onKeyDown={mostrarDescontos ? bloquearTeclaNaoNumerica : undefined}
-                      onPaste={
-                        mostrarDescontos
-                          ? (e) => {
-                              e.preventDefault();
-                              form.onValorTotalInput(e.clipboardData.getData("text"));
-                            }
-                          : undefined
-                      }
-                    />
-                  </div>
-                  {mostrarDescontos ? (
-                    <>
-                      <div className="col-6 col-sm-3">
-                        <label className="visitas-orc-label" htmlFor="modal-desconto-valor">
-                          Desconto (R$)
+                <div className="visitas-orc-col-form">
+                  <section className="visitas-orc-panel visitas-orc-panel--summary">
+                    <h5 className="visitas-orc-panel__title">
+                      <i className="bi bi-clipboard-data" aria-hidden="true" /> Resumo do orçamento
+                    </h5>
+                    <div
+                      className={`visitas-orc-resumo-grid${mostrarDescontos ? "" : " visitas-orc-resumo-grid--novo"}`}
+                    >
+                      <div className="visitas-orc-resumo-field">
+                        <label className="visitas-orc-label">ID</label>
+                        <input
+                          type="text"
+                          className="form-control visitas-orc-input"
+                          readOnly
+                          value={inventarioId ?? ""}
+                        />
+                      </div>
+                      <div className="visitas-orc-resumo-field">
+                        <label className="visitas-orc-label" htmlFor="modal-value-mostrar">
+                          Valor total
                         </label>
                         <input
-                          id="modal-desconto-valor"
+                          id="modal-value-mostrar"
                           type="text"
                           inputMode="decimal"
                           autoComplete="off"
-                          name="desconto_valor_orc"
-                          className="form-control visitas-orc-input text-center"
+                          className="form-control visitas-orc-input visitas-orc-valor text-center"
                           placeholder="0,00"
-                          value={form.descontoValor}
-                          onChange={(e) => form.onDescontoValorInput(e.target.value)}
-                          onBlur={form.onDescontoValorBlur}
+                          title={
+                            mostrarDescontos
+                              ? "Valor final para o cliente — o desconto é calculado automaticamente"
+                              : "Soma dos materiais do orçamento"
+                          }
+                          value={form.valorMostrar}
+                          readOnly={!mostrarDescontos}
+                          onChange={(e) => form.onValorTotalInput(e.target.value)}
+                          onBlur={form.onValorTotalBlur}
                           onFocus={(e) => {
-                            form.onDescontoValorFocus();
-                            e.target.select();
+                            if (mostrarDescontos) {
+                              form.onValorTotalFocus();
+                              e.target.select();
+                            }
                           }}
-                          onKeyDown={bloquearTeclaNaoNumerica}
-                          onPaste={(e) => {
-                            e.preventDefault();
-                            form.onDescontoValorInput(e.clipboardData.getData("text"));
-                          }}
+                          onKeyDown={mostrarDescontos ? bloquearTeclaNaoNumerica : undefined}
+                          onPaste={
+                            mostrarDescontos
+                              ? (e) => {
+                                  e.preventDefault();
+                                  form.onValorTotalInput(e.clipboardData.getData("text"));
+                                }
+                              : undefined
+                          }
                         />
                       </div>
-                      <div className="col-6 col-sm-3">
-                        <label className="visitas-orc-label" htmlFor="modal-desconto-pct">
-                          Desconto (%)
-                        </label>
-                        <input
-                          id="modal-desconto-pct"
-                          type="text"
-                          inputMode="decimal"
-                          autoComplete="off"
-                          name="desconto_pct_orc"
-                          maxLength={7}
-                          className="form-control visitas-orc-input text-center"
-                          placeholder="0"
-                          value={form.descontoPct}
-                          onChange={(e) => form.onDescontoPctInput(e.target.value)}
-                          onBlur={form.onDescontoPctBlur}
-                          onFocus={(e) => {
-                            form.onDescontoPctFocus();
-                            e.target.select();
-                          }}
-                          onKeyDown={bloquearTeclaNaoNumerica}
-                          onPaste={(e) => {
-                            e.preventDefault();
-                            form.onDescontoPctInput(e.clipboardData.getData("text"));
-                          }}
-                        />
-                      </div>
-                    </>
-                  ) : null}
-                </div>
-                <div className="row g-2 mb-2">
-                  <div className="col-12">
-                    <label className="visitas-orc-label">CPF/CNPJ</label>
-                    <input
-                      type="text"
+                      {mostrarDescontos ? (
+                        <>
+                          <div className="visitas-orc-resumo-field">
+                            <label className="visitas-orc-label" htmlFor="modal-desconto-valor">
+                              Desconto (R$)
+                            </label>
+                            <input
+                              id="modal-desconto-valor"
+                              type="text"
+                              inputMode="decimal"
+                              autoComplete="off"
+                              name="desconto_valor_orc"
+                              className="form-control visitas-orc-input text-center"
+                              placeholder="0,00"
+                              value={form.descontoValor}
+                              onChange={(e) => form.onDescontoValorInput(e.target.value)}
+                              onBlur={form.onDescontoValorBlur}
+                              onFocus={(e) => {
+                                form.onDescontoValorFocus();
+                                e.target.select();
+                              }}
+                              onKeyDown={bloquearTeclaNaoNumerica}
+                              onPaste={(e) => {
+                                e.preventDefault();
+                                form.onDescontoValorInput(e.clipboardData.getData("text"));
+                              }}
+                            />
+                          </div>
+                          <div className="visitas-orc-resumo-field">
+                            <label className="visitas-orc-label" htmlFor="modal-desconto-pct">
+                              Desconto (%)
+                            </label>
+                            <input
+                              id="modal-desconto-pct"
+                              type="text"
+                              inputMode="decimal"
+                              autoComplete="off"
+                              name="desconto_pct_orc"
+                              maxLength={7}
+                              className="form-control visitas-orc-input text-center"
+                              placeholder="0"
+                              value={form.descontoPct}
+                              onChange={(e) => form.onDescontoPctInput(e.target.value)}
+                              onBlur={form.onDescontoPctBlur}
+                              onFocus={(e) => {
+                                form.onDescontoPctFocus();
+                                e.target.select();
+                              }}
+                              onKeyDown={bloquearTeclaNaoNumerica}
+                              onPaste={(e) => {
+                                e.preventDefault();
+                                form.onDescontoPctInput(e.clipboardData.getData("text"));
+                              }}
+                            />
+                          </div>
+                        </>
+                      ) : null}
+                    </div>
+                    <div className="visitas-orc-resumo-cpf">
+                      <label className="visitas-orc-label">CPF/CNPJ</label>
+                      <input
+                        type="text"
+                        className="form-control visitas-orc-input"
+                        value={form.cpfCnpj}
+                        onChange={(e) => form.setCpfCnpj(e.target.value)}
+                      />
+                    </div>
+                  </section>
+
+                  <section className="visitas-orc-panel visitas-orc-panel--pay">
+                    <div className="visitas-orc-panel__head">
+                      <h5 className="visitas-orc-panel__title">
+                        <i className="bi bi-wallet2" aria-hidden="true" /> Pagamento
+                      </h5>
+                      <p className="visitas-orc-panel__hint">
+                        Escolha a forma de pagamento. No crédito, você define as parcelas em um passo rápido.
+                      </p>
+                    </div>
+
+                    <div className="visitas-orc-pay-grid" role="radiogroup" aria-label="Forma de pagamento">
+                      {PAY_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          role="radio"
+                          aria-checked={form.formaPagamento === opt.value}
+                          className={`visitas-orc-pay-card${form.formaPagamento === opt.value ? " visitas-orc-pay-card--active" : ""}`}
+                          onClick={() => selecionarFormaPagamento(opt.value)}
+                        >
+                          <span className="visitas-orc-pay-card__icon" aria-hidden="true">
+                            <i className={`bi ${opt.icon}`} />
+                          </span>
+                          <span className="visitas-orc-pay-card__name">{opt.label}</span>
+                          <span className="visitas-orc-pay-card__desc">
+                            {opt.value === "credito" && form.formaPagamento === "credito"
+                              ? resumoCredito
+                              : opt.desc}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                    {form.formaPagamento === "credito" ? (
+                      <button
+                        type="button"
+                        className="visitas-orc-parcelas-link btn btn-link btn-sm"
+                        onClick={abrirPopupParcelas}
+                      >
+                        <i className="bi bi-pencil-square" aria-hidden="true" /> Alterar parcelas ({qtdParcelasNum}x)
+                      </button>
+                    ) : null}
+                  </section>
+
+                  <section className="visitas-orc-panel visitas-orc-panel--obs">
+                    <h5 className="visitas-orc-panel__title">
+                      <i className="bi bi-chat-left-text" aria-hidden="true" /> Observação
+                    </h5>
+                    <textarea
+                      id="modal-orc-obs"
                       className="form-control visitas-orc-input"
-                      value={form.cpfCnpj}
-                      onChange={(e) => form.setCpfCnpj(e.target.value)}
+                      rows={4}
+                      maxLength={500}
+                      value={form.observacao}
+                      onChange={(e) => form.setObservacao(e.target.value)}
                     />
-                  </div>
+                    <span className="visitas-orc-obs__count">{form.observacao.length}/500</span>
+                  </section>
                 </div>
 
-                <section className="visitas-orc-panel">
+                <div className="visitas-orc-col-materiais">
+                <section className="visitas-orc-panel visitas-orc-panel--materiais">
+                  <div className="materiais-panel__head">
                   <h5 className="visitas-orc-panel__title">
                     <i className="bi bi-box-seam" aria-hidden="true" /> Materiais do orçamento
                   </h5>
@@ -546,11 +626,12 @@ export function ModalOrcamento({
                       {materiaisErro}
                     </p>
                   ) : null}
-                  <p className="visitas-orc-panel__hint small mb-2">
+                  <p className="visitas-orc-panel__hint mb-0">
                     Lance manualmente pelo material cadastrado ou use a calculadora de bobina para gerar os itens.
                   </p>
-                  <div className="visitas-orc-toolbar row g-2 align-items-end mb-2">
-                    <div className="col-12 col-md-4">
+                  </div>
+                  <div className="materiais-panel__toolbar">
+                    <div className="materiais-panel__toolbar-field">
                       <label className="visitas-orc-label">Buscar</label>
                       <input
                         type="text"
@@ -560,7 +641,7 @@ export function ModalOrcamento({
                         onChange={(e) => form.setPesquisa(e.target.value)}
                       />
                     </div>
-                    <div className="col-12 col-md-4">
+                    <div className="materiais-panel__toolbar-field">
                       <label className="visitas-orc-label">Material</label>
                       <OrcMaterialSelect
                         value={form.materialId}
@@ -576,7 +657,7 @@ export function ModalOrcamento({
                         }
                       />
                     </div>
-                    <div className="col-12 col-md-2">
+                    <div className="materiais-panel__toolbar-field">
                       <label className="visitas-orc-label">Metros</label>
                       <input
                         type="text"
@@ -585,7 +666,7 @@ export function ModalOrcamento({
                         onChange={(e) => form.onMetrosInput(e.target.value)}
                       />
                     </div>
-                    <div className="col-6 col-md-1 d-grid">
+                    <div className="materiais-panel__toolbar-actions">
                       <button
                         type="button"
                         className="btn visitas-orc-add-btn"
@@ -596,8 +677,6 @@ export function ModalOrcamento({
                         <i className="bi bi-plus-lg" aria-hidden="true" />
                         <span className="visitas-orc-act-label">Adicionar</span>
                       </button>
-                    </div>
-                    <div className="col-6 col-md-1 d-grid">
                       <button
                         type="button"
                         className="btn visitas-orc-calc-btn"
@@ -610,7 +689,7 @@ export function ModalOrcamento({
                       </button>
                     </div>
                   </div>
-                  <div className="visitas-orc-table-wrap table-responsive">
+                  <div className="visitas-orc-table-wrap materiais-table-wrapper table-responsive">
                     <table className="table table-sm visitas-orc-table mb-0">
                       <thead>
                         <tr>
@@ -628,7 +707,9 @@ export function ModalOrcamento({
                         {form.partData.map((linha, i) => (
                           <tr key={i} className={editingLinhaIdx === i ? "visitas-orc-table__row--editing" : undefined}>
                             <td>{i + 1}</td>
-                            <td>{linha.material}</td>
+                            <td className="visitas-orc-table__material">
+                              <MaterialOrcamentoNome material={linha.material} />
+                            </td>
                             {editingLinhaIdx === i ? (
                               editCalcInfo ? (
                                 <td colSpan={4} className="visitas-orc-table__edit-calc">
@@ -773,69 +854,28 @@ export function ModalOrcamento({
                       </tbody>
                     </table>
                   </div>
-                </section>
-
-                <section className="visitas-orc-panel visitas-orc-panel--pay">
-                  <div className="visitas-orc-panel__head">
-                    <h5 className="visitas-orc-panel__title">
-                      <i className="bi bi-wallet2" aria-hidden="true" /> Pagamento
-                    </h5>
-                    <p className="visitas-orc-panel__hint">
-                      Escolha a forma de pagamento. No crédito, você define as parcelas em um passo rápido.
-                    </p>
+                  <div className="visitas-orc-materiais-footer">
+                    <span className="visitas-orc-materiais-footer__count">
+                      {qtdItens} {qtdItens === 1 ? "item" : "itens"}
+                    </span>
+                    <span className="visitas-orc-materiais-footer__total">
+                      Total dos materiais{" "}
+                      <strong>
+                        {totalMateriais.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                      </strong>
+                    </span>
                   </div>
-
-                  <div className="visitas-orc-pay-grid" role="radiogroup" aria-label="Forma de pagamento">
-                    {PAY_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        role="radio"
-                        aria-checked={form.formaPagamento === opt.value}
-                        className={`visitas-orc-pay-card${form.formaPagamento === opt.value ? " visitas-orc-pay-card--active" : ""}`}
-                        onClick={() => selecionarFormaPagamento(opt.value)}
-                      >
-                        <span className="visitas-orc-pay-card__icon" aria-hidden="true">
-                          <i className={`bi ${opt.icon}`} />
-                        </span>
-                        <span className="visitas-orc-pay-card__name">{opt.label}</span>
-                        <span className="visitas-orc-pay-card__desc">
-                          {opt.value === "credito" && form.formaPagamento === "credito"
-                            ? resumoCredito
-                            : opt.desc}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                  {form.formaPagamento === "credito" ? (
-                    <button
-                      type="button"
-                      className="visitas-orc-parcelas-link btn btn-link btn-sm"
-                      onClick={abrirPopupParcelas}
-                    >
-                      <i className="bi bi-pencil-square" aria-hidden="true" /> Alterar parcelas ({qtdParcelasNum}x)
-                    </button>
-                  ) : null}
                 </section>
-
-                <div className="visitas-orc-obs mt-2">
-                  <label className="visitas-orc-label">Observação</label>
-                  <textarea
-                    className="form-control visitas-orc-input"
-                    rows={2}
-                    value={form.observacao}
-                    onChange={(e) => form.setObservacao(e.target.value)}
-                  />
                 </div>
               </>
             )}
           </div>
-          <div className="modal-footer visitas-orc-modal__footer flex-shrink-0">
+          <div className="modal-footer visitas-orc-modal__footer">
             <button type="button" className="btn btn-secondary" onClick={onClose}>
               Cancelar
             </button>
             <button type="submit" className="btn visitas-orc-save-btn" disabled={saving || loading}>
-              {saving ? <Loader2 className="spin" size={18} /> : null}
+              {saving ? <Loader2 className="spin" size={18} /> : <i className="bi bi-check2-circle" aria-hidden="true" />}
               Salvar orçamento
             </button>
           </div>

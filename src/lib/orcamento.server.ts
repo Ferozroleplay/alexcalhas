@@ -8,6 +8,24 @@ export type OrcamentoLinha = {
   id?: number;
 };
 
+/** Separa nome do material e perfil (ex.: "Chapa… mm" + "Perfil: C/40"). */
+export function splitMaterialOrcamentoLabel(material: string): {
+  titulo: string;
+  perfil: string | null;
+} {
+  const t = material.trim();
+  if (!t) return { titulo: "", perfil: null };
+
+  const m = t.match(/^(.+?)\s*[-–—]?\s*(Perfil\s*:\s*.+)$/i);
+  if (m) {
+    const titulo = m[1].trim();
+    const perfil = m[2].trim();
+    if (titulo) return { titulo, perfil };
+  }
+
+  return { titulo: t, perfil: null };
+}
+
 export function parseMoneyBr(raw: unknown): number {
   if (typeof raw === "number" && Number.isFinite(raw)) {
     return Math.round(Math.max(0, raw) * 100) / 100;

@@ -121,6 +121,8 @@ export function CalculadoraBobinaWidget({
   const [importIdxMaterial, setImportIdxMaterial] = useState<number | null>(null);
   const [importIdxInstalado, setImportIdxInstalado] = useState<number | null>(4);
   const [importErro, setImportErro] = useState("");
+  const [importSucesso, setImportSucesso] = useState("");
+  const importFeedbackRef = useRef<HTMLDivElement>(null);
   const [materiais, setMateriais] = useState<MaterialCorteRef[]>([]);
 
   useEffect(() => {
@@ -295,6 +297,7 @@ export function CalculadoraBobinaWidget({
     importIdxInstalado != null ? totalImportInstalado : totalImportMaterial;
 
   function selecionarImportMaterial(idx: number) {
+    setImportSucesso("");
     if (importIdxMaterial === idx) {
       setImportIdxMaterial(null);
       return;
@@ -304,6 +307,7 @@ export function CalculadoraBobinaWidget({
   }
 
   function selecionarImportInstalado(idx: number) {
+    setImportSucesso("");
     if (importIdxInstalado === idx) {
       setImportIdxInstalado(null);
       return;
@@ -315,6 +319,7 @@ export function CalculadoraBobinaWidget({
   function importarParaOrcamento() {
     if (!onImportarOrcamento) return;
     setImportErro("");
+    setImportSucesso("");
 
     if (importIdxMaterial == null && importIdxInstalado == null) {
       setImportErro("Selecione ao menos material ou serviço instalado para importar.");
@@ -334,6 +339,19 @@ export function CalculadoraBobinaWidget({
     }
 
     onImportarOrcamento(linhasOrc);
+
+    if (isModal) {
+      const n = linhasOrc.length;
+      const msg =
+        n === 1 ? "Item adicionado ao orçamento!" : `${n} itens adicionados ao orçamento!`;
+      setImportSucesso(msg);
+      window.setTimeout(() => setImportSucesso(""), 4000);
+      window.requestAnimationFrame(() => {
+        importFeedbackRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+      setLinhas(linhasBobinaPadrao().map((l) => sincronizarMaterialLinha(l, materiais)));
+      setImportErro("");
+    }
   }
 
   return (
@@ -693,6 +711,16 @@ export function CalculadoraBobinaWidget({
               <i className="bi bi-check2-circle" aria-hidden="true" /> Adicionar ao orçamento
             </button>
           </div>
+          {importSucesso ? (
+            <div
+              ref={importFeedbackRef}
+              className="dash-bobina-import__ok"
+              role="status"
+            >
+              <i className="bi bi-check-circle-fill" aria-hidden="true" />
+              <span>{importSucesso}</span>
+            </div>
+          ) : null}
           {importErro ? (
             <p className="text-danger small mb-0 mt-2" role="alert">
               {importErro}

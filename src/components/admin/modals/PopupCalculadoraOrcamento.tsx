@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { AdminModal } from "@/components/admin/modals/AdminModal";
 import { CalculadoraBobinaWidget } from "@/components/admin/CalculadoraBobinaWidget";
 import { formatBrl } from "@/lib/calculadora-bobina";
+import { dashToast } from "@/lib/dash-ui";
 import type { OrcamentoLinha } from "@/lib/orcamento.server";
 
 type Props = {
@@ -13,10 +14,20 @@ type Props = {
 
 export function PopupCalculadoraOrcamento({ open, onClose, onImportar }: Props) {
   const [custoCm2, setCustoCm2] = useState(0);
+  const [importOk, setImportOk] = useState("");
+
+  useEffect(() => {
+    if (!open) setImportOk("");
+  }, [open]);
 
   function handleImportar(linhas: OrcamentoLinha[]) {
     onImportar(linhas);
-    onClose();
+    const n = linhas.length;
+    const msg =
+      n === 1 ? "Item adicionado ao orçamento!" : `${n} itens adicionados ao orçamento!`;
+    dashToast(msg, "success");
+    setImportOk(msg);
+    window.setTimeout(() => setImportOk(""), 3500);
   }
 
   return (
@@ -60,6 +71,12 @@ export function PopupCalculadoraOrcamento({ open, onClose, onImportar }: Props) 
             <span className="metric-card__hint">Base para calcular o custo total de cada corte</span>
           </div>
         </div>
+        {importOk ? (
+          <div className="visitas-orc-calculadora-modal__import-ok" role="status">
+            <i className="bi bi-check-circle-fill" aria-hidden="true" />
+            <span>{importOk}</span>
+          </div>
+        ) : null}
         <div className="modal-body visitas-orc-calculadora-modal__body p-0">
           <CalculadoraBobinaWidget
             variant="modal"
