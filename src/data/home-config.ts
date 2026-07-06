@@ -58,10 +58,21 @@ export type HomeServico = {
 export type HomeSlide = { src: string; alt: string };
 export type HomeGaleriaItem = { src: string; legenda: string };
 
+export type HomePartner = {
+  name: string;
+  /** Caminho em /public (ex.: /images/parceiros/marca.png) */
+  logo?: string;
+  url?: string;
+};
+
+/** Fallback estático quando não há parceiros no banco */
+export const HOME_PARTNERS: HomePartner[] = [];
+
 export type HomeLandingData = {
   servicos: HomeServico[];
   heroSlides: HomeSlide[];
   galeria: HomeGaleriaItem[];
+  parceiros: HomePartner[];
 };
 
 /** Resolve caminho relativo do PHP ou URL absoluta (com fallback remoto). */

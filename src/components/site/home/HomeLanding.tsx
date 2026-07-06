@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { AcAgendarForm } from "@/components/site/home/AcAgendarForm";
 import { AcLoginModal } from "@/components/site/home/AcLoginModal";
+import { AcPartnersMarquee } from "@/components/site/home/AcPartnersMarquee";
 import { AcSiteChat } from "@/components/site/home/AcSiteChat";
 import { HOME_SITE, waUrl } from "@/data/home-config";
 import { useHomeLandingEffects } from "@/hooks/use-home-landing-effects";
@@ -62,7 +63,7 @@ export function HomeLanding({ data, painelLoginOpen, onPainelLoginOpenChange }: 
     void navigate({ to: "/", search: {}, replace: true });
   }
 
-  const { servicos, heroSlides, galeria } = data;
+  const { servicos, heroSlides, galeria, parceiros } = data;
   const year = new Date().getFullYear();
 
   return (
@@ -223,6 +224,8 @@ export function HomeLanding({ data, painelLoginOpen, onPainelLoginOpenChange }: 
             </article>
           </div>
         </section>
+
+        <AcPartnersMarquee partners={parceiros} />
 
         <section className="ac-section ac-section--soft" id="servicos">
           <div className="ac-container">

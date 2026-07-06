@@ -74,6 +74,19 @@ model ProdutoFoto {
   @@map("produto_fotos")
 }
 
+model ParceiroSite {
+  id           Int      @id @default(autoincrement())
+  nome         String   @db.VarChar(120)
+  logo         String?  @db.VarChar(255)
+  whatsapp     String?  @db.VarChar(30)
+  ativo        Int      @default(1) @db.TinyInt
+  ordem        Int      @default(0)
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @default(now()) @updatedAt @map("atualizado_em")
+
+  @@map("parceiros_site")
+}
+
 model Material {
   id                Int      @id @default(autoincrement())
   material          String?  @db.VarChar(50)

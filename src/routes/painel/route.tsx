@@ -26,6 +26,7 @@ export const Route = createFileRoute("/painel")({
       { rel: "stylesheet", href: "/admin/admin-react.css" },
       { rel: "stylesheet", href: "/admin/calculadora-bobina.css" },
       { rel: "stylesheet", href: "/admin/orcamento-modal.css" },
+      { rel: "stylesheet", href: "/admin/parceiros-page.css" },
     ],
   }),
   component: PainelLayout,

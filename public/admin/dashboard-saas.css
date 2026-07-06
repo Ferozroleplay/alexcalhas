@@ -2756,6 +2756,7 @@ html[data-bs-theme="dark"] .dash-page-header__meta-item--muted {
 .dash-page-header__icon--usuarios,
 .dash-page-header__icon--materiais,
 .dash-page-header__icon--produtos,
+.dash-page-header__icon--parceiros,
 .dash-page-header__icon--financeiro,
 .dash-page-header__icon--fornecedores {
     color: #fff;

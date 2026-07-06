@@ -21,6 +21,7 @@ import { Route as PainelProdutosGaleriaRouteImport } from './routes/painel/produ
 import { Route as PainelProdutosRouteImport } from './routes/painel/produtos'
 import { Route as PainelPontoControleRouteImport } from './routes/painel/ponto-controle'
 import { Route as PainelPontoRouteImport } from './routes/painel/ponto'
+import { Route as PainelParceirosRouteImport } from './routes/painel/parceiros'
 import { Route as PainelOrcamentadoRouteImport } from './routes/painel/orcamentado'
 import { Route as PainelMaterialRouteImport } from './routes/painel/material'
 import { Route as PainelLogsRouteImport } from './routes/painel/logs'
@@ -46,6 +47,7 @@ import { Route as ApiAdminProdutosMenuRouteImport } from './routes/api/admin/pro
 import { Route as ApiAdminProdutosRouteImport } from './routes/api/admin/produtos'
 import { Route as ApiAdminPontoControleRouteImport } from './routes/api/admin/ponto-controle'
 import { Route as ApiAdminPontoRouteImport } from './routes/api/admin/ponto'
+import { Route as ApiAdminParceirosRouteImport } from './routes/api/admin/parceiros'
 import { Route as ApiAdminNotaEntregaRouteImport } from './routes/api/admin/nota-entrega'
 import { Route as ApiAdminMateriaisRouteImport } from './routes/api/admin/materiais'
 import { Route as ApiAdminLogsRouteImport } from './routes/api/admin/logs'
@@ -69,6 +71,7 @@ import { Route as ApiAdminUsuariosIdRouteImport } from './routes/api/admin/usuar
 import { Route as ApiAdminProdutosIdRouteImport } from './routes/api/admin/produtos/$id'
 import { Route as ApiAdminUsuariosIdThumbRouteImport } from './routes/api/admin/usuarios/$id/thumb'
 import { Route as ApiAdminProdutosIdFotosRouteImport } from './routes/api/admin/produtos/$id/fotos'
+import { Route as ApiAdminParceirosIdLogoRouteImport } from './routes/api/admin/parceiros/$id/logo'
 import { Route as ApiAdminProdutosIdFotosFotoIdRouteImport } from './routes/api/admin/produtos/$id/fotos/$fotoId'
 
 const OsRoute = OsRouteImport.update({
@@ -129,6 +132,11 @@ const PainelPontoControleRoute = PainelPontoControleRouteImport.update({
 const PainelPontoRoute = PainelPontoRouteImport.update({
   id: '/ponto',
   path: '/ponto',
+  getParentRoute: () => PainelRouteRoute,
+} as any)
+const PainelParceirosRoute = PainelParceirosRouteImport.update({
+  id: '/parceiros',
+  path: '/parceiros',
   getParentRoute: () => PainelRouteRoute,
 } as any)
 const PainelOrcamentadoRoute = PainelOrcamentadoRouteImport.update({
@@ -256,6 +264,11 @@ const ApiAdminPontoRoute = ApiAdminPontoRouteImport.update({
   path: '/api/admin/ponto',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminParceirosRoute = ApiAdminParceirosRouteImport.update({
+  id: '/api/admin/parceiros',
+  path: '/api/admin/parceiros',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminNotaEntregaRoute = ApiAdminNotaEntregaRouteImport.update({
   id: '/api/admin/nota-entrega',
   path: '/api/admin/nota-entrega',
@@ -379,6 +392,11 @@ const ApiAdminProdutosIdFotosRoute = ApiAdminProdutosIdFotosRouteImport.update({
   path: '/fotos',
   getParentRoute: () => ApiAdminProdutosIdRoute,
 } as any)
+const ApiAdminParceirosIdLogoRoute = ApiAdminParceirosIdLogoRouteImport.update({
+  id: '/$id/logo',
+  path: '/$id/logo',
+  getParentRoute: () => ApiAdminParceirosRoute,
+} as any)
 const ApiAdminProdutosIdFotosFotoIdRoute =
   ApiAdminProdutosIdFotosFotoIdRouteImport.update({
     id: '/$fotoId',
@@ -408,6 +426,7 @@ export interface FileRoutesByFullPath {
   '/painel/logs': typeof PainelLogsRoute
   '/painel/material': typeof PainelMaterialRoute
   '/painel/orcamentado': typeof PainelOrcamentadoRoute
+  '/painel/parceiros': typeof PainelParceirosRoute
   '/painel/ponto': typeof PainelPontoRoute
   '/painel/ponto-controle': typeof PainelPontoControleRoute
   '/painel/produtos': typeof PainelProdutosRoute
@@ -430,6 +449,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/logs': typeof ApiAdminLogsRoute
   '/api/admin/materiais': typeof ApiAdminMateriaisRoute
   '/api/admin/nota-entrega': typeof ApiAdminNotaEntregaRoute
+  '/api/admin/parceiros': typeof ApiAdminParceirosRouteWithChildren
   '/api/admin/ponto': typeof ApiAdminPontoRoute
   '/api/admin/ponto-controle': typeof ApiAdminPontoControleRoute
   '/api/admin/produtos': typeof ApiAdminProdutosRouteWithChildren
@@ -445,6 +465,7 @@ export interface FileRoutesByFullPath {
   '/api/agendamentos/$id/confirmar-montagem': typeof ApiAgendamentosIdConfirmarMontagemRoute
   '/api/agendamentos/$id/orcamento': typeof ApiAgendamentosIdOrcamentoRoute
   '/api/agendamentos/$id/recebimentos': typeof ApiAgendamentosIdRecebimentosRoute
+  '/api/admin/parceiros/$id/logo': typeof ApiAdminParceirosIdLogoRoute
   '/api/admin/produtos/$id/fotos': typeof ApiAdminProdutosIdFotosRouteWithChildren
   '/api/admin/usuarios/$id/thumb': typeof ApiAdminUsuariosIdThumbRoute
   '/api/admin/produtos/$id/fotos/$fotoId': typeof ApiAdminProdutosIdFotosFotoIdRoute
@@ -470,6 +491,7 @@ export interface FileRoutesByTo {
   '/painel/logs': typeof PainelLogsRoute
   '/painel/material': typeof PainelMaterialRoute
   '/painel/orcamentado': typeof PainelOrcamentadoRoute
+  '/painel/parceiros': typeof PainelParceirosRoute
   '/painel/ponto': typeof PainelPontoRoute
   '/painel/ponto-controle': typeof PainelPontoControleRoute
   '/painel/produtos': typeof PainelProdutosRoute
@@ -492,6 +514,7 @@ export interface FileRoutesByTo {
   '/api/admin/logs': typeof ApiAdminLogsRoute
   '/api/admin/materiais': typeof ApiAdminMateriaisRoute
   '/api/admin/nota-entrega': typeof ApiAdminNotaEntregaRoute
+  '/api/admin/parceiros': typeof ApiAdminParceirosRouteWithChildren
   '/api/admin/ponto': typeof ApiAdminPontoRoute
   '/api/admin/ponto-controle': typeof ApiAdminPontoControleRoute
   '/api/admin/produtos': typeof ApiAdminProdutosRouteWithChildren
@@ -507,6 +530,7 @@ export interface FileRoutesByTo {
   '/api/agendamentos/$id/confirmar-montagem': typeof ApiAgendamentosIdConfirmarMontagemRoute
   '/api/agendamentos/$id/orcamento': typeof ApiAgendamentosIdOrcamentoRoute
   '/api/agendamentos/$id/recebimentos': typeof ApiAgendamentosIdRecebimentosRoute
+  '/api/admin/parceiros/$id/logo': typeof ApiAdminParceirosIdLogoRoute
   '/api/admin/produtos/$id/fotos': typeof ApiAdminProdutosIdFotosRouteWithChildren
   '/api/admin/usuarios/$id/thumb': typeof ApiAdminUsuariosIdThumbRoute
   '/api/admin/produtos/$id/fotos/$fotoId': typeof ApiAdminProdutosIdFotosFotoIdRoute
@@ -534,6 +558,7 @@ export interface FileRoutesById {
   '/painel/logs': typeof PainelLogsRoute
   '/painel/material': typeof PainelMaterialRoute
   '/painel/orcamentado': typeof PainelOrcamentadoRoute
+  '/painel/parceiros': typeof PainelParceirosRoute
   '/painel/ponto': typeof PainelPontoRoute
   '/painel/ponto-controle': typeof PainelPontoControleRoute
   '/painel/produtos': typeof PainelProdutosRoute
@@ -556,6 +581,7 @@ export interface FileRoutesById {
   '/api/admin/logs': typeof ApiAdminLogsRoute
   '/api/admin/materiais': typeof ApiAdminMateriaisRoute
   '/api/admin/nota-entrega': typeof ApiAdminNotaEntregaRoute
+  '/api/admin/parceiros': typeof ApiAdminParceirosRouteWithChildren
   '/api/admin/ponto': typeof ApiAdminPontoRoute
   '/api/admin/ponto-controle': typeof ApiAdminPontoControleRoute
   '/api/admin/produtos': typeof ApiAdminProdutosRouteWithChildren
@@ -571,6 +597,7 @@ export interface FileRoutesById {
   '/api/agendamentos/$id/confirmar-montagem': typeof ApiAgendamentosIdConfirmarMontagemRoute
   '/api/agendamentos/$id/orcamento': typeof ApiAgendamentosIdOrcamentoRoute
   '/api/agendamentos/$id/recebimentos': typeof ApiAgendamentosIdRecebimentosRoute
+  '/api/admin/parceiros/$id/logo': typeof ApiAdminParceirosIdLogoRoute
   '/api/admin/produtos/$id/fotos': typeof ApiAdminProdutosIdFotosRouteWithChildren
   '/api/admin/usuarios/$id/thumb': typeof ApiAdminUsuariosIdThumbRoute
   '/api/admin/produtos/$id/fotos/$fotoId': typeof ApiAdminProdutosIdFotosFotoIdRoute
@@ -599,6 +626,7 @@ export interface FileRouteTypes {
     | '/painel/logs'
     | '/painel/material'
     | '/painel/orcamentado'
+    | '/painel/parceiros'
     | '/painel/ponto'
     | '/painel/ponto-controle'
     | '/painel/produtos'
@@ -621,6 +649,7 @@ export interface FileRouteTypes {
     | '/api/admin/logs'
     | '/api/admin/materiais'
     | '/api/admin/nota-entrega'
+    | '/api/admin/parceiros'
     | '/api/admin/ponto'
     | '/api/admin/ponto-controle'
     | '/api/admin/produtos'
@@ -636,6 +665,7 @@ export interface FileRouteTypes {
     | '/api/agendamentos/$id/confirmar-montagem'
     | '/api/agendamentos/$id/orcamento'
     | '/api/agendamentos/$id/recebimentos'
+    | '/api/admin/parceiros/$id/logo'
     | '/api/admin/produtos/$id/fotos'
     | '/api/admin/usuarios/$id/thumb'
     | '/api/admin/produtos/$id/fotos/$fotoId'
@@ -661,6 +691,7 @@ export interface FileRouteTypes {
     | '/painel/logs'
     | '/painel/material'
     | '/painel/orcamentado'
+    | '/painel/parceiros'
     | '/painel/ponto'
     | '/painel/ponto-controle'
     | '/painel/produtos'
@@ -683,6 +714,7 @@ export interface FileRouteTypes {
     | '/api/admin/logs'
     | '/api/admin/materiais'
     | '/api/admin/nota-entrega'
+    | '/api/admin/parceiros'
     | '/api/admin/ponto'
     | '/api/admin/ponto-controle'
     | '/api/admin/produtos'
@@ -698,6 +730,7 @@ export interface FileRouteTypes {
     | '/api/agendamentos/$id/confirmar-montagem'
     | '/api/agendamentos/$id/orcamento'
     | '/api/agendamentos/$id/recebimentos'
+    | '/api/admin/parceiros/$id/logo'
     | '/api/admin/produtos/$id/fotos'
     | '/api/admin/usuarios/$id/thumb'
     | '/api/admin/produtos/$id/fotos/$fotoId'
@@ -724,6 +757,7 @@ export interface FileRouteTypes {
     | '/painel/logs'
     | '/painel/material'
     | '/painel/orcamentado'
+    | '/painel/parceiros'
     | '/painel/ponto'
     | '/painel/ponto-controle'
     | '/painel/produtos'
@@ -746,6 +780,7 @@ export interface FileRouteTypes {
     | '/api/admin/logs'
     | '/api/admin/materiais'
     | '/api/admin/nota-entrega'
+    | '/api/admin/parceiros'
     | '/api/admin/ponto'
     | '/api/admin/ponto-controle'
     | '/api/admin/produtos'
@@ -761,6 +796,7 @@ export interface FileRouteTypes {
     | '/api/agendamentos/$id/confirmar-montagem'
     | '/api/agendamentos/$id/orcamento'
     | '/api/agendamentos/$id/recebimentos'
+    | '/api/admin/parceiros/$id/logo'
     | '/api/admin/produtos/$id/fotos'
     | '/api/admin/usuarios/$id/thumb'
     | '/api/admin/produtos/$id/fotos/$fotoId'
@@ -791,6 +827,7 @@ export interface RootRouteChildren {
   ApiAdminLogsRoute: typeof ApiAdminLogsRoute
   ApiAdminMateriaisRoute: typeof ApiAdminMateriaisRoute
   ApiAdminNotaEntregaRoute: typeof ApiAdminNotaEntregaRoute
+  ApiAdminParceirosRoute: typeof ApiAdminParceirosRouteWithChildren
   ApiAdminPontoRoute: typeof ApiAdminPontoRoute
   ApiAdminPontoControleRoute: typeof ApiAdminPontoControleRoute
   ApiAdminProdutosRoute: typeof ApiAdminProdutosRouteWithChildren
@@ -885,6 +922,13 @@ declare module '@tanstack/react-router' {
       path: '/ponto'
       fullPath: '/painel/ponto'
       preLoaderRoute: typeof PainelPontoRouteImport
+      parentRoute: typeof PainelRouteRoute
+    }
+    '/painel/parceiros': {
+      id: '/painel/parceiros'
+      path: '/parceiros'
+      fullPath: '/painel/parceiros'
+      preLoaderRoute: typeof PainelParceirosRouteImport
       parentRoute: typeof PainelRouteRoute
     }
     '/painel/orcamentado': {
@@ -1062,6 +1106,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminPontoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/parceiros': {
+      id: '/api/admin/parceiros'
+      path: '/api/admin/parceiros'
+      fullPath: '/api/admin/parceiros'
+      preLoaderRoute: typeof ApiAdminParceirosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/nota-entrega': {
       id: '/api/admin/nota-entrega'
       path: '/api/admin/nota-entrega'
@@ -1223,6 +1274,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminProdutosIdFotosRouteImport
       parentRoute: typeof ApiAdminProdutosIdRoute
     }
+    '/api/admin/parceiros/$id/logo': {
+      id: '/api/admin/parceiros/$id/logo'
+      path: '/$id/logo'
+      fullPath: '/api/admin/parceiros/$id/logo'
+      preLoaderRoute: typeof ApiAdminParceirosIdLogoRouteImport
+      parentRoute: typeof ApiAdminParceirosRoute
+    }
     '/api/admin/produtos/$id/fotos/$fotoId': {
       id: '/api/admin/produtos/$id/fotos/$fotoId'
       path: '/$fotoId'
@@ -1246,6 +1304,7 @@ interface PainelRouteRouteChildren {
   PainelLogsRoute: typeof PainelLogsRoute
   PainelMaterialRoute: typeof PainelMaterialRoute
   PainelOrcamentadoRoute: typeof PainelOrcamentadoRoute
+  PainelParceirosRoute: typeof PainelParceirosRoute
   PainelPontoRoute: typeof PainelPontoRoute
   PainelPontoControleRoute: typeof PainelPontoControleRoute
   PainelProdutosRoute: typeof PainelProdutosRoute
@@ -1268,6 +1327,7 @@ const PainelRouteRouteChildren: PainelRouteRouteChildren = {
   PainelLogsRoute: PainelLogsRoute,
   PainelMaterialRoute: PainelMaterialRoute,
   PainelOrcamentadoRoute: PainelOrcamentadoRoute,
+  PainelParceirosRoute: PainelParceirosRoute,
   PainelPontoRoute: PainelPontoRoute,
   PainelPontoControleRoute: PainelPontoControleRoute,
   PainelProdutosRoute: PainelProdutosRoute,
@@ -1310,6 +1370,17 @@ const ApiAgendamentosRouteChildren: ApiAgendamentosRouteChildren = {
 const ApiAgendamentosRouteWithChildren = ApiAgendamentosRoute._addFileChildren(
   ApiAgendamentosRouteChildren,
 )
+
+interface ApiAdminParceirosRouteChildren {
+  ApiAdminParceirosIdLogoRoute: typeof ApiAdminParceirosIdLogoRoute
+}
+
+const ApiAdminParceirosRouteChildren: ApiAdminParceirosRouteChildren = {
+  ApiAdminParceirosIdLogoRoute: ApiAdminParceirosIdLogoRoute,
+}
+
+const ApiAdminParceirosRouteWithChildren =
+  ApiAdminParceirosRoute._addFileChildren(ApiAdminParceirosRouteChildren)
 
 interface ApiAdminProdutosIdFotosRouteChildren {
   ApiAdminProdutosIdFotosFotoIdRoute: typeof ApiAdminProdutosIdFotosFotoIdRoute
@@ -1394,6 +1465,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminLogsRoute: ApiAdminLogsRoute,
   ApiAdminMateriaisRoute: ApiAdminMateriaisRoute,
   ApiAdminNotaEntregaRoute: ApiAdminNotaEntregaRoute,
+  ApiAdminParceirosRoute: ApiAdminParceirosRouteWithChildren,
   ApiAdminPontoRoute: ApiAdminPontoRoute,
   ApiAdminPontoControleRoute: ApiAdminPontoControleRoute,
   ApiAdminProdutosRoute: ApiAdminProdutosRouteWithChildren,

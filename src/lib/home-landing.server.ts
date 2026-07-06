@@ -1,8 +1,9 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 
-import { HOME_SITE, siteAsset, type HomeGaleriaItem, type HomeLandingData, type HomeServico, type HomeSlide } from "@/data/home-config";
+import { HOME_SITE, HOME_PARTNERS, siteAsset, type HomeGaleriaItem, type HomeLandingData, type HomePartner, type HomeServico, type HomeSlide } from "@/data/home-config";
 import { getPrisma } from "@/lib/db.server";
+import { listParceirosPublicos } from "@/lib/parceiros.server";
 import { resolveProdutoImagemUrl } from "@/lib/produtos-site.server";
 import { fotoPublicUrl } from "@/lib/produtos-upload.server";
 
@@ -19,7 +20,7 @@ function staticLanding(): HomeLandingData {
     src: siteAsset(g.src),
     legenda: g.legenda,
   }));
-  return { servicos, heroSlides, galeria };
+  return { servicos, heroSlides, galeria, parceiros: HOME_PARTNERS };
 }
 
 function resolvePublicUrl(rel: string): string {
@@ -30,7 +31,7 @@ function resolvePublicUrl(rel: string): string {
   return `${base}${remote}`;
 }
 
-async function buildFromDb(): Promise<HomeLandingData | null> {
+async function buildFromDb(): Promise<Omit<HomeLandingData, "parceiros"> | null> {
   const prisma = await getPrisma();
   const produtos = await prisma.produtoSite.findMany({
     where: { ativo: 1 },
@@ -81,12 +82,23 @@ async function buildFromDb(): Promise<HomeLandingData | null> {
   return { servicos, galeria, heroSlides };
 }
 
+async function loadParceirosHome(): Promise<HomePartner[]> {
+  try {
+    const fromDb = await listParceirosPublicos();
+    if (fromDb.length > 0) return fromDb;
+  } catch (err) {
+    console.error("[loadParceirosHome]", err);
+  }
+  return HOME_PARTNERS;
+}
+
 export async function loadHomeLandingData(): Promise<HomeLandingData> {
+  const parceiros = await loadParceirosHome();
   try {
     const fromDb = await buildFromDb();
-    if (fromDb) return fromDb;
+    if (fromDb) return { ...fromDb, parceiros };
   } catch (err) {
     console.error("[loadHomeLandingData]", err);
   }
-  return staticLanding();
+  return { ...staticLanding(), parceiros };
 }

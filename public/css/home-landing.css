@@ -490,6 +490,159 @@ body.ac-landing > main {
     line-height: 1.45;
 }
 
+/* Partners marquee */
+.ac-partners {
+    position: relative;
+    z-index: 1;
+    padding: 0.5rem 0 2.25rem;
+    background: transparent;
+}
+
+.ac-partners__head {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.ac-partners__title {
+    font-family: var(--ac-font-title);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ac-green);
+    margin: 0;
+}
+
+.ac-partners__viewport {
+    overflow: hidden;
+    width: 100%;
+    mask-image: linear-gradient(
+        90deg,
+        transparent 0%,
+        #000 8%,
+        #000 92%,
+        transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+        90deg,
+        transparent 0%,
+        #000 8%,
+        #000 92%,
+        transparent 100%
+    );
+}
+
+.ac-partners__track {
+    display: flex;
+    align-items: center;
+    width: max-content;
+    gap: 3rem;
+    padding: 0.35rem 0;
+    animation: ac-partners-scroll var(--ac-partners-duration, 38s) linear infinite;
+    will-change: transform;
+}
+
+.ac-partners__viewport:hover .ac-partners__track {
+    animation-play-state: paused;
+}
+
+.ac-partners--single .ac-partners__viewport {
+    mask-image: none;
+    -webkit-mask-image: none;
+    overflow: visible;
+}
+
+.ac-partners--single .ac-partners__track {
+    width: 100%;
+    justify-content: center;
+    animation: none;
+    padding: 0;
+}
+
+.ac-partners--single .ac-partners__logo {
+    opacity: 0.85;
+    filter: none;
+}
+
+@keyframes ac-partners-scroll {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+.ac-partners__item {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 8rem;
+    height: 3.5rem;
+    padding: 0 0.75rem;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    text-decoration: none;
+    transition: transform 0.25s ease;
+}
+
+.ac-partners__item:hover {
+    transform: scale(1.04);
+}
+
+.ac-partners__logo {
+    display: block;
+    max-width: 9rem;
+    max-height: 3rem;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    filter: grayscale(1);
+    opacity: 0.65;
+    transition: filter 0.25s ease, opacity 0.25s ease, transform 0.25s ease;
+}
+
+.ac-partners__item:hover .ac-partners__logo {
+    filter: grayscale(0);
+    opacity: 1;
+}
+
+.ac-partners__name {
+    font-family: var(--ac-font-title);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--ac-navy);
+    white-space: nowrap;
+    opacity: 0.75;
+    transition: opacity 0.25s ease, color 0.25s ease;
+}
+
+.ac-partners__item:hover .ac-partners__name {
+    opacity: 1;
+    color: var(--ac-green);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ac-partners__track {
+        animation: none;
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+        max-width: var(--ac-container, 1140px);
+        margin: 0 auto;
+        gap: 1rem;
+    }
+
+    .ac-partners__viewport {
+        mask-image: none;
+        -webkit-mask-image: none;
+        overflow: visible;
+        padding: 0 1rem;
+    }
+}
+
 /* Section headers */
 .ac-section {
     padding: 4.5rem 0;
