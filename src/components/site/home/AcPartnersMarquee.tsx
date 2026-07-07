@@ -10,7 +10,7 @@ type Props = {
 function buildMarqueeLoop(partners: HomePartner[]): HomePartner[] {
   if (partners.length <= 1) return partners;
 
-  const targetPerHalf = 16;
+  const targetPerHalf = 12;
   const reps = Math.max(2, Math.ceil(targetPerHalf / partners.length));
   const half = Array.from({ length: reps }, () => partners).flat();
   return [...half, ...half];
@@ -19,19 +19,22 @@ function buildMarqueeLoop(partners: HomePartner[]): HomePartner[] {
 function PartnerItem({ partner }: { partner: HomePartner }) {
   const [imgOk, setImgOk] = useState(Boolean(partner.logo));
 
-  const content =
-    partner.logo && imgOk ? (
-      <img
-        src={partner.logo}
-        alt={partner.name}
-        className="ac-partners__logo"
-        loading="lazy"
-        decoding="async"
-        onError={() => setImgOk(false)}
-      />
-    ) : (
-      <span className="ac-partners__name">{partner.name}</span>
-    );
+  const inner = (
+    <div className="ac-partners__card">
+      {partner.logo && imgOk ? (
+        <img
+          src={partner.logo}
+          alt={partner.name}
+          className="ac-partners__logo"
+          loading="lazy"
+          decoding="async"
+          onError={() => setImgOk(false)}
+        />
+      ) : (
+        <span className="ac-partners__name">{partner.name}</span>
+      )}
+    </div>
+  );
 
   if (partner.url) {
     return (
@@ -40,16 +43,17 @@ function PartnerItem({ partner }: { partner: HomePartner }) {
         className="ac-partners__item"
         target="_blank"
         rel="noopener noreferrer"
-        title={partner.name}
+        title={`Falar com ${partner.name} no WhatsApp`}
+        aria-label={`Parceiro ${partner.name} — abrir WhatsApp`}
       >
-        {content}
+        {inner}
       </a>
     );
   }
 
   return (
     <div className="ac-partners__item" title={partner.name}>
-      {content}
+      {inner}
     </div>
   );
 }
@@ -69,26 +73,28 @@ export function AcPartnersMarquee({ partners }: Props) {
       className={`ac-partners${single ? " ac-partners--single" : ""}`}
       aria-labelledby="ac-partners-title"
     >
-      <div className="ac-container ac-partners__head">
+      <div className="ac-partners__head">
         <h2 id="ac-partners-title" className="ac-partners__title">
           Nossos parceiros
         </h2>
       </div>
-      <div className="ac-partners__viewport" aria-hidden="false">
-        <div
-          className="ac-partners__track"
-          style={
-            single
-              ? undefined
-              : ({ "--ac-partners-duration": `${scrollDuration}s` } as React.CSSProperties)
-          }
-        >
-          {loop.map((partner, i) => (
-            <PartnerItem
-              key={single ? partner.name : `${partner.name}-${partner.logo ?? ""}-${i}`}
-              partner={partner}
-            />
-          ))}
+      <div className="ac-partners__band">
+        <div className="ac-partners__viewport" aria-hidden="false">
+          <div
+            className="ac-partners__track"
+            style={
+              single
+                ? undefined
+                : ({ "--ac-partners-duration": `${scrollDuration}s` } as React.CSSProperties)
+            }
+          >
+            {loop.map((partner, i) => (
+              <PartnerItem
+                key={single ? partner.name : `${partner.name}-${partner.logo ?? ""}-${i}`}
+                partner={partner}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </section>
