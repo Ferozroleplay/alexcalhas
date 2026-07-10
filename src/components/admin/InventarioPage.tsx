@@ -42,6 +42,14 @@ const STATUS_FILTER: Record<InventarioVariant, string> = {
   finalizado: "finalizado",
 };
 
+function normalizarBusca(valor: string): string {
+  return valor
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 function MateriaisDetalhes({ item }: { item: AgendamentoItem }) {
   const n = item.materiaisCount ?? item.orcamentoItens?.length ?? 0;
   if (n === 0) return <span className="inv-detail-empty">Sem itens</span>;
@@ -74,6 +82,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
+  const [busca, setBusca] = useState("");
 
   const [orcamentoOpen, setOrcamentoOpen] = useState(false);
   const [orcamentoMode, setOrcamentoMode] = useState<"novo" | "editar">("novo");
@@ -111,17 +120,37 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
     return ordenarInventarioPorMontagem(items);
   }, [items, variant]);
 
-  const total = sortedItems.length;
+  const filteredItems = useMemo(() => {
+    const q = normalizarBusca(busca);
+    if (!q) return sortedItems;
+    return sortedItems.filter((item) => {
+      const nome = normalizarBusca(item.nome);
+      const telefone = item.telefone.replace(/\D/g, "");
+      const id = String(item.id);
+      const qDigits = q.replace(/\D/g, "");
+      return (
+        nome.includes(q) ||
+        id.includes(q) ||
+        (qDigits.length >= 3 && telefone.includes(qDigits))
+      );
+    });
+  }, [sortedItems, busca]);
+
+  const total = filteredItems.length;
   const totalPages = Math.max(1, Math.ceil(total / INVENTARIO_PER_PAGE));
   const pageSafe = Math.min(page, totalPages);
+
+  useEffect(() => {
+    setPage(1);
+  }, [busca]);
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
 
   const pageItems = useMemo(
-    () => paginateItems(sortedItems, pageSafe, INVENTARIO_PER_PAGE),
-    [sortedItems, pageSafe],
+    () => paginateItems(filteredItems, pageSafe, INVENTARIO_PER_PAGE),
+    [filteredItems, pageSafe],
   );
 
   function openOrcamentoNovo(item: AgendamentoItem) {
@@ -469,6 +498,59 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
             </div>
           ) : (
             <>
+              <div className="inv-list-toolbar">
+                <label className="inv-list-toolbar__search" htmlFor={`inv-busca-${listingSlug}`}>
+                  <i className="bi bi-search" aria-hidden="true" />
+                  <input
+                    id={`inv-busca-${listingSlug}`}
+                    type="search"
+                    value={busca}
+                    onChange={(e) => setBusca(e.target.value)}
+                    placeholder="Buscar por nome do cliente…"
+                    autoComplete="off"
+                  />
+                  {busca ? (
+                    <button
+                      type="button"
+                      className="inv-list-toolbar__clear"
+                      onClick={() => setBusca("")}
+                      aria-label="Limpar busca"
+                      title="Limpar"
+                    >
+                      <i className="bi bi-x-lg" aria-hidden="true" />
+                    </button>
+                  ) : null}
+                </label>
+                {busca.trim() ? (
+                  <span className="inv-list-toolbar__hint" role="status">
+                    {total === 0
+                      ? "Nenhum resultado"
+                      : `${total} resultado${total === 1 ? "" : "s"}`}
+                  </span>
+                ) : null}
+              </div>
+
+              {filteredItems.length === 0 ? (
+                <div className="inv-empty-state" role="status">
+                  <div className={`inv-empty-state__icon inv-empty-state__icon--${listingSlug}`}>
+                    <i className="bi bi-search" aria-hidden="true" />
+                  </div>
+                  <h2 className="inv-empty-state__title">Nenhum cliente encontrado</h2>
+                  <p className="inv-empty-state__text">
+                    Não achamos ninguém com “{busca.trim()}”. Tente outro nome.
+                  </p>
+                  <div className="inv-empty-state__actions">
+                    <button
+                      type="button"
+                      className="analytics-btn analytics-btn--outline analytics-btn--sm"
+                      onClick={() => setBusca("")}
+                    >
+                      Limpar busca
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
               <div className="dashboard-data-desktop inv-table-shell">
                 <div className="table-responsive inv-table-scroll">
                   <table
@@ -625,6 +707,8 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
                 total={total}
                 onPageChange={setPage}
               />
+                </>
+              )}
             </>
           )}
         </div>
