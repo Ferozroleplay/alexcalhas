@@ -21,8 +21,33 @@ export const OS_ORCAMENTO_EMPRESA = {
   assinaturaNome: "Alex Calhas",
   assinaturaCargo: "Responsável pela empresa",
   validadeProposta: "30 dias",
-  condicaoPagamentoPadrao: "50% de sinal + 50% na instalação",
+  condicaoPagamentoPadrao:
+    "À vista 50% de entrada e 50% na instalação. Parcelamos em até 6x no cartão. O cartão deve ser passado no momento da aprovação.",
 } as const;
+
+/** Textos prontos para colar na observação do orçamento. */
+export const ORCAMENTO_OBS_PRESETS = [
+  {
+    id: "50-50-cartao",
+    label: "50/50 + 6x",
+    text: "À vista 50% de entrada e 50% na instalação.\nParcelamos em até 6x no cartão. O cartão deve ser passado no momento da aprovação.",
+  },
+  {
+    id: "50-50",
+    label: "50% + 50%",
+    text: "À vista 50% de entrada e 50% na instalação.",
+  },
+  {
+    id: "cartao-6x",
+    label: "Cartão 6x",
+    text: "Parcelamos em até 6x no cartão. O cartão deve ser passado no momento da aprovação.",
+  },
+  {
+    id: "vista-total",
+    label: "100% à vista",
+    text: "Pagamento 100% à vista.",
+  },
+] as const;
 
 export function formatOsMoney(value: number): string {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });

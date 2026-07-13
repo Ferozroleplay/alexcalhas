@@ -228,8 +228,11 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
   async function onOrcamentoSaved(item: AgendamentoItem) {
     if (variant === "visitas") {
       setItems((prev) => prev.filter((r) => r.id !== item.id));
-    } else if (variant === "orcamentado" && orcamentoMode === "editar") {
-      setItems((prev) => prev.map((r) => (r.id === item.id ? item : r)));
+    } else if (
+      (variant === "orcamentado" || variant === "confirmado") &&
+      orcamentoMode === "editar"
+    ) {
+      setItems((prev) => prev.map((r) => (r.id === item.id ? { ...r, ...item } : r)));
     } else {
       void load();
     }
@@ -395,7 +398,14 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
               onClick: () => openEditarCliente(item.id),
             },
             ...(isAdmin
-              ? [{ label: "Excluir", icon: "bi-trash", onClick: () => void handleCancelar(item.id) }]
+              ? [
+                  {
+                    label: "Editar orçamento",
+                    icon: "bi-receipt",
+                    onClick: () => openOrcamentoEditar(item),
+                  },
+                  { label: "Excluir", icon: "bi-trash", onClick: () => void handleCancelar(item.id) },
+                ]
               : []),
           ]}
         />

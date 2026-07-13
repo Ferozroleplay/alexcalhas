@@ -76,7 +76,11 @@ export const Route = createFileRoute("/api/agendamentos/$id/orcamento")({
           const row = await prisma.inventario.findFirst({
             where: {
               id,
-              OR: [{ status: "orcamentado" }, { status: "orçamentado" }],
+              OR: [
+                { status: "orcamentado" },
+                { status: "orçamentado" },
+                { status: "confirmado" },
+              ],
               ...filtroFuncionarioWhere(session),
             },
           });
@@ -233,7 +237,11 @@ export const Route = createFileRoute("/api/agendamentos/$id/orcamento")({
           const row = await prisma.inventario.findFirst({
             where: {
               id,
-              OR: [{ status: "orcamentado" }, { status: "orçamentado" }],
+              OR: [
+                { status: "orcamentado" },
+                { status: "orçamentado" },
+                { status: "confirmado" },
+              ],
             },
           });
           if (!row) {

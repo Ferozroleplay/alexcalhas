@@ -24,6 +24,7 @@ import {
   salvarOrcamentoNovo,
   type AgendamentoItem,
 } from "@/lib/admin-api";
+import { ORCAMENTO_OBS_PRESETS } from "@/lib/os-document";
 
 type Props = {
   open: boolean;
@@ -597,16 +598,42 @@ export function ModalOrcamento({
                   </section>
 
                   <section className="visitas-orc-panel visitas-orc-panel--obs">
-                    <h5 className="visitas-orc-panel__title">
-                      <i className="bi bi-chat-left-text" aria-hidden="true" /> Observação
-                    </h5>
+                    <div className="visitas-orc-obs-head">
+                      <h5 className="visitas-orc-panel__title">
+                        <i className="bi bi-chat-left-text" aria-hidden="true" /> Observação
+                      </h5>
+                      <p className="visitas-orc-obs-head__hint">
+                        Escolha uma opção pronta ou escreva a sua:
+                      </p>
+                    </div>
+
+                    <div className="visitas-orc-obs-grid" role="group" aria-label="Textos prontos de observação">
+                      {ORCAMENTO_OBS_PRESETS.map((preset) => {
+                        const ativo =
+                          form.observacao.replace(/\s+/g, " ").trim() ===
+                          preset.text.replace(/\s+/g, " ").trim();
+                        return (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            className={`visitas-orc-obs-card${ativo ? " is-active" : ""}`}
+                            title={preset.text}
+                            onClick={() => form.setObservacao(preset.text)}
+                          >
+                            {preset.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
                     <textarea
                       id="modal-orc-obs"
-                      className="form-control visitas-orc-input"
+                      className="form-control visitas-orc-input visitas-orc-obs-textarea"
                       rows={4}
                       maxLength={500}
                       value={form.observacao}
                       onChange={(e) => form.setObservacao(e.target.value)}
+                      placeholder="Ex.: condições de pagamento, prazo, observações para o cliente…"
                     />
                     <span className="visitas-orc-obs__count">{form.observacao.length}/500</span>
                   </section>

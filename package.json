@@ -15,7 +15,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "db:test": "node scripts/test-db.mjs"
+    "db:test": "node scripts/test-db.mjs",
+    "db:export": "node scripts/export-banco.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
