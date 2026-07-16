@@ -508,8 +508,8 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
             </div>
           ) : (
             <>
-              <div className="inv-list-toolbar">
-                <label className="inv-list-toolbar__search" htmlFor={`inv-busca-${listingSlug}`}>
+              <div className="inv-search-bar">
+                <label className="inv-search-bar__field" htmlFor={`inv-busca-${listingSlug}`}>
                   <i className="bi bi-search" aria-hidden="true" />
                   <input
                     id={`inv-busca-${listingSlug}`}
@@ -522,7 +522,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
                   {busca ? (
                     <button
                       type="button"
-                      className="inv-list-toolbar__clear"
+                      className="inv-search-bar__clear"
                       onClick={() => setBusca("")}
                       aria-label="Limpar busca"
                       title="Limpar"
@@ -532,7 +532,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
                   ) : null}
                 </label>
                 {busca.trim() ? (
-                  <span className="inv-list-toolbar__hint" role="status">
+                  <span className="inv-search-bar__hint" role="status">
                     {total === 0
                       ? "Nenhum resultado"
                       : `${total} resultado${total === 1 ? "" : "s"}`}
