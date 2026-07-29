@@ -5,6 +5,7 @@ import { INVENTARIO_STATUS } from "@/lib/agendamento-constants";
 import { dbErrorMessage, serializeInventario } from "@/lib/agendamento.server";
 import { getAdminSessionFromRequest, isAdminRequest } from "@/lib/auth.server";
 import { getPrisma } from "@/lib/db.server";
+import { baixarEstoqueDoInventario } from "@/lib/estoque-baixa.server";
 import { jsonResponse } from "@/lib/http.server";
 
 const patchSchema = z.object({
@@ -92,6 +93,15 @@ export const Route = createFileRoute("/api/agendamentos/$id")({
             where: { id },
             data: { status: next },
           });
+
+          if (next === "confirmado" && st !== "confirmado") {
+            try {
+              await baixarEstoqueDoInventario(id);
+            } catch (estoqueErr) {
+              console.error("[PATCH /api/agendamentos/$id] baixa estoque", estoqueErr);
+            }
+          }
+
           return jsonResponse({ ok: true, item: serializeInventario(updated) });
         } catch (err) {
           console.error("[PATCH /api/agendamentos/$id]", err);

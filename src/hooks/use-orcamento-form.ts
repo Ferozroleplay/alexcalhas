@@ -2,6 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { MaterialItem } from "@/lib/admin-api";
 import {
+  calcularPrecoItemEmpresa,
+  escolherMaterialPorCorteEspessura,
+  materialTemEspessura,
+  montarDescricaoItemEmpresa,
+  type EspessuraChapa,
+} from "@/lib/orcamento-empresa";
+import { loadEmpresaConfig } from "@/lib/empresa-config";
+import {
   calcDescontoOrcamento,
   formatDescontoPctOrc,
   formatDescontoValorOrc,
@@ -35,13 +43,58 @@ export function useOrcamentoForm(materiais: MaterialItem[]) {
   const [pesquisa, setPesquisa] = useState("");
   const [materialId, setMaterialId] = useState("");
   const [metros, setMetros] = useState("1");
+  const [corteCm, setCorteCm] = useState("");
+  const [espessura, setEspessura] = useState<EspessuraChapa>("0.43");
+  const [descricaoItem, setDescricaoItem] = useState("Chapa galvalume");
+  const [materialAutoId, setMaterialAutoId] = useState<number | null>(null);
 
   const descontoSourceRef = useRef<OrcamentoModoDesconto>("percent");
   const valorBaseManualRef = useRef(0);
   const syncingRef = useRef(false);
   const carregandoRef = useRef(false);
+  const descricaoManualRef = useRef(false);
 
   const subtotal = useMemo(() => inventarioSubtotalOrcamento(partData), [partData]);
+
+  const corteNumero = useMemo(() => {
+    const n = Number.parseFloat(corteCm.replace(",", "."));
+    return Number.isFinite(n) ? n : 0;
+  }, [corteCm]);
+
+  const metrosNumero = useMemo(() => {
+    const n = Number.parseFloat(metros.replace(",", "."));
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  }, [metros]);
+
+  const precoEstimado = useMemo(
+    () =>
+      calcularPrecoItemEmpresa({
+        cfg: loadEmpresaConfig(),
+        corteCm: corteNumero,
+        metros: metrosNumero > 0 ? metrosNumero : 0,
+        espessura,
+      }),
+    [corteNumero, metrosNumero, espessura],
+  );
+
+  useEffect(() => {
+    if (corteNumero <= 0 || corteNumero > 120) {
+      setMaterialAutoId(null);
+      if (!descricaoManualRef.current) setDescricaoItem("Chapa galvalume");
+      return;
+    }
+    const escolhido = escolherMaterialPorCorteEspessura(materiais, corteNumero, espessura, null);
+    setMaterialAutoId(escolhido?.id ?? null);
+    if (!descricaoManualRef.current) {
+      const nomeOk =
+        escolhido && materialTemEspessura(escolhido.material ?? "", espessura)
+          ? escolhido.material
+          : escolhido?.material && !/0[.,]\d{1,2}/.test(escolhido.material)
+            ? escolhido.material
+            : null;
+      setDescricaoItem(montarDescricaoItemEmpresa(corteNumero, espessura, nomeOk));
+    }
+  }, [corteNumero, espessura, materiais]);
 
   const calcComCampos = useCallback(
     (campos: CamposDesconto = {}) => {
@@ -59,7 +112,6 @@ export function useOrcamentoForm(materiais: MaterialItem[]) {
 
   const totalOrcamento = useMemo(() => calcComCampos().total, [calcComCampos]);
 
-  /** Igual PHP: atualiza o outro campo e o valor total (não o campo que está sendo editado). */
   const sincronizarDescontoPar = useCallback(
     (campos: CamposDesconto = {}) => {
       const src = descontoSourceRef.current;
@@ -200,28 +252,129 @@ export function useOrcamentoForm(materiais: MaterialItem[]) {
   const materiaisFiltrados = useMemo(() => {
     const q = pesquisa.trim().toLowerCase();
     if (!q) return materiais;
-    return materiais.filter((m) => m.material.toLowerCase().includes(q));
+    return materiais.filter((m) => {
+      const blob = [
+        m.material,
+        m.codigo,
+        m.tipo_material,
+        m.departamento,
+        m.referencia,
+        m.unidade,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return blob.includes(q);
+    });
   }, [materiais, pesquisa]);
 
-  const addMaterial = useCallback(() => {
-    const m = materiais.find((x) => String(x.id) === materialId);
-    if (!m) return;
-    const mt = Number.parseFloat(metros.replace(",", ".")) || 1;
+  const materialPesquisaSelecionado = useMemo(
+    () => materiais.find((x) => String(x.id) === materialId) ?? null,
+    [materiais, materialId],
+  );
+
+  const addMaterial = useCallback(
+    (qtdOverride?: number) => {
+      const m = materiais.find((x) => String(x.id) === materialId);
+      if (!m) return;
+      const mt =
+        qtdOverride != null && qtdOverride > 0
+          ? qtdOverride
+          : Number.parseFloat(metros.replace(",", ".")) || 1;
+      if (mt <= 0) return;
+      setPartData((prev) =>
+        mesclarLinhasOrcamento([
+          ...prev,
+          {
+            material: m.material,
+            metros: mt,
+            valor: Number(m.valor) || 0,
+            valor_custo: Number(m.valor_custo) || 0,
+            id: m.id,
+          },
+        ]),
+      );
+      setMaterialId("");
+      setPesquisa("");
+    },
+    [materiais, materialId, metros],
+  );
+
+  const onCorteInput = useCallback((raw: string) => {
+    let v = raw.replace(/[^\d,.]/g, "");
+    const sep = v.includes(",") ? "," : v.includes(".") ? "." : null;
+    if (sep) {
+      const parts = v.split(sep);
+      v = parts[0] + sep + (parts[1] ?? "").slice(0, 2);
+    }
+    descricaoManualRef.current = false;
+    setCorteCm(v);
+  }, []);
+
+  const aplicarCorteRapido = useCallback((cm: number) => {
+    descricaoManualRef.current = false;
+    setCorteCm(String(cm));
+  }, []);
+
+  const onDescricaoInput = useCallback((raw: string) => {
+    descricaoManualRef.current = true;
+    setDescricaoItem(raw);
+  }, []);
+
+  const limparItemForm = useCallback(() => {
+    descricaoManualRef.current = false;
+    setCorteCm("");
+    setEspessura("0.43");
+    setDescricaoItem("Chapa galvalume");
+    setMaterialAutoId(null);
+    setMetros("1");
+  }, []);
+
+  const addItemPorCorte = useCallback(() => {
+    if (corteNumero < 1 || corteNumero > 120) return;
+    const mt = metrosNumero > 0 ? metrosNumero : 1;
+    const preco = calcularPrecoItemEmpresa({
+      cfg: loadEmpresaConfig(),
+      corteCm: corteNumero,
+      metros: mt,
+      espessura,
+    });
+    if (preco.valorUnitario <= 0) return;
+
+    const escolhido = escolherMaterialPorCorteEspessura(
+      materiais,
+      corteNumero,
+      espessura,
+      materialAutoId,
+    );
+    const nome = montarDescricaoItemEmpresa(
+      corteNumero,
+      espessura,
+      descricaoItem.trim() || escolhido?.material || null,
+    );
+
     setPartData((prev) =>
       mesclarLinhasOrcamento([
         ...prev,
         {
-          material: m.material,
+          material: nome,
           metros: mt,
-          valor: m.valor,
-          valor_custo: m.valor_custo,
-          id: m.id,
+          valor: preco.valorUnitario,
+          valor_custo: preco.custoUnitario,
+          ...(escolhido?.id != null ? { id: escolhido.id } : {}),
         },
       ]),
     );
-    setMaterialId("");
-    setMetros("1");
-  }, [materiais, materialId, metros]);
+    limparItemForm();
+  }, [
+    corteNumero,
+    metrosNumero,
+    espessura,
+    materiais,
+    materialAutoId,
+    descricaoItem,
+    limparItemForm,
+  ]);
 
   const addLinhas = useCallback((linhas: OrcamentoLinha[]) => {
     if (linhas.length === 0) return;
@@ -251,6 +404,11 @@ export function useOrcamentoForm(materiais: MaterialItem[]) {
     setPesquisa("");
     setMaterialId("");
     setMetros("1");
+    setCorteCm("");
+    setEspessura("0.43");
+    setDescricaoItem("Chapa galvalume");
+    setMaterialAutoId(null);
+    descricaoManualRef.current = false;
     descontoSourceRef.current = "percent";
     valorBaseManualRef.current = 0;
     carregandoRef.current = false;
@@ -375,7 +533,19 @@ export function useOrcamentoForm(materiais: MaterialItem[]) {
     setMaterialId,
     metros,
     onMetrosInput,
+    corteCm,
+    onCorteInput,
+    aplicarCorteRapido,
+    espessura,
+    setEspessura,
+    descricaoItem,
+    onDescricaoInput,
+    materialAutoId,
+    precoEstimado,
+    limparItemForm,
+    addItemPorCorte,
     materiaisFiltrados,
+    materialPesquisaSelecionado,
     addMaterial,
     addLinhas,
     removeLinha,

@@ -7,10 +7,11 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { SITE_META } from "@/data/home-config";
+import { applyBrandTheme, getSavedBrandTheme } from "@/lib/brand-colors";
 
 function NotFoundComponent() {
   return (
@@ -122,11 +123,21 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function BrandColorBootstrap() {
+  useEffect(() => {
+    // Cores customizadas só no painel — o site público fica no visual padrão
+    if (!window.location.pathname.startsWith("/painel")) return;
+    applyBrandTheme(getSavedBrandTheme());
+  }, []);
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
+      <BrandColorBootstrap />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>

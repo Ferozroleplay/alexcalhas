@@ -4,17 +4,19 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useAdminAuth } from "@/components/admin/admin-auth";
 import { sairImpersonacao } from "@/lib/usuarios-client";
 import { getAdminTheme, setAdminTheme } from "@/components/admin/AdminTheme";
+import { BrandColorPicker } from "@/components/admin/BrandColorPicker";
 import { DashPageHero, NovaVisitaCta } from "@/components/admin/DashPageHero";
 import { DashBrandLogo } from "@/components/admin/DashBrandLogo";
 import { PainelVisaoGuard } from "@/components/admin/PainelVisaoGuard";
 import { DashRadio } from "@/components/admin/DashRadio";
 import { UserThumb } from "@/components/admin/UserThumb";
 import type { AdminVisao } from "@/lib/visao.server";
+import { applyBrandTheme, getSavedBrandTheme } from "@/lib/brand-colors";
 
 type ProdutoMenu = { id: number; nome: string };
 
 const NAV_MAIN: { to: string; label: string; icon: string; exact?: boolean }[] = [
-  { to: "/painel", label: "Painel", icon: "bi-grid-1x2-fill", exact: true },
+  { to: "/painel", label: "Caixa", icon: "bi-cash-coin", exact: true },
   { to: "/painel/visitas", label: "Visitas", icon: "bi-journal-text" },
   { to: "/painel/orcamentado", label: "Orçamentado", icon: "bi-clipboard2-pulse" },
   { to: "/painel/confirmado", label: "Confirmado", icon: "bi-journal-bookmark" },
@@ -22,6 +24,7 @@ const NAV_MAIN: { to: string; label: string; icon: string; exact?: boolean }[] =
 ];
 
 const NAV_ADMIN: { to: string; label: string; icon: string }[] = [
+  { to: "/painel/empresa", label: "Empresa", icon: "bi-buildings" },
   { to: "/painel/clientes", label: "Clientes", icon: "bi-person-vcard" },
   { to: "/painel/material", label: "Materiais", icon: "bi-box-seam" },
   { to: "/painel/parceiros", label: "Parceiros", icon: "bi-building" },
@@ -29,6 +32,7 @@ const NAV_ADMIN: { to: string; label: string; icon: string }[] = [
   { to: "/painel/usuarios", label: "Usuários", icon: "bi-people" },
   { to: "/painel/fornecedores", label: "Entregas", icon: "bi-inbox" },
   { to: "/painel/financeiro", label: "Financeiro", icon: "bi-cash-coin" },
+  { to: "/painel/despesas", label: "Despesas", icon: "bi-receipt" },
   { to: "/painel/funcionarios", label: "Funcionários", icon: "bi-people-fill" },
   { to: "/painel/ponto-controle", label: "Bate-ponto", icon: "bi-clock" },
   { to: "/painel/logs", label: "Log do sistema", icon: "bi-journal-code" },
@@ -77,6 +81,7 @@ export function AdminShell() {
 
   useEffect(() => {
     setTheme(getAdminTheme());
+    applyBrandTheme(getSavedBrandTheme());
     const mq = window.matchMedia("(max-width: 899px)");
     const syncNav = () => setNavMobile(mq.matches);
     syncNav();
@@ -92,6 +97,7 @@ export function AdminShell() {
     const next = theme === "dark" ? "light" : "dark";
     setAdminTheme(next);
     setTheme(next);
+    applyBrandTheme(getSavedBrandTheme());
   }
 
   const visao = visaoAtiva(user);
@@ -176,6 +182,7 @@ export function AdminShell() {
           <Link to="/" className="dash-topbar__icon-link" title="Site público" aria-label="Site público">
             <i className="bi bi-globe-americas" aria-hidden="true" />
           </Link>
+          <BrandColorPicker />
           <button
             type="button"
             className="dash-topbar__theme-btn"

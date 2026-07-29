@@ -57,6 +57,40 @@ export type MaterialItem = {
   fornecedor_ids?: number[];
   qtd_fornecedores?: number;
   fornecedores_nomes?: string[];
+  codigo?: string;
+  descricao_nfe?: string;
+  unidade?: string;
+  departamento?: string;
+  subdepartamento?: string;
+  marca?: string;
+  tipo_material?: string;
+  referencia?: string;
+  caracteristica?: string;
+  situacao?: string;
+  servico?: boolean;
+  situacao_tributaria?: string;
+  ncm?: string;
+  ean?: string;
+  estoque_minimo?: number;
+  capacidade_total?: number;
+  estoque_negativo?: boolean;
+  fator?: number;
+  tipo_fator?: string;
+  chapa_mm?: string;
+  corte_cm?: number;
+  custo_mercado?: number;
+  custo_formacao?: number;
+  margem_desejada?: number;
+  margem_aplicada?: number;
+  perc_comissao?: number;
+  saldo_loja?: number;
+  saldo_geral?: number;
+  custo_loja?: number;
+  localizacao?: string;
+  local_mapa?: string;
+  coluna?: string;
+  prateleira?: string;
+  box?: string;
 };
 
 export type ClienteInventarioDados = {
@@ -201,37 +235,72 @@ export async function fetchMateriais(): Promise<MaterialItem[]> {
   return data.itens ?? [];
 }
 
-export async function criarMaterial(payload: {
-  material: string;
-  valor_custo: string;
-  valor: string;
-}): Promise<void> {
+/** Define saldo_loja/saldo_geral de todos os materiais (ex.: 100 metros). */
+export async function definirEstoquesEmMassa(saldo: number): Promise<MaterialItem[]> {
+  const res = await fetch("/api/admin/materiais", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ acao: "set_estoques", saldo }),
+  });
+  const data = await parseJson<{
+    ok?: boolean;
+    itens?: MaterialItem[];
+    message?: string;
+  }>(res);
+  if (!res.ok) throw new Error(data.message ?? "Erro ao definir estoques.");
+  return data.itens ?? [];
+}
+
+/** Define estoque_minimo de todos (ex.: 2 metros). */
+export async function definirEstoquesMinimosEmMassa(minimo: number): Promise<MaterialItem[]> {
+  const res = await fetch("/api/admin/materiais", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ acao: "set_estoques_minimos", minimo }),
+  });
+  const data = await parseJson<{
+    ok?: boolean;
+    itens?: MaterialItem[];
+    message?: string;
+  }>(res);
+  if (!res.ok) throw new Error(data.message ?? "Erro ao definir estoques mínimos.");
+  return data.itens ?? [];
+}
+
+export async function criarMaterial(
+  payload: Partial<MaterialItem> & { material: string; valor: number | string; valor_custo?: number | string },
+): Promise<MaterialItem> {
   const res = await fetch("/api/admin/materiais", {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  const data = await parseJson<{ ok?: boolean; message?: string }>(res);
-  if (!res.ok) throw new Error(data.message ?? "Erro ao cadastrar material.");
+  const data = await parseJson<{ ok?: boolean; item?: MaterialItem; message?: string }>(res);
+  if (!res.ok || !data.item) throw new Error(data.message ?? "Erro ao cadastrar material.");
+  return data.item;
 }
 
-export async function atualizarMaterial(payload: {
-  id: number;
-  material: string;
-  valor_custo: string;
-  valor: string;
-  valor_fornecedor?: string;
-  fornecedor_ids?: number[];
-}): Promise<void> {
+export async function atualizarMaterial(
+  payload: Partial<MaterialItem> & {
+    id: number;
+    material: string;
+    valor: number | string;
+    valor_custo?: number | string;
+    fornecedor_ids?: number[];
+  },
+): Promise<MaterialItem> {
   const res = await fetch("/api/admin/materiais", {
     method: "PATCH",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  const data = await parseJson<{ ok?: boolean; message?: string }>(res);
-  if (!res.ok) throw new Error(data.message ?? "Erro ao salvar material.");
+  const data = await parseJson<{ ok?: boolean; item?: MaterialItem; message?: string }>(res);
+  if (!res.ok || !data.item) throw new Error(data.message ?? "Erro ao salvar material.");
+  return data.item;
 }
 
 export async function excluirMaterial(id: number): Promise<void> {

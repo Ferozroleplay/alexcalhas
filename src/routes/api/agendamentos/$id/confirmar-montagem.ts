@@ -4,6 +4,7 @@ import { z } from "zod";
 import { dataInputParaDb, dbErrorMessage, serializeInventario } from "@/lib/agendamento.server";
 import { isAdminRequest } from "@/lib/auth.server";
 import { getPrisma } from "@/lib/db.server";
+import { baixarEstoqueDoInventario } from "@/lib/estoque-baixa.server";
 import { jsonResponse } from "@/lib/http.server";
 
 const bodySchema = z.object({
@@ -55,9 +56,24 @@ export const Route = createFileRoute("/api/agendamentos/$id/confirmar-montagem")
             },
           });
 
+          // Sai do estoque (Materiais) os metros do orçamento.
+          let estoqueMsg = "";
+          try {
+            const baixa = await baixarEstoqueDoInventario(id);
+            if (baixa.baixas.length > 0) {
+              const totalM = baixa.baixas.reduce((s, b) => s + b.metros, 0);
+              estoqueMsg = ` Estoque: −${totalM.toLocaleString("pt-BR")} m.`;
+            } else if (baixa.naoEncontrados.length > 0) {
+              estoqueMsg = " Atenção: algum item do orçamento não foi encontrado no estoque.";
+            }
+          } catch (estoqueErr) {
+            console.error("[POST confirmar-montagem] baixa estoque", estoqueErr);
+            estoqueMsg = " Atenção: não foi possível baixar o estoque automaticamente.";
+          }
+
           return jsonResponse({
             ok: true,
-            message: "Serviço confirmado com sucesso!",
+            message: `Serviço confirmado com sucesso!${estoqueMsg}`,
             item: serializeInventario(updated),
           });
         } catch (err) {

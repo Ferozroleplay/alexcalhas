@@ -3,8 +3,10 @@ import path from "node:path";
 
 import type { PrismaClient } from "@prisma/client";
 
+import { hasBlobStorage } from "@/lib/blob-upload.server";
 import { getPrisma } from "@/lib/db.server";
 import { fotoPublicUrl, produtosUploadDir } from "@/lib/produtos-upload.server";
+import { isBlobPrivateRef } from "@/lib/usuario-thumb-url";
 import type { ProdutoSiteHome } from "@/types/site";
 
 export type { ProdutoSiteHome };
@@ -54,9 +56,16 @@ export async function resolveProdutoImagemUrl(
 
   const capa = fotos.find((f) => f.ehCapa === 1) ?? fotos[0];
   if (capa?.arquivo) {
-    const local = path.join(produtosUploadDir(), capa.arquivo);
-    if (existsSync(local)) return fotoPublicUrl(capa.arquivo);
-    return fotoPublicUrl(capa.arquivo);
+    const arquivo = capa.arquivo.trim();
+    const local = path.join(produtosUploadDir(), arquivo);
+    if (existsSync(local)) return fotoPublicUrl(arquivo);
+
+    // Blob privado sem token local → usa imagem estática do catálogo
+    if (isBlobPrivateRef(arquivo) && !hasBlobStorage()) {
+      return staticFallback(slug) || fotoPublicUrl(arquivo);
+    }
+
+    return fotoPublicUrl(arquivo);
   }
 
   return staticFallback(slug);

@@ -89,12 +89,46 @@ model ParceiroSite {
 
 model Material {
   id                Int      @id @default(autoincrement())
-  material          String?  @db.VarChar(50)
+  material          String?  @db.VarChar(255)
   valorCusto        Decimal  @default(0.00) @map("valor_custo") @db.Decimal(10, 2)
   valor             Decimal  @default(0.00) @db.Decimal(10, 2)
   fornecedorId      Int?     @map("fornecedor_id")
   visivelFornecedor Int      @default(0) @map("visivel_fornecedor") @db.TinyInt
   valorFornecedor   Decimal  @default(0.00) @map("valor_fornecedor") @db.Decimal(10, 2)
+  codigo            String?  @db.VarChar(40)
+  descricaoNfe      String?  @map("descricao_nfe") @db.VarChar(255)
+  unidade           String   @default("M") @db.VarChar(10)
+  departamento      String?  @db.VarChar(80)
+  subdepartamento   String?  @db.VarChar(80)
+  marca             String?  @db.VarChar(80)
+  tipoMaterial      String?  @map("tipo_material") @db.VarChar(80)
+  referencia        String?  @db.VarChar(80)
+  caracteristica    String?  @db.VarChar(120)
+  situacao          String   @default("liberado") @db.VarChar(40)
+  servico           Int      @default(0) @db.TinyInt
+  situacaoTributaria String? @map("situacao_tributaria") @db.VarChar(80)
+  ncm               String?  @db.VarChar(20)
+  ean               String?  @db.VarChar(40)
+  estoqueMinimo     Decimal  @default(0.00) @map("estoque_minimo") @db.Decimal(12, 2)
+  capacidadeTotal   Decimal  @default(0.00) @map("capacidade_total") @db.Decimal(12, 2)
+  estoqueNegativo   Int      @default(0) @map("estoque_negativo") @db.TinyInt
+  fator             Decimal  @default(0.0000) @db.Decimal(12, 4)
+  tipoFator         String   @default("multiplicacao") @map("tipo_fator") @db.VarChar(20)
+  chapaMm           String?  @map("chapa_mm") @db.VarChar(10)
+  corteCm           Decimal  @default(0.00) @map("corte_cm") @db.Decimal(10, 2)
+  custoMercado      Decimal  @default(0.00) @map("custo_mercado") @db.Decimal(10, 2)
+  custoFormacao     Decimal  @default(0.00) @map("custo_formacao") @db.Decimal(10, 2)
+  margemDesejada    Decimal  @default(0.00) @map("margem_desejada") @db.Decimal(8, 2)
+  margemAplicada    Decimal  @default(0.00) @map("margem_aplicada") @db.Decimal(8, 2)
+  percComissao      Decimal  @default(0.00) @map("perc_comissao") @db.Decimal(8, 2)
+  saldoLoja         Decimal  @default(0.00) @map("saldo_loja") @db.Decimal(12, 2)
+  saldoGeral        Decimal  @default(0.00) @map("saldo_geral") @db.Decimal(12, 2)
+  custoLoja         Decimal  @default(0.00) @map("custo_loja") @db.Decimal(10, 2)
+  localizacao       String?  @db.VarChar(120)
+  localMapa         String?  @map("local_mapa") @db.VarChar(120)
+  coluna            String?  @db.VarChar(40)
+  prateleira        String?  @db.VarChar(40)
+  box               String?  @db.VarChar(40)
 
   @@map("materiais")
 }
@@ -137,4 +171,20 @@ model AdminLog {
   @@index([nivel])
   @@index([criadoEm])
   @@map("admin_logs")
+}
+
+model Despesa {
+  id             Int      @id @default(autoincrement())
+  data           DateTime @db.Date
+  descricao      String   @db.VarChar(255)
+  categoria      String   @db.VarChar(80)
+  valor          Decimal  @db.Decimal(10, 2)
+  formaPagamento String   @map("forma_pagamento") @db.VarChar(20)
+  observacao     String?  @db.Text
+  criadoEm       DateTime @default(now()) @map("criado_em")
+  atualizadoEm   DateTime @default(now()) @updatedAt @map("atualizado_em")
+
+  @@index([data])
+  @@index([categoria])
+  @@map("despesas")
 }

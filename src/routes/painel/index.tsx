@@ -1,7 +1,7 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 
 import { useAdminAuth } from "@/components/admin/admin-auth";
-import { DashboardView } from "@/components/admin/DashboardView";
+import { CaixaView } from "@/components/admin/CaixaView";
 
 function PainelHome() {
   const { user, ready } = useAdminAuth();
@@ -22,7 +22,7 @@ function PainelHome() {
     );
   }
 
-  return <DashboardView />;
+  return <CaixaView />;
 }
 
 export const Route = createFileRoute("/painel/")({

@@ -1,12 +1,12 @@
 /* Alex Calhas — Landing homepage */
 :root {
-    --ac-green: #079657;
-    --ac-green-hover: #067845;
-    --ac-green-light: #eaf7f1;
-    --ac-green-glow: rgba(7, 150, 87, 0.14);
+    --ac-green: var(--brand-green, #079657);
+    --ac-green-hover: var(--brand-green-dark, #067845);
+    --ac-green-light: var(--brand-green-soft, #eaf7f1);
+    --ac-green-glow: var(--primary-glow, rgba(7, 150, 87, 0.14));
     --ac-navy: #152b45;
     --ac-navy-soft: #1e3a56;
-    --ac-text: #5d6b7c;
+    --ac-text: var(--brand-muted, #5d6b7c);
     --ac-bg: #f2f7f5;
     --ac-bg-soft: #e8f2ed;
     --ac-bg-warm: #f4f8f6;
@@ -31,7 +31,7 @@ body.ac-landing {
     color: var(--ac-text);
     background-color: var(--ac-bg);
     background-image:
-        radial-gradient(ellipse 90% 55% at 0% 0%, rgba(7, 150, 87, 0.08), transparent 55%),
+        radial-gradient(ellipse 90% 55% at 0% 0%, color-mix(in srgb, var(--ac-green) 8%, transparent), transparent 55%),
         radial-gradient(ellipse 70% 50% at 100% 8%, rgba(21, 43, 69, 0.05), transparent 50%);
     background-repeat: no-repeat;
     overflow-x: hidden;
@@ -298,8 +298,12 @@ body.ac-landing > main {
     color: var(--ac-green);
     margin-bottom: 1rem;
     padding: 0.35rem 0.75rem;
-    background: linear-gradient(135deg, rgba(7, 150, 87, 0.12), rgba(7, 150, 87, 0.05));
-    border: 1px solid rgba(7, 150, 87, 0.18);
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--ac-green) 12%, transparent),
+      color-mix(in srgb, var(--ac-green) 5%, transparent)
+    );
+    border: 1px solid color-mix(in srgb, var(--ac-green) 18%, transparent);
     border-radius: 999px;
 }
 
@@ -453,7 +457,7 @@ body.ac-landing > main {
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, var(--ac-green), #3cb878, var(--ac-green));
+    background: linear-gradient(90deg, var(--ac-green), var(--ac-green-bright, var(--ac-green)), var(--ac-green));
 }
 
 .ac-benefit {
@@ -472,8 +476,8 @@ body.ac-landing > main {
     color: var(--ac-green);
     border-radius: 50%;
     font-size: 1.35rem;
-    box-shadow: 0 6px 16px rgba(7, 150, 87, 0.15);
-    border: 1px solid rgba(7, 150, 87, 0.12);
+    box-shadow: 0 6px 16px color-mix(in srgb, var(--ac-green) 15%, transparent);
+    border: 1px solid color-mix(in srgb, var(--ac-green) 12%, transparent);
 }
 
 .ac-benefit h3 {
@@ -703,7 +707,7 @@ body.ac-landing > main {
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(ellipse 50% 40% at 15% 20%, rgba(7, 150, 87, 0.08), transparent 55%),
+        radial-gradient(ellipse 50% 40% at 15% 20%, color-mix(in srgb, var(--ac-green) 8%, transparent), transparent 55%),
         radial-gradient(ellipse 45% 35% at 88% 75%, rgba(21, 43, 69, 0.05), transparent 50%);
     pointer-events: none;
     z-index: -1;
@@ -742,7 +746,7 @@ body.ac-landing > main {
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(ellipse 60% 50% at 10% 0%, rgba(7, 150, 87, 0.2), transparent 55%),
+        radial-gradient(ellipse 60% 50% at 10% 0%, color-mix(in srgb, var(--ac-green) 20%, transparent), transparent 55%),
         radial-gradient(ellipse 50% 40% at 95% 100%, rgba(255, 255, 255, 0.04), transparent 45%);
     pointer-events: none;
 }
@@ -1033,7 +1037,7 @@ body.ac-landing > main {
 .ac-contact__form-card {
     border-radius: var(--ac-radius);
     overflow: hidden;
-    box-shadow: var(--ac-shadow), 0 0 0 1px rgba(7, 150, 87, 0.08);
+    box-shadow: var(--ac-shadow), 0 0 0 1px color-mix(in srgb, var(--ac-green) 8%, transparent);
     background: #fff;
 }
 

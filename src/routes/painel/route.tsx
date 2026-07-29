@@ -9,7 +9,7 @@ import { DashUiProvider } from "@/components/admin/DashUiProvider";
 export const Route = createFileRoute("/painel")({
   head: () => ({
     meta: [
-      { title: "Painel — Alex Calhas" },
+      { title: "Caixa — Alex Calhas" },
       { name: "robots", content: "noindex" },
     ],
     links: [
@@ -27,6 +27,10 @@ export const Route = createFileRoute("/painel")({
       { rel: "stylesheet", href: "/admin/calculadora-bobina.css" },
       { rel: "stylesheet", href: "/admin/orcamento-modal.css" },
       { rel: "stylesheet", href: "/admin/parceiros-page.css" },
+      { rel: "stylesheet", href: "/admin/empresa-page.css" },
+      { rel: "stylesheet", href: "/admin/despesas-page.css" },
+      { rel: "stylesheet", href: "/admin/material-cadastro.css" },
+      { rel: "stylesheet", href: "/admin/caixa-page.css" },
     ],
   }),
   component: PainelLayout,

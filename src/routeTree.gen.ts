@@ -30,6 +30,8 @@ import { Route as PainelFuncionariosRouteImport } from './routes/painel/funciona
 import { Route as PainelFornecedoresRouteImport } from './routes/painel/fornecedores'
 import { Route as PainelFinanceiroRouteImport } from './routes/painel/financeiro'
 import { Route as PainelFinalizadoRouteImport } from './routes/painel/finalizado'
+import { Route as PainelEmpresaRouteImport } from './routes/painel/empresa'
+import { Route as PainelDespesasRouteImport } from './routes/painel/despesas'
 import { Route as PainelConfirmadoRouteImport } from './routes/painel/confirmado'
 import { Route as PainelClientesRouteImport } from './routes/painel/clientes'
 import { Route as PainelCalculadoraBobinaRouteImport } from './routes/painel/calculadora-bobina'
@@ -59,10 +61,12 @@ import { Route as ApiAdminFornecedoresRouteImport } from './routes/api/admin/for
 import { Route as ApiAdminFornecedorPortalRouteImport } from './routes/api/admin/fornecedor-portal'
 import { Route as ApiAdminFornecedorInicioRouteImport } from './routes/api/admin/fornecedor-inicio'
 import { Route as ApiAdminFinanceiroRouteImport } from './routes/api/admin/financeiro'
+import { Route as ApiAdminDespesasRouteImport } from './routes/api/admin/despesas'
 import { Route as ApiAdminDashboardRouteImport } from './routes/api/admin/dashboard'
 import { Route as ApiAdminConsultaDocumentoRouteImport } from './routes/api/admin/consulta-documento'
 import { Route as ApiAdminConsultaCnpjRouteImport } from './routes/api/admin/consulta-cnpj'
 import { Route as ApiAdminClientesRouteImport } from './routes/api/admin/clientes'
+import { Route as ApiAdminCaixaRouteImport } from './routes/api/admin/caixa'
 import { Route as ApiAgendamentosIdRecebimentosRouteImport } from './routes/api/agendamentos/$id/recebimentos'
 import { Route as ApiAgendamentosIdOrcamentoRouteImport } from './routes/api/agendamentos/$id/orcamento'
 import { Route as ApiAgendamentosIdConfirmarMontagemRouteImport } from './routes/api/agendamentos/$id/confirmar-montagem'
@@ -177,6 +181,16 @@ const PainelFinanceiroRoute = PainelFinanceiroRouteImport.update({
 const PainelFinalizadoRoute = PainelFinalizadoRouteImport.update({
   id: '/finalizado',
   path: '/finalizado',
+  getParentRoute: () => PainelRouteRoute,
+} as any)
+const PainelEmpresaRoute = PainelEmpresaRouteImport.update({
+  id: '/empresa',
+  path: '/empresa',
+  getParentRoute: () => PainelRouteRoute,
+} as any)
+const PainelDespesasRoute = PainelDespesasRouteImport.update({
+  id: '/despesas',
+  path: '/despesas',
   getParentRoute: () => PainelRouteRoute,
 } as any)
 const PainelConfirmadoRoute = PainelConfirmadoRouteImport.update({
@@ -327,6 +341,11 @@ const ApiAdminFinanceiroRoute = ApiAdminFinanceiroRouteImport.update({
   path: '/api/admin/financeiro',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminDespesasRoute = ApiAdminDespesasRouteImport.update({
+  id: '/api/admin/despesas',
+  path: '/api/admin/despesas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminDashboardRoute = ApiAdminDashboardRouteImport.update({
   id: '/api/admin/dashboard',
   path: '/api/admin/dashboard',
@@ -346,6 +365,11 @@ const ApiAdminConsultaCnpjRoute = ApiAdminConsultaCnpjRouteImport.update({
 const ApiAdminClientesRoute = ApiAdminClientesRouteImport.update({
   id: '/api/admin/clientes',
   path: '/api/admin/clientes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminCaixaRoute = ApiAdminCaixaRouteImport.update({
+  id: '/api/admin/caixa',
+  path: '/api/admin/caixa',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAgendamentosIdRecebimentosRoute =
@@ -418,6 +442,8 @@ export interface FileRoutesByFullPath {
   '/painel/calculadora-bobina': typeof PainelCalculadoraBobinaRoute
   '/painel/clientes': typeof PainelClientesRoute
   '/painel/confirmado': typeof PainelConfirmadoRoute
+  '/painel/despesas': typeof PainelDespesasRoute
+  '/painel/empresa': typeof PainelEmpresaRoute
   '/painel/finalizado': typeof PainelFinalizadoRoute
   '/painel/financeiro': typeof PainelFinanceiroRoute
   '/painel/fornecedores': typeof PainelFornecedoresRoute
@@ -434,10 +460,12 @@ export interface FileRoutesByFullPath {
   '/painel/usuarios': typeof PainelUsuariosRoute
   '/painel/visitas': typeof PainelVisitasRoute
   '/painel/': typeof PainelIndexRoute
+  '/api/admin/caixa': typeof ApiAdminCaixaRoute
   '/api/admin/clientes': typeof ApiAdminClientesRoute
   '/api/admin/consulta-cnpj': typeof ApiAdminConsultaCnpjRoute
   '/api/admin/consulta-documento': typeof ApiAdminConsultaDocumentoRoute
   '/api/admin/dashboard': typeof ApiAdminDashboardRoute
+  '/api/admin/despesas': typeof ApiAdminDespesasRoute
   '/api/admin/financeiro': typeof ApiAdminFinanceiroRoute
   '/api/admin/fornecedor-inicio': typeof ApiAdminFornecedorInicioRoute
   '/api/admin/fornecedor-portal': typeof ApiAdminFornecedorPortalRoute
@@ -483,6 +511,8 @@ export interface FileRoutesByTo {
   '/painel/calculadora-bobina': typeof PainelCalculadoraBobinaRoute
   '/painel/clientes': typeof PainelClientesRoute
   '/painel/confirmado': typeof PainelConfirmadoRoute
+  '/painel/despesas': typeof PainelDespesasRoute
+  '/painel/empresa': typeof PainelEmpresaRoute
   '/painel/finalizado': typeof PainelFinalizadoRoute
   '/painel/financeiro': typeof PainelFinanceiroRoute
   '/painel/fornecedores': typeof PainelFornecedoresRoute
@@ -499,10 +529,12 @@ export interface FileRoutesByTo {
   '/painel/usuarios': typeof PainelUsuariosRoute
   '/painel/visitas': typeof PainelVisitasRoute
   '/painel': typeof PainelIndexRoute
+  '/api/admin/caixa': typeof ApiAdminCaixaRoute
   '/api/admin/clientes': typeof ApiAdminClientesRoute
   '/api/admin/consulta-cnpj': typeof ApiAdminConsultaCnpjRoute
   '/api/admin/consulta-documento': typeof ApiAdminConsultaDocumentoRoute
   '/api/admin/dashboard': typeof ApiAdminDashboardRoute
+  '/api/admin/despesas': typeof ApiAdminDespesasRoute
   '/api/admin/financeiro': typeof ApiAdminFinanceiroRoute
   '/api/admin/fornecedor-inicio': typeof ApiAdminFornecedorInicioRoute
   '/api/admin/fornecedor-portal': typeof ApiAdminFornecedorPortalRoute
@@ -550,6 +582,8 @@ export interface FileRoutesById {
   '/painel/calculadora-bobina': typeof PainelCalculadoraBobinaRoute
   '/painel/clientes': typeof PainelClientesRoute
   '/painel/confirmado': typeof PainelConfirmadoRoute
+  '/painel/despesas': typeof PainelDespesasRoute
+  '/painel/empresa': typeof PainelEmpresaRoute
   '/painel/finalizado': typeof PainelFinalizadoRoute
   '/painel/financeiro': typeof PainelFinanceiroRoute
   '/painel/fornecedores': typeof PainelFornecedoresRoute
@@ -566,10 +600,12 @@ export interface FileRoutesById {
   '/painel/usuarios': typeof PainelUsuariosRoute
   '/painel/visitas': typeof PainelVisitasRoute
   '/painel/': typeof PainelIndexRoute
+  '/api/admin/caixa': typeof ApiAdminCaixaRoute
   '/api/admin/clientes': typeof ApiAdminClientesRoute
   '/api/admin/consulta-cnpj': typeof ApiAdminConsultaCnpjRoute
   '/api/admin/consulta-documento': typeof ApiAdminConsultaDocumentoRoute
   '/api/admin/dashboard': typeof ApiAdminDashboardRoute
+  '/api/admin/despesas': typeof ApiAdminDespesasRoute
   '/api/admin/financeiro': typeof ApiAdminFinanceiroRoute
   '/api/admin/fornecedor-inicio': typeof ApiAdminFornecedorInicioRoute
   '/api/admin/fornecedor-portal': typeof ApiAdminFornecedorPortalRoute
@@ -618,6 +654,8 @@ export interface FileRouteTypes {
     | '/painel/calculadora-bobina'
     | '/painel/clientes'
     | '/painel/confirmado'
+    | '/painel/despesas'
+    | '/painel/empresa'
     | '/painel/finalizado'
     | '/painel/financeiro'
     | '/painel/fornecedores'
@@ -634,10 +672,12 @@ export interface FileRouteTypes {
     | '/painel/usuarios'
     | '/painel/visitas'
     | '/painel/'
+    | '/api/admin/caixa'
     | '/api/admin/clientes'
     | '/api/admin/consulta-cnpj'
     | '/api/admin/consulta-documento'
     | '/api/admin/dashboard'
+    | '/api/admin/despesas'
     | '/api/admin/financeiro'
     | '/api/admin/fornecedor-inicio'
     | '/api/admin/fornecedor-portal'
@@ -683,6 +723,8 @@ export interface FileRouteTypes {
     | '/painel/calculadora-bobina'
     | '/painel/clientes'
     | '/painel/confirmado'
+    | '/painel/despesas'
+    | '/painel/empresa'
     | '/painel/finalizado'
     | '/painel/financeiro'
     | '/painel/fornecedores'
@@ -699,10 +741,12 @@ export interface FileRouteTypes {
     | '/painel/usuarios'
     | '/painel/visitas'
     | '/painel'
+    | '/api/admin/caixa'
     | '/api/admin/clientes'
     | '/api/admin/consulta-cnpj'
     | '/api/admin/consulta-documento'
     | '/api/admin/dashboard'
+    | '/api/admin/despesas'
     | '/api/admin/financeiro'
     | '/api/admin/fornecedor-inicio'
     | '/api/admin/fornecedor-portal'
@@ -749,6 +793,8 @@ export interface FileRouteTypes {
     | '/painel/calculadora-bobina'
     | '/painel/clientes'
     | '/painel/confirmado'
+    | '/painel/despesas'
+    | '/painel/empresa'
     | '/painel/finalizado'
     | '/painel/financeiro'
     | '/painel/fornecedores'
@@ -765,10 +811,12 @@ export interface FileRouteTypes {
     | '/painel/usuarios'
     | '/painel/visitas'
     | '/painel/'
+    | '/api/admin/caixa'
     | '/api/admin/clientes'
     | '/api/admin/consulta-cnpj'
     | '/api/admin/consulta-documento'
     | '/api/admin/dashboard'
+    | '/api/admin/despesas'
     | '/api/admin/financeiro'
     | '/api/admin/fornecedor-inicio'
     | '/api/admin/fornecedor-portal'
@@ -812,10 +860,12 @@ export interface RootRouteChildren {
   ApiConsultaDocumentoRoute: typeof ApiConsultaDocumentoRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ApiOsRoute: typeof ApiOsRoute
+  ApiAdminCaixaRoute: typeof ApiAdminCaixaRoute
   ApiAdminClientesRoute: typeof ApiAdminClientesRoute
   ApiAdminConsultaCnpjRoute: typeof ApiAdminConsultaCnpjRoute
   ApiAdminConsultaDocumentoRoute: typeof ApiAdminConsultaDocumentoRoute
   ApiAdminDashboardRoute: typeof ApiAdminDashboardRoute
+  ApiAdminDespesasRoute: typeof ApiAdminDespesasRoute
   ApiAdminFinanceiroRoute: typeof ApiAdminFinanceiroRoute
   ApiAdminFornecedorInicioRoute: typeof ApiAdminFornecedorInicioRoute
   ApiAdminFornecedorPortalRoute: typeof ApiAdminFornecedorPortalRoute
@@ -985,6 +1035,20 @@ declare module '@tanstack/react-router' {
       path: '/finalizado'
       fullPath: '/painel/finalizado'
       preLoaderRoute: typeof PainelFinalizadoRouteImport
+      parentRoute: typeof PainelRouteRoute
+    }
+    '/painel/empresa': {
+      id: '/painel/empresa'
+      path: '/empresa'
+      fullPath: '/painel/empresa'
+      preLoaderRoute: typeof PainelEmpresaRouteImport
+      parentRoute: typeof PainelRouteRoute
+    }
+    '/painel/despesas': {
+      id: '/painel/despesas'
+      path: '/despesas'
+      fullPath: '/painel/despesas'
+      preLoaderRoute: typeof PainelDespesasRouteImport
       parentRoute: typeof PainelRouteRoute
     }
     '/painel/confirmado': {
@@ -1190,6 +1254,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminFinanceiroRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/despesas': {
+      id: '/api/admin/despesas'
+      path: '/api/admin/despesas'
+      fullPath: '/api/admin/despesas'
+      preLoaderRoute: typeof ApiAdminDespesasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/dashboard': {
       id: '/api/admin/dashboard'
       path: '/api/admin/dashboard'
@@ -1216,6 +1287,13 @@ declare module '@tanstack/react-router' {
       path: '/api/admin/clientes'
       fullPath: '/api/admin/clientes'
       preLoaderRoute: typeof ApiAdminClientesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/caixa': {
+      id: '/api/admin/caixa'
+      path: '/api/admin/caixa'
+      fullPath: '/api/admin/caixa'
+      preLoaderRoute: typeof ApiAdminCaixaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/agendamentos/$id/recebimentos': {
@@ -1296,6 +1374,8 @@ interface PainelRouteRouteChildren {
   PainelCalculadoraBobinaRoute: typeof PainelCalculadoraBobinaRoute
   PainelClientesRoute: typeof PainelClientesRoute
   PainelConfirmadoRoute: typeof PainelConfirmadoRoute
+  PainelDespesasRoute: typeof PainelDespesasRoute
+  PainelEmpresaRoute: typeof PainelEmpresaRoute
   PainelFinalizadoRoute: typeof PainelFinalizadoRoute
   PainelFinanceiroRoute: typeof PainelFinanceiroRoute
   PainelFornecedoresRoute: typeof PainelFornecedoresRoute
@@ -1319,6 +1399,8 @@ const PainelRouteRouteChildren: PainelRouteRouteChildren = {
   PainelCalculadoraBobinaRoute: PainelCalculadoraBobinaRoute,
   PainelClientesRoute: PainelClientesRoute,
   PainelConfirmadoRoute: PainelConfirmadoRoute,
+  PainelDespesasRoute: PainelDespesasRoute,
+  PainelEmpresaRoute: PainelEmpresaRoute,
   PainelFinalizadoRoute: PainelFinalizadoRoute,
   PainelFinanceiroRoute: PainelFinanceiroRoute,
   PainelFornecedoresRoute: PainelFornecedoresRoute,
@@ -1450,10 +1532,12 @@ const rootRouteChildren: RootRouteChildren = {
   ApiConsultaDocumentoRoute: ApiConsultaDocumentoRoute,
   ApiHealthRoute: ApiHealthRoute,
   ApiOsRoute: ApiOsRoute,
+  ApiAdminCaixaRoute: ApiAdminCaixaRoute,
   ApiAdminClientesRoute: ApiAdminClientesRoute,
   ApiAdminConsultaCnpjRoute: ApiAdminConsultaCnpjRoute,
   ApiAdminConsultaDocumentoRoute: ApiAdminConsultaDocumentoRoute,
   ApiAdminDashboardRoute: ApiAdminDashboardRoute,
+  ApiAdminDespesasRoute: ApiAdminDespesasRoute,
   ApiAdminFinanceiroRoute: ApiAdminFinanceiroRoute,
   ApiAdminFornecedorInicioRoute: ApiAdminFornecedorInicioRoute,
   ApiAdminFornecedorPortalRoute: ApiAdminFornecedorPortalRoute,

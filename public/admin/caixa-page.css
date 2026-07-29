@@ -1,0 +1,1052 @@
+/* Caixa diário — /painel */
+
+.caixa-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0.25rem 0 1.5rem;
+  max-width: 1100px;
+}
+
+.caixa-toast {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 80;
+  padding: 0.65rem 1rem;
+  border-radius: 0.65rem;
+  background: #0f172a;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  color: #bbf7d0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.caixa-board {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  gap: 0;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: #0b1220;
+  min-height: 520px;
+}
+
+.caixa-side {
+  padding: 1.35rem 1.25rem 1.25rem;
+  background: linear-gradient(180deg, #0f172a 0%, #0b1220 100%);
+  border-right: 1px solid rgba(148, 163, 184, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.caixa-side__eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--primary, #22c55e);
+}
+
+.caixa-side__hello {
+  margin: 0;
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #f8fafc;
+  line-height: 1.15;
+}
+
+.caixa-side__status {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #94a3b8;
+}
+
+.caixa-side__status strong {
+  color: #e2e8f0;
+  font-weight: 700;
+}
+
+.caixa-side__status em {
+  font-style: normal;
+  color: color-mix(in srgb, var(--primary, #22c55e) 55%, #fff);
+  font-weight: 600;
+}
+
+.caixa-cal {
+  margin-top: 0.35rem;
+  padding: 0.75rem 0.65rem 0.55rem;
+  border-radius: 0.85rem;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.caixa-cal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  margin-bottom: 0.55rem;
+}
+
+.caixa-cal__head strong {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  text-align: center;
+}
+
+.caixa-cal__nav {
+  width: 1.85rem;
+  height: 1.85rem;
+  border: 0;
+  border-radius: 0.45rem;
+  background: transparent;
+  color: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.caixa-cal__nav:hover {
+  background: rgba(148, 163, 184, 0.12);
+  color: #f8fafc;
+}
+
+.caixa-cal__week,
+.caixa-cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.15rem;
+}
+
+.caixa-cal__week span {
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #64748b;
+  padding-bottom: 0.25rem;
+}
+
+.caixa-cal__day {
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 0.78rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.caixa-cal__day.is-empty {
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.caixa-cal__day:hover {
+  background: rgba(148, 163, 184, 0.12);
+}
+
+/* Dia com caixa aberto (ou que já foi aberto e fechado) */
+.caixa-cal__day.is-aberto {
+  background: rgba(34, 197, 94, 0.22);
+  color: color-mix(in srgb, var(--primary, #22c55e) 55%, #fff);
+  font-weight: 700;
+}
+
+.caixa-cal__day.is-aberto:hover {
+  background: rgba(34, 197, 94, 0.35);
+}
+
+/* Dia sem abertura do caixa (hoje ou passado) */
+.caixa-cal__day.is-nao-aberto {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+  font-weight: 700;
+}
+
+.caixa-cal__day.is-nao-aberto:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+.caixa-cal__day.is-selected {
+  box-shadow: inset 0 0 0 2px #f8fafc;
+}
+
+.caixa-cal__day.is-selected.is-aberto {
+  background: var(--primary, #22c55e);
+  color: #052e16;
+  font-weight: 800;
+  box-shadow: none;
+}
+
+.caixa-cal__day.is-selected.is-nao-aberto {
+  background: #ef4444;
+  color: #fff;
+  font-weight: 800;
+  box-shadow: none;
+}
+
+.caixa-cal__day.is-selected:not(.is-aberto):not(.is-nao-aberto) {
+  background: var(--primary, #22c55e);
+  color: #052e16;
+  font-weight: 800;
+  box-shadow: none;
+}
+
+.caixa-cal__day.is-today:not(.is-selected) {
+  box-shadow: inset 0 0 0 1.5px rgba(148, 163, 184, 0.55);
+}
+
+.caixa-cal__day.is-today.is-aberto:not(.is-selected) {
+  box-shadow: inset 0 0 0 1.5px rgba(34, 197, 94, 0.75);
+}
+
+.caixa-cal__day.is-today.is-nao-aberto:not(.is-selected) {
+  box-shadow: inset 0 0 0 1.5px rgba(239, 68, 68, 0.75);
+}
+
+.caixa-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.caixa-action {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.85rem 1rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: #111827;
+  color: #f8fafc;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.caixa-action:hover {
+  border-color: rgba(148, 163, 184, 0.28);
+  background: #152033;
+}
+
+.caixa-action > .bi {
+  font-size: 1.15rem;
+  color: #94a3b8;
+  flex: 0 0 auto;
+}
+
+.caixa-action span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.caixa-action small {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.caixa-action--primary {
+  background: var(--primary, #22c55e);
+  border-color: #16a34a;
+  color: #052e16;
+}
+
+.caixa-action--primary:hover {
+  background: #16a34a;
+  border-color: var(--primary-dark, #15803d);
+}
+
+.caixa-action--primary > .bi {
+  color: #052e16;
+}
+
+.caixa-action--primary small {
+  color: rgba(5, 46, 22, 0.72);
+}
+
+.caixa-action--primary.is-open {
+  background: #0f172a;
+  border-color: rgba(34, 197, 94, 0.45);
+  color: #bbf7d0;
+}
+
+.caixa-action--primary.is-open > .bi {
+  color: var(--primary, #4ade80);
+}
+
+.caixa-action--primary.is-open small {
+  color: #64748b;
+}
+
+.caixa-main {
+  padding: 1.35rem 1.4rem 1.25rem;
+  background: #0b1220;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.caixa-main__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.caixa-main__head h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.caixa-main__head p {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  color: #94a3b8;
+}
+
+.caixa-eye {
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 0.45rem;
+  background: transparent;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.caixa-eye:hover {
+  background: rgba(148, 163, 184, 0.1);
+  color: #e2e8f0;
+}
+
+.caixa-error {
+  margin: 0 0 0.75rem;
+  color: #fca5a5;
+  font-size: 0.82rem;
+}
+
+.caixa-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.caixa-row {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.55rem;
+}
+
+.caixa-row__icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.caixa-row__label {
+  font-size: 0.9rem;
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.caixa-row__value {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #f8fafc;
+  font-variant-numeric: tabular-nums;
+}
+
+.caixa-row--saldo {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.22);
+  margin: 0.25rem 0;
+}
+
+.caixa-row--saldo .caixa-row__icon,
+.caixa-row--saldo .caixa-row__label,
+.caixa-row--saldo .caixa-row__value {
+  color: var(--primary, #4ade80);
+}
+
+.caixa-row--saldo .caixa-row__label,
+.caixa-row--saldo .caixa-row__value {
+  font-weight: 800;
+}
+
+.caixa-row--lucro {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  margin: 0.15rem 0 0.35rem;
+}
+
+.caixa-row--lucro .caixa-row__icon,
+.caixa-row--lucro .caixa-row__label,
+.caixa-row--lucro .caixa-row__value {
+  color: #7dd3fc;
+  font-weight: 750;
+}
+
+.caixa-row--lucro.is-neg .caixa-row__icon,
+.caixa-row--lucro.is-neg .caixa-row__label,
+.caixa-row--lucro.is-neg .caixa-row__value {
+  color: #f87171;
+}
+
+.caixa-fin {
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: #0b1220;
+  padding: 1.1rem 1.25rem 1.25rem;
+}
+
+.caixa-fin__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.9rem;
+}
+
+.caixa-fin__head h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #f8fafc;
+}
+
+.caixa-fin__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.caixa-fin__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.95rem 1rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: #111827;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.caixa-fin__card:hover {
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+.caixa-fin__card span {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.caixa-fin__card strong {
+  font-size: 1.15rem;
+  color: #f8fafc;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.caixa-fin__card strong.is-green {
+  color: var(--primary, #4ade80);
+}
+
+.caixa-fin__card strong.is-red {
+  color: #f87171;
+}
+
+.caixa-fin__card--lucro {
+  border-color: rgba(56, 189, 248, 0.28);
+  background: linear-gradient(160deg, rgba(56, 189, 248, 0.1), #111827 70%);
+  cursor: pointer;
+  text-align: left;
+}
+
+.caixa-fin__card--lucro:hover {
+  border-color: rgba(56, 189, 248, 0.5);
+}
+
+/* Modal lucro real */
+.caixa-lucro-modal .modal-header {
+  border-bottom-color: rgba(148, 163, 184, 0.14);
+  align-items: flex-start;
+}
+
+.caixa-lucro-modal__eyebrow {
+  margin: 0 0 0.15rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--primary, #22c55e);
+}
+
+.caixa-lucro-modal .modal-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.caixa-lucro-modal__formula {
+  margin: 0 0 1rem;
+  font-size: 0.82rem;
+  color: #94a3b8;
+}
+
+.caixa-lucro-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1.15rem;
+}
+
+.caixa-lucro-kpi {
+  padding: 0.85rem 0.9rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.caixa-lucro-kpi span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.caixa-lucro-kpi strong {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #f8fafc;
+  font-variant-numeric: tabular-nums;
+}
+
+.caixa-lucro-kpi small {
+  font-size: 0.72rem;
+  color: color-mix(in srgb, var(--primary, #22c55e) 55%, #fff);
+  font-weight: 600;
+}
+
+.caixa-lucro-kpi--result {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.caixa-lucro-kpi--result strong {
+  color: var(--primary, #4ade80);
+}
+
+.caixa-lucro-kpi--result.is-neg {
+  border-color: rgba(248, 113, 113, 0.4);
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.caixa-lucro-kpi--result.is-neg strong,
+.caixa-lucro-kpi--result.is-neg small {
+  color: #fca5a5;
+}
+
+.caixa-lucro-modal__list-title {
+  margin: 0 0 0.55rem;
+  font-size: 0.9rem;
+  font-weight: 750;
+  color: #e2e8f0;
+}
+
+.caixa-lucro-modal__empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.caixa-lucro-table-wrap {
+  max-height: 280px;
+  overflow: auto;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.caixa-lucro-table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.caixa-lucro-table th,
+.caixa-lucro-table td {
+  padding: 0.55rem 0.7rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.caixa-lucro-table th {
+  position: sticky;
+  top: 0;
+  background: #0f172a;
+  color: #94a3b8;
+  font-size: 0.68rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  z-index: 1;
+}
+
+.caixa-lucro-table td {
+  color: #e2e8f0;
+}
+
+.caixa-lucro-table .text-end {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.caixa-lucro-table .is-pos {
+  color: var(--primary, #4ade80);
+  font-weight: 700;
+}
+
+.caixa-lucro-table .is-neg {
+  color: #f87171;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .caixa-board {
+    grid-template-columns: 1fr;
+  }
+
+  .caixa-side {
+    border-right: 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  }
+
+  .caixa-fin__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .caixa-lucro-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .caixa-fin__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .caixa-side .caixa-actions,
+  .caixa-eye,
+  .caixa-toast,
+  .modal-backdrop,
+  .modal-footer,
+  .btn-close {
+    display: none !important;
+  }
+
+  .caixa-board {
+    border: 1px solid #ccc;
+  }
+
+  .caixa-lucro-modal {
+    box-shadow: none !important;
+  }
+
+  .caixa-lucro-table-wrap {
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+/* ——— Modo claro ——— */
+html[data-bs-theme="light"] .caixa-toast {
+  background: #fff;
+  border-color: rgba(22, 163, 74, 0.35);
+  color: var(--primary-dark, #166534);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+}
+
+html[data-bs-theme="light"] .caixa-board {
+  background: #fff;
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
+}
+
+html[data-bs-theme="light"] .caixa-side {
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border-right-color: rgba(15, 23, 42, 0.08);
+}
+
+html[data-bs-theme="light"] .caixa-side__hello {
+  color: #0f172a;
+}
+
+html[data-bs-theme="light"] .caixa-side__status {
+  color: #64748b;
+}
+
+html[data-bs-theme="light"] .caixa-side__status strong {
+  color: #0f172a;
+}
+
+html[data-bs-theme="light"] .caixa-side__status em {
+  color: var(--primary-dark, #15803d);
+}
+
+html[data-bs-theme="light"] .caixa-cal {
+  background: #fff;
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+html[data-bs-theme="light"] .caixa-cal__head strong {
+  color: #0f172a;
+}
+
+html[data-bs-theme="light"] .caixa-cal__nav {
+  color: #64748b;
+}
+
+html[data-bs-theme="light"] .caixa-cal__nav:hover {
+  background: rgba(15, 23, 42, 0.06);
+  color: #0f172a;
+}
+
+html[data-bs-theme="light"] .caixa-cal__week span {
+  color: #94a3b8;
+}
+
+html[data-bs-theme="light"] .caixa-cal__day {
+  color: #334155;
+}
+
+html[data-bs-theme="light"] .caixa-cal__day:hover {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+html[data-bs-theme="light"] .caixa-cal__day.is-aberto {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--primary-dark, #15803d);
+}
+
+html[data-bs-theme="light"] .caixa-cal__day.is-aberto:hover {
+  background: rgba(34, 197, 94, 0.32);
+}
+
+html[data-bs-theme="light"] .caixa-cal__day.is-nao-aberto {
+  background: rgba(239, 68, 68, 0.14);
+  color: #b91c1c;
+}
+
+html[data-bs-theme="light"] .caixa-cal__day.is-nao-aberto:hover {
+  background: rgba(239, 68, 68, 0.24);
+}
+
+html[data-bs-theme="light"] .caixa-cal__day.is-selected {
+  box-shadow: inset 0 0 0 2px #0f172a;
+}
+
+html[data-bs-theme="light"] .caixa-cal__day.is-selected.is-aberto {
+  background: var(--primary, #22c55e);
+  color: #052e16;
+  box-shadow: none;
+}
+
+html[data-bs-theme="light"] .caixa-cal__day.is-selected.is-nao-aberto {
+  background: #ef4444;
+  color: #fff;
+  box-shadow: none;
+}
+
+html[data-bs-theme="light"] .caixa-cal__day.is-selected:not(.is-aberto):not(.is-nao-aberto) {
+  background: var(--primary, #22c55e);
+  color: #052e16;
+  box-shadow: none;
+}
+
+html[data-bs-theme="light"] .caixa-action {
+  background: #fff;
+  border-color: rgba(15, 23, 42, 0.1);
+  color: #0f172a;
+}
+
+html[data-bs-theme="light"] .caixa-action:hover {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.18);
+}
+
+html[data-bs-theme="light"] .caixa-action > .bi {
+  color: #64748b;
+}
+
+html[data-bs-theme="light"] .caixa-action small {
+  color: #94a3b8;
+}
+
+html[data-bs-theme="light"] .caixa-action--primary {
+  background: var(--primary, #22c55e);
+  border-color: #16a34a;
+  color: #052e16;
+}
+
+html[data-bs-theme="light"] .caixa-action--primary > .bi {
+  color: #052e16;
+}
+
+html[data-bs-theme="light"] .caixa-action--primary small {
+  color: rgba(5, 46, 22, 0.7);
+}
+
+html[data-bs-theme="light"] .caixa-action--primary.is-open {
+  background: #fff;
+  border-color: rgba(22, 163, 74, 0.45);
+  color: var(--primary-dark, #166534);
+}
+
+html[data-bs-theme="light"] .caixa-action--primary.is-open > .bi {
+  color: #16a34a;
+}
+
+html[data-bs-theme="light"] .caixa-action--primary.is-open small {
+  color: #94a3b8;
+}
+
+html[data-bs-theme="light"] .caixa-main {
+  background: #fff;
+}
+
+html[data-bs-theme="light"] .caixa-main__head h2 {
+  color: #0f172a;
+}
+
+html[data-bs-theme="light"] .caixa-main__head p {
+  color: #64748b;
+}
+
+html[data-bs-theme="light"] .caixa-eye {
+  color: #64748b;
+}
+
+html[data-bs-theme="light"] .caixa-eye:hover {
+  background: rgba(15, 23, 42, 0.06);
+  color: #0f172a;
+}
+
+html[data-bs-theme="light"] .caixa-error {
+  color: #dc2626;
+}
+
+html[data-bs-theme="light"] .caixa-row__icon {
+  color: #64748b;
+}
+
+html[data-bs-theme="light"] .caixa-row__label {
+  color: #334155;
+}
+
+html[data-bs-theme="light"] .caixa-row__value {
+  color: #0f172a;
+}
+
+html[data-bs-theme="light"] .caixa-row--saldo {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(22, 163, 74, 0.28);
+}
+
+html[data-bs-theme="light"] .caixa-row--saldo .caixa-row__icon,
+html[data-bs-theme="light"] .caixa-row--saldo .caixa-row__label,
+html[data-bs-theme="light"] .caixa-row--saldo .caixa-row__value {
+  color: var(--primary-dark, #15803d);
+}
+
+html[data-bs-theme="light"] .caixa-row--lucro {
+  background: rgba(14, 165, 233, 0.08);
+  border-color: rgba(14, 165, 233, 0.28);
+}
+
+html[data-bs-theme="light"] .caixa-row--lucro .caixa-row__icon,
+html[data-bs-theme="light"] .caixa-row--lucro .caixa-row__label,
+html[data-bs-theme="light"] .caixa-row--lucro .caixa-row__value {
+  color: #0369a1;
+}
+
+html[data-bs-theme="light"] .caixa-row--lucro.is-neg .caixa-row__icon,
+html[data-bs-theme="light"] .caixa-row--lucro.is-neg .caixa-row__label,
+html[data-bs-theme="light"] .caixa-row--lucro.is-neg .caixa-row__value {
+  color: #dc2626;
+}
+
+html[data-bs-theme="light"] .caixa-fin {
+  background: #fff;
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
+}
+
+html[data-bs-theme="light"] .caixa-fin__head h2 {
+  color: #0f172a;
+}
+
+html[data-bs-theme="light"] .caixa-fin__card {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+html[data-bs-theme="light"] .caixa-fin__card:hover {
+  border-color: rgba(22, 163, 74, 0.4);
+  background: #fff;
+}
+
+html[data-bs-theme="light"] .caixa-fin__card span {
+  color: #64748b;
+}
+
+html[data-bs-theme="light"] .caixa-fin__card strong {
+  color: #0f172a;
+}
+
+html[data-bs-theme="light"] .caixa-fin__card strong.is-green {
+  color: var(--primary-dark, #15803d);
+}
+
+html[data-bs-theme="light"] .caixa-fin__card strong.is-red {
+  color: #dc2626;
+}
+
+html[data-bs-theme="light"] .caixa-fin__card--lucro {
+  border-color: rgba(14, 165, 233, 0.3);
+  background: linear-gradient(160deg, rgba(14, 165, 233, 0.1), #f8fafc 70%);
+}
+
+html[data-bs-theme="light"] .caixa-fin__card--lucro:hover {
+  border-color: rgba(14, 165, 233, 0.5);
+}
+
+html[data-bs-theme="light"] .caixa-lucro-modal .modal-content {
+  background: #fff;
+  color: #0f172a;
+}
+
+html[data-bs-theme="light"] .caixa-lucro-modal .modal-header {
+  border-bottom-color: rgba(15, 23, 42, 0.1);
+}
+
+html[data-bs-theme="light"] .caixa-lucro-modal .modal-title {
+  color: #0f172a;
+}
+
+html[data-bs-theme="light"] .caixa-lucro-modal__formula {
+  color: #64748b;
+}
+
+html[data-bs-theme="light"] .caixa-lucro-kpi {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+html[data-bs-theme="light"] .caixa-lucro-kpi span {
+  color: #64748b;
+}
+
+html[data-bs-theme="light"] .caixa-lucro-kpi strong {
+  color: #0f172a;
+}
+
+html[data-bs-theme="light"] .caixa-lucro-kpi small {
+  color: var(--primary-dark, #15803d);
+}
+
+html[data-bs-theme="light"] .caixa-lucro-kpi--result {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(22, 163, 74, 0.3);
+}
+
+html[data-bs-theme="light"] .caixa-lucro-kpi--result strong {
+  color: var(--primary-dark, #15803d);
+}
+
+html[data-bs-theme="light"] .caixa-lucro-kpi--result.is-neg {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+html[data-bs-theme="light"] .caixa-lucro-kpi--result.is-neg strong,
+html[data-bs-theme="light"] .caixa-lucro-kpi--result.is-neg small {
+  color: #dc2626;
+}
+
+html[data-bs-theme="light"] .caixa-lucro-modal__list-title {
+  color: #0f172a;
+}
+
+html[data-bs-theme="light"] .caixa-lucro-modal__empty {
+  color: #64748b;
+}
+
+html[data-bs-theme="light"] .caixa-lucro-table-wrap {
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+html[data-bs-theme="light"] .caixa-lucro-table th {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+html[data-bs-theme="light"] .caixa-lucro-table td {
+  color: #334155;
+  border-bottom-color: rgba(15, 23, 42, 0.06);
+}
+
+html[data-bs-theme="light"] .caixa-lucro-table .is-pos {
+  color: var(--primary-dark, #15803d);
+}
+
+html[data-bs-theme="light"] .caixa-lucro-table .is-neg {
+  color: #dc2626;
+}
