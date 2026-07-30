@@ -3,6 +3,8 @@ import { listDespesas } from "@/lib/despesas.server";
 import { parseDataInventario } from "@/lib/inventario-stats.server";
 import { parseFormaPagamento } from "@/lib/orcamento.server";
 
+export type CaixaStatus = "aberto" | "fechado";
+
 export type CaixaVendaItem = {
   id: number;
   nome: string;
@@ -35,7 +37,111 @@ export type CaixaDiaResumo = {
   lucroReal: number;
   margemPct: number;
   vendasDetalhe: CaixaVendaItem[];
+  /** Status compartilhado (todos os admins). Ausente = nunca aberto. */
+  status: CaixaStatus | null;
 };
+
+let tabelaCaixaPronta = false;
+
+async function ensureCaixaDiasTable(): Promise<void> {
+  if (tabelaCaixaPronta) return;
+  const prisma = await getPrisma();
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS caixa_dias (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      data DATE NOT NULL,
+      status VARCHAR(20) NOT NULL,
+      aberto_por_id INT NULL,
+      fechado_por_id INT NULL,
+      aberto_em DATETIME NULL,
+      fechado_em DATETIME NULL,
+      atualizado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      UNIQUE KEY uq_caixa_dias_data (data)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+  tabelaCaixaPronta = true;
+}
+
+function normalizeYmd(dataYmd: string): string {
+  return /^\d{4}-\d{2}-\d{2}$/.test(dataYmd) ? dataYmd : ymdLocal(new Date());
+}
+
+export async function getCaixaStatus(dataYmd: string): Promise<CaixaStatus | null> {
+  await ensureCaixaDiasTable();
+  const ymd = normalizeYmd(dataYmd);
+  const prisma = await getPrisma();
+  const rows = await prisma.$queryRawUnsafe<Array<{ status: string }>>(
+    `SELECT status FROM caixa_dias WHERE data = '${ymd}' LIMIT 1`,
+  );
+  const s = String(rows[0]?.status ?? "").toLowerCase();
+  if (s === "aberto" || s === "fechado") return s;
+  return null;
+}
+
+/** Mapa data → status para marcar o calendário (mês/ano). */
+export async function listCaixaStatusMes(
+  ano: number,
+  mes: number,
+): Promise<Record<string, CaixaStatus>> {
+  await ensureCaixaDiasTable();
+  if (!Number.isFinite(ano) || !Number.isFinite(mes) || mes < 1 || mes > 12) return {};
+  const prisma = await getPrisma();
+  const rows = await prisma.$queryRawUnsafe<Array<{ data: Date | string; status: string }>>(
+    `SELECT data, status FROM caixa_dias
+     WHERE YEAR(data) = ${Math.trunc(ano)} AND MONTH(data) = ${Math.trunc(mes)}`,
+  );
+  const map: Record<string, CaixaStatus> = {};
+  for (const row of rows) {
+    // DATE do MySQL vem como UTC midnight — usar ISO evita virar o dia anterior no BR.
+    const d =
+      row.data instanceof Date && !Number.isNaN(row.data.getTime())
+        ? row.data.toISOString().slice(0, 10)
+        : String(row.data ?? "").slice(0, 10);
+    const s = String(row.status ?? "").toLowerCase();
+    if ((s === "aberto" || s === "fechado") && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
+      map[d] = s;
+    }
+  }
+  return map;
+}
+
+export async function setCaixaStatus(
+  dataYmd: string,
+  status: CaixaStatus,
+  usuarioId?: number | null,
+): Promise<CaixaStatus> {
+  await ensureCaixaDiasTable();
+  const ymd = normalizeYmd(dataYmd);
+  const uid =
+    typeof usuarioId === "number" && Number.isFinite(usuarioId) && usuarioId > 0
+      ? Math.trunc(usuarioId)
+      : null;
+  const prisma = await getPrisma();
+  const agora = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+  if (status === "aberto") {
+    await prisma.$executeRawUnsafe(`
+      INSERT INTO caixa_dias (data, status, aberto_por_id, aberto_em, fechado_por_id, fechado_em)
+      VALUES ('${ymd}', 'aberto', ${uid ?? "NULL"}, '${agora}', NULL, NULL)
+      ON DUPLICATE KEY UPDATE
+        status = 'aberto',
+        aberto_por_id = VALUES(aberto_por_id),
+        aberto_em = VALUES(aberto_em),
+        fechado_por_id = NULL,
+        fechado_em = NULL
+    `);
+  } else {
+    await prisma.$executeRawUnsafe(`
+      INSERT INTO caixa_dias (data, status, fechado_por_id, fechado_em)
+      VALUES ('${ymd}', 'fechado', ${uid ?? "NULL"}, '${agora}')
+      ON DUPLICATE KEY UPDATE
+        status = 'fechado',
+        fechado_por_id = VALUES(fechado_por_id),
+        fechado_em = VALUES(fechado_em)
+    `);
+  }
+  return status;
+}
 
 function ymdLocal(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -82,7 +188,7 @@ function formaLabel(raw: string | null | undefined): string {
 
 /** Resumo do caixa para um dia (confirmados + finalizados com data nesse dia). */
 export async function getCaixaDia(dataYmd: string): Promise<CaixaDiaResumo> {
-  const ymd = /^\d{4}-\d{2}-\d{2}$/.test(dataYmd) ? dataYmd : ymdLocal(new Date());
+  const ymd = normalizeYmd(dataYmd);
   const [y, m, d] = ymd.split("-").map(Number);
   const dataRef = new Date(y, m - 1, d);
   const dataLabel = dataRef.toLocaleDateString("pt-BR", {
@@ -90,6 +196,8 @@ export async function getCaixaDia(dataYmd: string): Promise<CaixaDiaResumo> {
     month: "2-digit",
     year: "numeric",
   });
+
+  const status = await getCaixaStatus(ymd);
 
   const prisma = await getPrisma();
   const rows = await prisma.inventario.findMany({
@@ -184,5 +292,6 @@ export async function getCaixaDia(dataYmd: string): Promise<CaixaDiaResumo> {
     lucroReal,
     margemPct,
     vendasDetalhe,
+    status,
   };
 }

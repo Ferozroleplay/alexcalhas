@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useAdminAuth } from "@/components/admin/admin-auth";
 import { AdminModal } from "@/components/admin/modals/AdminModal";
-import type { CaixaDiaResumo } from "@/lib/caixa.server";
+import type { CaixaDiaResumo, CaixaStatus } from "@/lib/caixa.server";
 
 const MESES = [
   "Janeiro",
@@ -22,9 +22,7 @@ const MESES = [
 
 const WEEKDAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
 
-const CAIXA_STATUS_KEY = "alex-caixa-status-v1";
-
-type CaixaStatusMap = Record<string, "aberto" | "fechado">;
+type CaixaStatusMap = Record<string, CaixaStatus>;
 
 function ymd(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -38,22 +36,6 @@ function firstName(nome: string): string {
 function money(v: number, hidden = false) {
   if (hidden) return "R$ ••••••";
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function loadStatusMap(): CaixaStatusMap {
-  try {
-    const raw = localStorage.getItem(CAIXA_STATUS_KEY);
-    if (!raw) return {};
-    return JSON.parse(raw) as CaixaStatusMap;
-  } catch {
-    return {};
-  }
-}
-
-function saveStatus(data: string, status: "aberto" | "fechado") {
-  const map = loadStatusMap();
-  map[data] = status;
-  localStorage.setItem(CAIXA_STATUS_KEY, JSON.stringify(map));
 }
 
 type Linha = {
@@ -80,47 +62,78 @@ export function CaixaView() {
   const [hideFin, setHideFin] = useState(true);
   const [caixaAberto, setCaixaAberto] = useState(false);
   const [statusMap, setStatusMap] = useState<CaixaStatusMap>({});
+  const [toggling, setToggling] = useState(false);
   const [toast, setToast] = useState("");
   const [lucroOpen, setLucroOpen] = useState(false);
 
-  const load = useCallback(async (data: string) => {
+  const load = useCallback(async (data: string, mesView?: { y: number; m: number }) => {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`/api/admin/caixa?data=${encodeURIComponent(data)}`, {
+      const ano = mesView?.y ?? Number(data.slice(0, 4));
+      const mes = (mesView?.m ?? Number(data.slice(5, 7)) - 1) + 1;
+      const qs = new URLSearchParams({
+        data,
+        ano: String(ano),
+        mes: String(mes),
+      });
+      const res = await fetch(`/api/admin/caixa?${qs}`, {
         credentials: "include",
       });
       const json = (await res.json()) as {
         ok?: boolean;
         resumo?: CaixaDiaResumo;
+        statusMes?: CaixaStatusMap;
         message?: string;
       };
       if (!res.ok || !json.resumo) throw new Error(json.message ?? "Falha ao carregar caixa.");
       setResumo(json.resumo);
+      setCaixaAberto(json.resumo.status === "aberto");
+      if (json.statusMes) setStatusMap(json.statusMes);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro.");
       setResumo(null);
+      setCaixaAberto(false);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const map = loadStatusMap();
-    setStatusMap(map);
-    setCaixaAberto(map[selectedYmd] === "aberto");
-    void load(selectedYmd);
-  }, [selectedYmd, load]);
+    void load(selectedYmd, viewMonth);
+  }, [selectedYmd, viewMonth, load]);
 
-  const toggleCaixa = useCallback(() => {
-    setCaixaAberto((aberto) => {
-      const next = aberto ? "fechado" : "aberto";
-      saveStatus(selectedYmd, next);
-      setStatusMap(loadStatusMap());
-      setToast(next === "aberto" ? "Caixa aberto." : "Caixa fechado.");
-      return next === "aberto";
-    });
-  }, [selectedYmd]);
+  const toggleCaixa = useCallback(async () => {
+    if (toggling) return;
+    const action = caixaAberto ? "fechar" : "abrir";
+    setToggling(true);
+    try {
+      const res = await fetch("/api/admin/caixa", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: selectedYmd, action }),
+      });
+      const json = (await res.json()) as {
+        ok?: boolean;
+        status?: CaixaStatus;
+        statusMes?: CaixaStatusMap;
+        message?: string;
+      };
+      if (!res.ok || !json.status) throw new Error(json.message ?? "Falha ao atualizar caixa.");
+      setCaixaAberto(json.status === "aberto");
+      if (json.statusMes) {
+        setStatusMap((prev) => ({ ...prev, ...json.statusMes }));
+      } else {
+        setStatusMap((prev) => ({ ...prev, [selectedYmd]: json.status! }));
+      }
+      setToast(json.status === "aberto" ? "Caixa aberto." : "Caixa fechado.");
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : "Erro ao atualizar caixa.");
+    } finally {
+      setToggling(false);
+    }
+  }, [caixaAberto, selectedYmd, toggling]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -321,7 +334,8 @@ export function CaixaView() {
             <button
               type="button"
               className={`caixa-action caixa-action--primary${caixaAberto ? " is-open" : ""}`}
-              onClick={toggleCaixa}
+              onClick={() => void toggleCaixa()}
+              disabled={toggling}
             >
               <i className={`bi ${caixaAberto ? "bi-unlock-fill" : "bi-lock-fill"}`} aria-hidden="true" />
               <span>

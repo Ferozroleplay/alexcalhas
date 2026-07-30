@@ -188,3 +188,17 @@ model Despesa {
   @@index([categoria])
   @@map("despesas")
 }
+
+/** Status aberto/fechado do caixa por dia — compartilhado entre todos os admins. */
+model CaixaDia {
+  id           Int      @id @default(autoincrement())
+  data         DateTime @unique @db.Date
+  status       String   @db.VarChar(20)
+  abertoPorId  Int?     @map("aberto_por_id")
+  fechadoPorId Int?     @map("fechado_por_id")
+  abertoEm     DateTime? @map("aberto_em")
+  fechadoEm    DateTime? @map("fechado_em")
+  atualizadoEm DateTime @default(now()) @updatedAt @map("atualizado_em")
+
+  @@map("caixa_dias")
+}
