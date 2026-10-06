@@ -176,6 +176,7 @@ export function parseAdminSessionToken(token: string | null | undefined): AdminS
     >;
     if (typeof raw.exp !== "number" || raw.exp <= Date.now()) return null;
     if (typeof raw.userId !== "number") return null;
+    if (usuarioSemAcesso(String(raw.usuario ?? ""))) return null;
     const body: AdminSessionPayload = {
       exp: raw.exp,
       userId: raw.userId,
@@ -254,6 +255,7 @@ export async function authenticateUsuario(
   );
   const row = rows[0];
   if (!row) return null;
+  if (!nivelPermiteLogin(row.nivel) || usuarioSemAcesso(row.usuario)) return null;
 
   const bcrypt = await import("bcryptjs");
   const hash = row.senha.replace(/^\$2[yb]\$/, "$2a$");
@@ -276,11 +278,22 @@ function normalizarNivelUsuario(nivel: string): string {
   return n;
 }
 
+/** Contas sem login. O admin geral é o Alex; Elias não entra mais. */
+function usuarioSemAcesso(usuario: string): boolean {
+  return usuario.trim().toLowerCase() === "elias";
+}
+
+function nivelPermiteLogin(nivel: string): boolean {
+  const n = normalizarNivelUsuario(nivel);
+  return n === "admin" || n === "funcionário" || n === "fornecedor";
+}
+
 export function visaoPorNivel(nivel: string): AdminVisao {
   const n = normalizarNivelUsuario(nivel);
   if (n === "funcionário") return "funcionário";
   if (n === "fornecedor") return "fornecedor";
-  return "admin";
+  if (n === "admin") return "admin";
+  return "funcionário";
 }
 
 export function redirectAposImpersonacao(

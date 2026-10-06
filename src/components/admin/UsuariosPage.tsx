@@ -33,6 +33,7 @@ function nivelLabel(u: UsuarioItem): string {
   if (u.nivel === "funcionário" || u.nivel === "funcionario") return "Funcionário";
   if (u.nivel === "admin") return "Admin";
   if (u.nivel === "fornecedor") return "Fornecedor";
+  if (u.nivel === "inativo") return "Sem acesso";
   return u.nivel;
 }
 
