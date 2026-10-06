@@ -320,6 +320,17 @@ export function AdminShell() {
                     <span>Meus pagamentos</span>
                   </Link>
                 </li>
+                <li className={navActive(pathname, "/painel/calculadora-bobina") ? "activeMenu" : ""}>
+                  <Link
+                    to="/painel/calculadora-bobina"
+                    className="dash-nav-link"
+                    title="Calculadora"
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <i className="bi bi-calculator" aria-hidden="true" />
+                    <span>Calculadora</span>
+                  </Link>
+                </li>
               </>
             )}
 

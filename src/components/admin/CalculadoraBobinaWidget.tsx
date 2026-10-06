@@ -7,18 +7,31 @@ import {
   calcularBobina,
   colunasPadraoInstalado,
   colunasPadraoMaterial,
-  escolherMaterialPorCorte,
   formatBrl,
   formatMultLabel,
   linhasBobinaPadrao,
   linhasCalculadoraParaOrcamento,
   materiaisPorPerfilCorte,
   parseNumeroBr,
-  sincronizarMaterialLinha,
   type ColunaPersonalizada,
   type LinhaBobina,
   type MaterialCorteRef,
 } from "@/lib/calculadora-bobina";
+import {
+  EMPRESA_DEFAULTS,
+  formatMoneyInput,
+  formatPctInput,
+  loadEmpresaConfig,
+  type EmpresaConfig,
+} from "@/lib/empresa-config";
+import {
+  ESPESSURAS_CHAPA,
+  LARGURA_BOBINA_PADRAO_CM,
+  escolherMaterialPorCorteEspessura,
+  materialTemEspessura,
+  valorBobinaPorEspessura,
+  type EspessuraChapa,
+} from "@/lib/orcamento-empresa";
 import type { OrcamentoLinha } from "@/lib/orcamento.server";
 
 function uid() {
@@ -111,6 +124,8 @@ export function CalculadoraBobinaWidget({
 }: Props) {
   const printRef = useRef<HTMLDivElement>(null);
   const isModal = variant === "modal";
+  const [empresa, setEmpresa] = useState<EmpresaConfig>(EMPRESA_DEFAULTS);
+  const [espessura, setEspessura] = useState<EspessuraChapa>("0.43");
   const [valorBobina, setValorBobina] = useState("");
   const [metragemTotal, setMetragemTotal] = useState("");
   const [larguraBobina, setLarguraBobina] = useState("");
@@ -126,6 +141,15 @@ export function CalculadoraBobinaWidget({
   const [materiais, setMateriais] = useState<MaterialCorteRef[]>([]);
 
   useEffect(() => {
+    const cfg = loadEmpresaConfig();
+    setEmpresa(cfg);
+    setEspessura("0.43");
+    setValorBobina(formatMoneyInput(valorBobinaPorEspessura(cfg, "0.43")));
+    setMetragemTotal(formatPctInput(cfg.comprimentoBobina));
+    setLarguraBobina(String(LARGURA_BOBINA_PADRAO_CM));
+  }, []);
+
+  useEffect(() => {
     void fetchMateriais()
       .then((itens) =>
         setMateriais(
@@ -138,10 +162,21 @@ export function CalculadoraBobinaWidget({
       .catch(() => setMateriais([]));
   }, []);
 
+  function linhaComChapa(linha: LinhaBobina, esp: EspessuraChapa, lista: MaterialCorteRef[]): LinhaBobina {
+    const corte = parseNumeroBr(linha.corteCm);
+    if (corte <= 0) return { ...linha, materialId: null, materialNome: null };
+    const escolhido = escolherMaterialPorCorteEspessura(lista, corte, esp, linha.materialId);
+    return {
+      ...linha,
+      materialId: escolhido?.id ?? null,
+      materialNome: escolhido?.material?.trim() || null,
+    };
+  }
+
   useEffect(() => {
     if (materiais.length === 0) return;
-    setLinhas((prev) => prev.map((l) => sincronizarMaterialLinha(l, materiais)));
-  }, [materiais]);
+    setLinhas((prev) => prev.map((l) => linhaComChapa(l, espessura, materiais)));
+  }, [materiais, espessura]);
 
   const resultado = useMemo(
     () =>
@@ -168,7 +203,7 @@ export function CalculadoraBobinaWidget({
         if (l.id !== id) return l;
         const merged = { ...l, ...patch };
         if ("corteCm" in patch || "materialId" in patch) {
-          return sincronizarMaterialLinha(merged, materiais);
+          return linhaComChapa(merged, espessura, materiais);
         }
         return merged;
       }),
@@ -191,15 +226,16 @@ export function CalculadoraBobinaWidget({
 
   function produtoLinha(linha: LinhaBobina) {
     const corte = parseNumeroBr(linha.corteCm);
-    const matches = materiaisPorPerfilCorte(materiais, corte);
-    const escolhido =
-      linha.materialNome && linha.materialId
-        ? materiais.find((m) => m.id === linha.materialId) ?? {
-            id: linha.materialId,
-            material: linha.materialNome,
-          }
-        : escolherMaterialPorCorte(materiais, corte, linha.materialId);
+    const porCorte = materiaisPorPerfilCorte(materiais, corte);
+    const porEspessura = porCorte.filter((m) => materialTemEspessura(m.material ?? "", espessura));
+    const matches = porEspessura.length > 0 ? porEspessura : porCorte;
+    const escolhido = escolherMaterialPorCorteEspessura(materiais, corte, espessura, linha.materialId);
     return { corte, matches, escolhido };
+  }
+
+  function escolherChapa(esp: EspessuraChapa) {
+    setEspessura(esp);
+    setValorBobina(formatMoneyInput(valorBobinaPorEspessura(empresa, esp)));
   }
 
   function adicionarLinha() {
@@ -230,9 +266,12 @@ export function CalculadoraBobinaWidget({
   const temColunasPersonalizadas = colunasPersonalizadas.length > 0;
 
   function limparValores() {
-    setValorBobina("");
-    setMetragemTotal("");
-    setLarguraBobina("");
+    const cfg = loadEmpresaConfig();
+    setEmpresa(cfg);
+    setEspessura("0.43");
+    setValorBobina(formatMoneyInput(valorBobinaPorEspessura(cfg, "0.43")));
+    setMetragemTotal(formatPctInput(cfg.comprimentoBobina));
+    setLarguraBobina(String(LARGURA_BOBINA_PADRAO_CM));
     setLinhas(linhasBobinaPadrao());
     restaurarColunasPadrao();
     setImportErro("");
@@ -349,7 +388,7 @@ export function CalculadoraBobinaWidget({
       window.requestAnimationFrame(() => {
         importFeedbackRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
       });
-      setLinhas(linhasBobinaPadrao().map((l) => sincronizarMaterialLinha(l, materiais)));
+      setLinhas(linhasBobinaPadrao());
       setImportErro("");
     }
   }
@@ -365,22 +404,21 @@ export function CalculadoraBobinaWidget({
         </h2>
         <div className="row g-3 align-items-end">
           <div className="col-12 col-md-4">
-            <label className="dash-edit-modal__label" htmlFor={`${idPrefix}-valor`}>
-              Valor da bobina
+            <label className="dash-edit-modal__label" htmlFor={`${idPrefix}-chapa`}>
+              Chapa
             </label>
-            <div className="input-group dash-material-money-group">
-              <span className="input-group-text">R$</span>
-              <input
-                id={`${idPrefix}-valor`}
-                type="text"
-                inputMode="decimal"
-                autoComplete="off"
-                className="form-control dash-edit-modal__input"
-                placeholder="0,00"
-                value={valorBobina}
-                onChange={(e) => setValorBobina(e.target.value)}
-              />
-            </div>
+            <select
+              id={`${idPrefix}-chapa`}
+              className="form-select dash-edit-modal__input"
+              value={espessura}
+              onChange={(e) => escolherChapa(e.target.value as EspessuraChapa)}
+            >
+              {ESPESSURAS_CHAPA.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  Chapa {opt.label} — R$ {formatMoneyInput(valorBobinaPorEspessura(empresa, opt.value))}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="col-6 col-md-4">
             <label className="dash-edit-modal__label" htmlFor={`${idPrefix}-metragem`}>
@@ -419,6 +457,9 @@ export function CalculadoraBobinaWidget({
             </div>
           </div>
         </div>
+        <p className="text-secondary small mb-0 mt-2">
+          A chapa e o comprimento vêm do cadastro da empresa. A largura começa em {LARGURA_BOBINA_PADRAO_CM} cm.
+        </p>
       </section>
 
       {!isModal ? (
