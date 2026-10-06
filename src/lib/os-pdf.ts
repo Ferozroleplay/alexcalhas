@@ -135,6 +135,51 @@ export async function gerarPngDoElemento(el: HTMLElement, filename: string): Pro
   }
 }
 
+/** PDF no tamanho do conteúdo, sem folha A4 sobrando. */
+export async function gerarPdfNoConteudo(el: HTMLElement, filename: string): Promise<void> {
+  await aguardarImagens(el);
+  const widthPx = Math.ceil(Math.max(el.scrollWidth, el.offsetWidth, 1));
+  const heightPx = Math.ceil(Math.max(el.scrollHeight, el.offsetHeight, 1));
+  const pxToMm = 25.4 / 96;
+  const widthMm = Math.round(widthPx * pxToMm * 10) / 10;
+  const heightMm = Math.round(heightPx * pxToMm * 10) / 10;
+
+  const canvasMod = await import("html2canvas");
+  const html2canvas = canvasMod.default;
+  if (!html2canvas) throw new Error("Biblioteca de imagem indisponível.");
+
+  const canvas = await html2canvas(el, {
+    scale: 2,
+    useCORS: true,
+    logging: false,
+    backgroundColor: "#ffffff",
+    scrollX: 0,
+    scrollY: 0,
+    width: widthPx,
+    height: heightPx,
+    windowWidth: widthPx,
+    windowHeight: heightPx,
+  });
+
+  const { jsPDF } = await import("jspdf");
+  const landscape = widthMm >= heightMm;
+  const pdf = new jsPDF({
+    unit: "mm",
+    format: [widthMm, heightMm],
+    orientation: landscape ? "landscape" : "portrait",
+    compress: true,
+  });
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  pdf.addImage(canvas.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, pageW, pageH);
+
+  const blob = pdf.output("blob");
+  if (!blob || blob.size < 500) {
+    throw new Error("PDF gerado está vazio. Tente novamente.");
+  }
+  baixarBlob(blob, filename);
+}
+
 export async function gerarPdfDoElemento(el: HTMLElement, filename: string): Promise<void> {
   await aguardarImagens(el);
   prepararQuebrasPdf(el);

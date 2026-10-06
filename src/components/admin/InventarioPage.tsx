@@ -23,6 +23,7 @@ import { horaParaExibicaoVisita, ordenarInventarioPorMontagem } from "@/lib/inve
 import { ModalConfirmarMontagem } from "@/components/admin/modals/ModalConfirmarMontagem";
 import { ModalEditarCliente } from "@/components/admin/modals/ModalEditarCliente";
 import { ModalOrcamento } from "@/components/admin/modals/ModalOrcamento";
+import { ClienteDashModal } from "@/components/admin/modals/ClienteDashModal";
 import { ModalRecebimentos } from "@/components/admin/modals/ModalRecebimentos";
 import { dashConfirm, dashToast } from "@/lib/dash-ui";
 import {
@@ -96,6 +97,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
 
   const [recebimentosOpen, setRecebimentosOpen] = useState(false);
   const [recebimentosItem, setRecebimentosItem] = useState<AgendamentoItem | null>(null);
+  const [fichaItem, setFichaItem] = useState<AgendamentoItem | null>(null);
   const statusFilter = STATUS_FILTER[variant];
 
   const load = useCallback(async () => {
@@ -181,6 +183,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
   ) {
     setItems((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
     setRecebimentosItem((prev) => (prev?.id === id ? { ...prev, ...patch } : prev));
+    setFichaItem((prev) => (prev?.id === id ? { ...prev, ...patch } : prev));
   }
 
   async function handleCancelar(id: number) {
@@ -287,7 +290,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
         <>
           <InvActionBtn
             icon="bi-cash-coin"
-            title="Registrar pagamento do cliente"
+            title="Registrar entrada"
             variant="secondary"
             onClick={() => openRecebimentos(item)}
           />
@@ -327,6 +330,11 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
           onClick: () => openRecebimentos(item),
         },
         {
+          label: "Ficha do cliente",
+          icon: "bi-eye",
+          onClick: () => setFichaItem(item),
+        },
+        {
           label: "Editar",
           icon: "bi-pencil-square",
           className: "inv-dropdown-item--edit",
@@ -351,7 +359,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
         <>
           <InvActionBtn
             icon="bi-cash-coin"
-            title="Registrar pagamento do cliente"
+            title="Registrar entrada"
             variant="secondary"
             onClick={() => openRecebimentos(item)}
           />
@@ -390,6 +398,11 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
               label: "Pagamentos",
               icon: "bi-cash-coin",
               onClick: () => openRecebimentos(item),
+            },
+            {
+              label: "Ficha do cliente",
+              icon: "bi-eye",
+              onClick: () => setFichaItem(item),
             },
             {
               label: "Editar",
@@ -441,6 +454,11 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
             onClick: () => gerarOS(item.id),
           },
           {
+            label: "Ficha do cliente",
+            icon: "bi-eye",
+            onClick: () => setFichaItem(item),
+          },
+          {
             label: "Editar",
             icon: "bi-pencil-square",
             className: "inv-dropdown-item--edit",
@@ -473,6 +491,15 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
 
   return (
     <div className={`analytics-page dash-form-page--pro dashboard-page--${listingSlug}`}>
+      {fichaItem ? (
+        <ClienteDashModal
+          open
+          onClose={() => setFichaItem(null)}
+          item={fichaItem}
+          onPagamentoSalvo={(patch) => patchRecebimentosItem(fichaItem.id, patch)}
+        />
+      ) : (
+      <>
       <DashPageHero
         title={meta.title}
         subtitle={meta.subtitle}
@@ -588,7 +615,20 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
                             <span className="inv-id-badge">#{item.id}</span>
                           </th>
                           <td className="inv-col-cliente">
-                            <span className="inv-cliente-nome">{item.nome}</span>
+                            <span className="inv-cliente-cell">
+                              {!showVisita ? (
+                                <button
+                                  type="button"
+                                  className="cli-eye"
+                                  title="Abrir ficha do cliente"
+                                  aria-label={`Abrir ficha de ${item.nome}`}
+                                  onClick={() => setFichaItem(item)}
+                                >
+                                  <i className="bi bi-eye" aria-hidden="true" />
+                                </button>
+                              ) : null}
+                              <span className="inv-cliente-nome">{item.nome}</span>
+                            </span>
                           </td>
                           <td className="inv-col-telefone">
                             <TelefoneCell telefone={item.telefone} />
@@ -653,7 +693,20 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
                     <header className="inv-card__head">
                       <div className="inv-card__title">
                         <span className="inv-id-badge">#{item.id}</span>
-                        <strong className="inv-card__name">{item.nome}</strong>
+                        <span className="inv-cliente-cell">
+                          {!showVisita ? (
+                            <button
+                              type="button"
+                              className="cli-eye"
+                              title="Abrir ficha do cliente"
+                              aria-label={`Abrir ficha de ${item.nome}`}
+                              onClick={() => setFichaItem(item)}
+                            >
+                              <i className="bi bi-eye" aria-hidden="true" />
+                            </button>
+                          ) : null}
+                          <strong className="inv-card__name">{item.nome}</strong>
+                        </span>
                       </div>
                       <div className="inv-card__actions">{renderActions(item)}</div>
                     </header>
@@ -723,6 +776,8 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
           )}
         </div>
       </div>
+      </>
+      )}
 
       <ModalOrcamento
         open={orcamentoOpen}

@@ -81,7 +81,7 @@ export const Route = createFileRoute("/api/agendamentos")({
               const item = serializeInventario(row);
               if (!statusPermiteRecebimento(row.status)) return item;
               const agg = mapaRecebido[row.id];
-              const resumo = calcularResumoRecebimento(Number(row.valor), agg?.total ?? 0);
+              const resumo = calcularResumoRecebimento(Number(item.valor), agg?.total ?? 0);
               return {
                 ...item,
                 valorRecebido: resumo.valorRecebido,

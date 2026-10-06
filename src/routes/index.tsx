@@ -6,11 +6,13 @@ import { getHomeLandingData } from "@/lib/home-landing.functions";
 
 type IndexSearch = {
   painel?: "login";
+  erro?: string;
 };
 
 export const Route = createFileRoute("/")({
   validateSearch: (search: Record<string, unknown>): IndexSearch => ({
     painel: search.painel === "login" ? "login" : undefined,
+    erro: typeof search.erro === "string" ? search.erro : undefined,
   }),
   loader: async () => ({
     home: await getHomeLandingData(),
@@ -49,7 +51,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const { home } = Route.useLoaderData();
-  const { painel } = Route.useSearch();
+  const { painel, erro } = Route.useSearch();
   const [loginOpen, setLoginOpen] = useState(painel === "login");
 
   useEffect(() => {
@@ -61,6 +63,7 @@ function Index() {
       data={home}
       painelLoginOpen={loginOpen}
       onPainelLoginOpenChange={setLoginOpen}
+      loginErro={erro}
     />
   );
 }

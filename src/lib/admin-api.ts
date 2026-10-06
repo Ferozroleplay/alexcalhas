@@ -484,7 +484,11 @@ export async function fetchRecebimentosInventario(inventarioId: number): Promise
 export async function registrarRecebimentoInventario(
   inventarioId: number,
   payload: { valor: string | number; tipo?: string; pago_em: string; observacao?: string },
-): Promise<{ recebimentos: InventarioRecebimentoItem[]; resumo: RecebimentoResumo }> {
+): Promise<{
+  recebimentos: InventarioRecebimentoItem[];
+  resumo: RecebimentoResumo;
+  recebimentoId: number;
+}> {
   const res = await fetch(`/api/agendamentos/${inventarioId}/recebimentos`, {
     method: "POST",
     credentials: "include",
@@ -493,11 +497,37 @@ export async function registrarRecebimentoInventario(
   });
   const data = await parseJson<{
     ok?: boolean;
+    recebimento_id?: number;
     recebimentos?: InventarioRecebimentoItem[];
     resumo?: RecebimentoResumo;
     message?: string;
   }>(res);
   if (!res.ok || !data.resumo) throw new Error(data.message ?? "Erro ao registrar pagamento.");
+  return {
+    recebimentos: data.recebimentos ?? [],
+    resumo: data.resumo,
+    recebimentoId: data.recebimento_id ?? 0,
+  };
+}
+
+export async function atualizarRecebimentoInventario(
+  inventarioId: number,
+  recebimentoId: number,
+  payload: { valor: string | number; tipo?: string; pago_em: string; observacao?: string },
+): Promise<{ recebimentos: InventarioRecebimentoItem[]; resumo: RecebimentoResumo }> {
+  const res = await fetch(`/api/agendamentos/${inventarioId}/recebimentos`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...payload, recebimento_id: recebimentoId }),
+  });
+  const data = await parseJson<{
+    ok?: boolean;
+    recebimentos?: InventarioRecebimentoItem[];
+    resumo?: RecebimentoResumo;
+    message?: string;
+  }>(res);
+  if (!res.ok || !data.resumo) throw new Error(data.message ?? "Erro ao atualizar pagamento.");
   return { recebimentos: data.recebimentos ?? [], resumo: data.resumo };
 }
 

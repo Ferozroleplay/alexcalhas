@@ -1,0 +1,480 @@
+.recibo-body {
+  margin: 0;
+  padding: 18px;
+  background: #e7eee9;
+  color: #163028;
+  color-scheme: light;
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+}
+
+html.recibo-embed,
+html.recibo-embed body {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: #fff !important;
+  width: 760px !important;
+  min-height: 0 !important;
+}
+
+.recibo-body--embed {
+  padding: 0 !important;
+  background: #fff !important;
+  width: 760px !important;
+  min-height: 0 !important;
+}
+
+.recibo-page,
+.recibo-page * {
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif !important;
+}
+
+.recibo-page {
+  width: 740px;
+  max-width: 740px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  background: #f7fbf8 !important;
+  color: #173528 !important;
+  padding: 16px 16px 0;
+  border: 1px solid #d5e6db;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.recibo-body--embed .recibo-page {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.recibo-marca {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 4px 6px 12px;
+}
+
+.recibo-logo {
+  display: block;
+  height: 58px !important;
+  width: auto !important;
+  max-width: 210px;
+}
+
+.recibo-selos {
+  display: flex;
+  gap: 14px;
+  margin: 0;
+  padding: 0 0 0 16px;
+  list-style: none;
+  border-left: 1px solid #d5e4db;
+}
+
+.recibo-selos li {
+  width: 92px;
+  text-align: center;
+  font-size: 8px;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5d7268 !important;
+  font-weight: 700;
+}
+
+.recibo-selos span,
+.recibo-banner__titulo > span,
+.recibo-bloco h2 > span,
+.recibo-opcoes h2 > span,
+.recibo-recebido span {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: #1c8a48;
+}
+
+.recibo-selos span {
+  width: 34px;
+  height: 34px;
+  margin: 0 auto 4px;
+  border: 1.5px solid #1c8a48;
+  border-radius: 50%;
+}
+
+.recibo-selos svg,
+.recibo-banner svg,
+.recibo-bloco svg,
+.recibo-opcoes svg,
+.recibo-recebido svg,
+.recibo-rodape svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.recibo-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #1c8a48 !important;
+  color: #fff !important;
+}
+
+.recibo-banner__titulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.recibo-banner__titulo > span {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff !important;
+}
+
+.recibo-banner h1 {
+  margin: 0 !important;
+  font-size: 20px !important;
+  line-height: 1 !important;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff !important;
+}
+
+.recibo-banner p {
+  margin: 3px 0 0;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+
+.recibo-banner__meta {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 1px 10px;
+  text-align: right;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+.recibo-banner__meta strong {
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: #fff !important;
+}
+
+.recibo-bloco,
+.recibo-opcoes {
+  margin: 0 0 8px;
+  padding: 8px 10px 10px;
+  border: 1px solid #cfe3d6;
+  border-radius: 10px;
+  background: #fff !important;
+}
+
+.recibo-bloco h2,
+.recibo-opcoes h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1c8a48 !important;
+}
+
+.recibo-bloco h2 > span,
+.recibo-opcoes h2 > span {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e7f6ec;
+}
+
+.recibo-campos p {
+  display: grid;
+  grid-template-columns: 148px 1fr;
+  gap: 8px;
+  align-items: end;
+  margin: 0 0 6px;
+}
+
+.recibo-campos span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #5d7268 !important;
+}
+
+.recibo-campos strong {
+  min-height: 16px;
+  border-bottom: 1px solid #b7cfc2;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.3;
+  color: #173528 !important;
+}
+
+.recibo-desc {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.recibo-desc th,
+.recibo-desc td {
+  text-align: left !important;
+  background: transparent !important;
+}
+
+.recibo-desc th {
+  padding: 5px 8px;
+  background: #1c8a48 !important;
+  color: #fff !important;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.recibo-desc th:last-child,
+.recibo-desc td:last-child {
+  text-align: right !important;
+  width: 110px;
+  white-space: nowrap;
+}
+
+.recibo-desc td {
+  padding: 5px 8px;
+  border-bottom: 1px solid #e5f0e9;
+  font-size: 12px;
+  color: #173528 !important;
+}
+
+.recibo-desc small {
+  display: block;
+  margin-top: 1px;
+  font-size: 10px;
+  color: #5d7268 !important;
+}
+
+.recibo-recebido {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #e7f6ec !important;
+  border: 1px solid #b7e0c4;
+}
+
+.recibo-recebido > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.recibo-recebido > div > span {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #1c8a48;
+  color: #fff !important;
+}
+
+.recibo-recebido strong {
+  display: block;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #146b38 !important;
+}
+
+.recibo-recebido em {
+  display: block;
+  margin-top: 2px;
+  font-style: normal;
+  font-size: 11px;
+  line-height: 1.3;
+  color: #3e564b !important;
+}
+
+.recibo-recebido b {
+  font-size: 26px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #146b38 !important;
+  white-space: nowrap;
+}
+
+.recibo-opcoes > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.recibo-opcoes label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #173528 !important;
+}
+
+.recibo-check {
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  border: 1.5px solid #1c8a48;
+  border-radius: 3px;
+  background: #fff;
+  display: inline-grid;
+  place-items: center;
+}
+
+.recibo-check svg {
+  width: 12px;
+  height: 12px;
+}
+
+.recibo-check.is-on {
+  background: #1c8a48;
+  color: #fff;
+}
+
+.recibo-opcoes i {
+  display: inline-block;
+  width: 72px;
+  border-bottom: 1px solid #b7cfc2;
+}
+
+.recibo-obs {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid #d5e6db;
+  border-radius: 8px;
+  background: #f7fbf8 !important;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: #173528 !important;
+}
+
+.recibo-assinaturas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  padding: 8px 18px 4px;
+}
+
+.recibo-assinaturas div {
+  text-align: center;
+}
+
+.recibo-assinaturas img {
+  display: block;
+  height: 42px !important;
+  width: auto !important;
+  max-width: 150px;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
+.recibo-assinaturas span,
+.recibo-linha-cliente {
+  display: block;
+  height: 1px;
+  margin: 2px 18px 4px;
+  background: #173528;
+}
+
+.recibo-linha-cliente {
+  margin-top: 44px;
+}
+
+.recibo-assinaturas strong,
+.recibo-assinaturas small {
+  display: block;
+}
+
+.recibo-assinaturas strong {
+  font-size: 12px;
+  color: #173528 !important;
+}
+
+.recibo-assinaturas small {
+  font-size: 10px;
+  color: #5d7268 !important;
+}
+
+.recibo-obrigado {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: #1c8a48 !important;
+}
+
+.recibo-obrigado small {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #3e564b !important;
+}
+
+.recibo-rodape {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 10px -16px 0;
+  padding: 8px 16px;
+  background: #146b38 !important;
+  color: #fff !important;
+}
+
+.recibo-rodape span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 650;
+  color: #fff !important;
+}
+
+.recibo-rodape svg {
+  width: 14px;
+  height: 14px;
+}
+
+.recibo-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.recibo-actions button {
+  border: 0;
+  border-radius: 8px;
+  background: #146b38;
+  color: #fff;
+  font-weight: 700;
+  padding: 10px 22px;
+  cursor: pointer;
+}

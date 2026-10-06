@@ -14,9 +14,10 @@ type Props = {
   data: HomeLandingData;
   painelLoginOpen?: boolean;
   onPainelLoginOpenChange?: (open: boolean) => void;
+  loginErro?: string;
 };
 
-export function HomeLanding({ data, painelLoginOpen, onPainelLoginOpenChange }: Props) {
+export function HomeLanding({ data, painelLoginOpen, onPainelLoginOpenChange, loginErro }: Props) {
   const navigate = useNavigate();
   const [localLogin, setLocalLogin] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
@@ -430,7 +431,7 @@ export function HomeLanding({ data, painelLoginOpen, onPainelLoginOpenChange }: 
       </footer>
 
       <AcSiteChat />
-      {!loggedIn ? <AcLoginModal open={loginOpen} onClose={fecharLogin} /> : null}
+      {!loggedIn ? <AcLoginModal open={loginOpen} onClose={fecharLogin} erro={loginErro} /> : null}
     </>
   );
 }

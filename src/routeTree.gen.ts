@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ReciboRouteImport } from './routes/recibo'
 import { Route as OsRouteImport } from './routes/os'
 import { Route as NotaEntregaRouteImport } from './routes/nota-entrega'
 import { Route as GaleriaRouteImport } from './routes/galeria'
@@ -78,6 +79,11 @@ import { Route as ApiAdminProdutosIdFotosRouteImport } from './routes/api/admin/
 import { Route as ApiAdminParceirosIdLogoRouteImport } from './routes/api/admin/parceiros/$id/logo'
 import { Route as ApiAdminProdutosIdFotosFotoIdRouteImport } from './routes/api/admin/produtos/$id/fotos/$fotoId'
 
+const ReciboRoute = ReciboRouteImport.update({
+  id: '/recibo',
+  path: '/recibo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OsRoute = OsRouteImport.update({
   id: '/os',
   path: '/os',
@@ -434,6 +440,7 @@ export interface FileRoutesByFullPath {
   '/galeria': typeof GaleriaRoute
   '/nota-entrega': typeof NotaEntregaRoute
   '/os': typeof OsRoute
+  '/recibo': typeof ReciboRoute
   '/api/agendamentos': typeof ApiAgendamentosRouteWithChildren
   '/api/consulta-documento': typeof ApiConsultaDocumentoRoute
   '/api/health': typeof ApiHealthRoute
@@ -503,6 +510,7 @@ export interface FileRoutesByTo {
   '/galeria': typeof GaleriaRoute
   '/nota-entrega': typeof NotaEntregaRoute
   '/os': typeof OsRoute
+  '/recibo': typeof ReciboRoute
   '/api/agendamentos': typeof ApiAgendamentosRouteWithChildren
   '/api/consulta-documento': typeof ApiConsultaDocumentoRoute
   '/api/health': typeof ApiHealthRoute
@@ -574,6 +582,7 @@ export interface FileRoutesById {
   '/galeria': typeof GaleriaRoute
   '/nota-entrega': typeof NotaEntregaRoute
   '/os': typeof OsRoute
+  '/recibo': typeof ReciboRoute
   '/api/agendamentos': typeof ApiAgendamentosRouteWithChildren
   '/api/consulta-documento': typeof ApiConsultaDocumentoRoute
   '/api/health': typeof ApiHealthRoute
@@ -646,6 +655,7 @@ export interface FileRouteTypes {
     | '/galeria'
     | '/nota-entrega'
     | '/os'
+    | '/recibo'
     | '/api/agendamentos'
     | '/api/consulta-documento'
     | '/api/health'
@@ -715,6 +725,7 @@ export interface FileRouteTypes {
     | '/galeria'
     | '/nota-entrega'
     | '/os'
+    | '/recibo'
     | '/api/agendamentos'
     | '/api/consulta-documento'
     | '/api/health'
@@ -785,6 +796,7 @@ export interface FileRouteTypes {
     | '/galeria'
     | '/nota-entrega'
     | '/os'
+    | '/recibo'
     | '/api/agendamentos'
     | '/api/consulta-documento'
     | '/api/health'
@@ -856,6 +868,7 @@ export interface RootRouteChildren {
   GaleriaRoute: typeof GaleriaRoute
   NotaEntregaRoute: typeof NotaEntregaRoute
   OsRoute: typeof OsRoute
+  ReciboRoute: typeof ReciboRoute
   ApiAgendamentosRoute: typeof ApiAgendamentosRouteWithChildren
   ApiConsultaDocumentoRoute: typeof ApiConsultaDocumentoRoute
   ApiHealthRoute: typeof ApiHealthRoute
@@ -890,6 +903,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/recibo': {
+      id: '/recibo'
+      path: '/recibo'
+      fullPath: '/recibo'
+      preLoaderRoute: typeof ReciboRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/os': {
       id: '/os'
       path: '/os'
@@ -1528,6 +1548,7 @@ const rootRouteChildren: RootRouteChildren = {
   GaleriaRoute: GaleriaRoute,
   NotaEntregaRoute: NotaEntregaRoute,
   OsRoute: OsRoute,
+  ReciboRoute: ReciboRoute,
   ApiAgendamentosRoute: ApiAgendamentosRouteWithChildren,
   ApiConsultaDocumentoRoute: ApiConsultaDocumentoRoute,
   ApiHealthRoute: ApiHealthRoute,

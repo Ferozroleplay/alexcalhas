@@ -1,9 +1,10 @@
 import { Loader2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AdminModal } from "@/components/admin/modals/AdminModal";
 import { useAdminAuth } from "@/components/admin/admin-auth";
 import {
+  atualizarRecebimentoInventario,
   excluirRecebimentoInventario,
   fetchRecebimentosInventario,
   registrarRecebimentoInventario,
@@ -16,8 +17,12 @@ import { formatMoeda } from "@/lib/financeiro-display";
 import {
   formatPagoEmExibicao,
   labelRecebimentoTipo,
+  normalizarValorPagamento,
+  parsePagoEm,
   RECEBIMENTO_TIPOS,
 } from "@/lib/inventario-recebimento-display";
+import { parseMoneyBr } from "@/lib/orcamento.server";
+import { abrirRecibo, baixarPdfRecibo } from "@/lib/recibo-pdf";
 
 type Props = {
   open: boolean;
@@ -28,6 +33,13 @@ type Props = {
 
 function agoraInputLocal(): string {
   const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function pagoEmParaCampo(raw: string): string {
+  const d = parsePagoEm(raw);
+  if (!d) return agoraInputLocal();
   const p = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
@@ -47,6 +59,9 @@ export function ModalRecebimentos({ open, onClose, item, onSaved }: Props) {
   const [tipo, setTipo] = useState("sinal");
   const [pagoEm, setPagoEm] = useState(agoraInputLocal());
   const [observacao, setObservacao] = useState("");
+  const [editandoId, setEditandoId] = useState<number | null>(null);
+  const [gerandoReciboId, setGerandoReciboId] = useState<number | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const load = useCallback(async () => {
     if (!item?.id) return;
@@ -72,6 +87,7 @@ export function ModalRecebimentos({ open, onClose, item, onSaved }: Props) {
       setTipo("sinal");
       setPagoEm(agoraInputLocal());
       setObservacao("");
+      setEditandoId(null);
       return;
     }
     void load();
@@ -87,25 +103,81 @@ export function ModalRecebimentos({ open, onClose, item, onSaved }: Props) {
     });
   }
 
+  function preencherValor(n: number) {
+    if (n <= 0) return;
+    setValor(n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+  }
+
+  async function gerarRecibo(recebimentoId: number) {
+    if (!item || gerandoReciboId) return;
+    setGerandoReciboId(recebimentoId);
+    dashToast("Gerando o recibo…", "info");
+    try {
+      await baixarPdfRecibo(item.id, recebimentoId);
+      dashToast("Recibo PDF baixado. Envie o arquivo no WhatsApp do cliente.", "success");
+    } catch (err) {
+      dashToast(err instanceof Error ? err.message : "Não foi possível gerar o recibo.", "danger");
+    } finally {
+      setGerandoReciboId(null);
+    }
+  }
+
+  function limparFormulario() {
+    setValor("");
+    setTipo("sinal");
+    setPagoEm(agoraInputLocal());
+    setObservacao("");
+    setEditandoId(null);
+  }
+
+  function iniciarEdicao(rec: InventarioRecebimentoItem) {
+    setEditandoId(rec.id);
+    setValor(rec.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    setTipo(rec.tipo);
+    setPagoEm(pagoEmParaCampo(rec.pago_em));
+    setObservacao(rec.observacao?.trim() ?? "");
+    setErro("");
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  const valorEmEdicao = editandoId ? (lista.find((r) => r.id === editandoId)?.valor ?? 0) : 0;
+  const tetoPagamento = (resumo?.saldoPendente ?? valorOrcamento) + valorEmEdicao;
+
   async function salvar(e: React.FormEvent) {
     e.preventDefault();
     if (!item) return;
+    const valorNum = parseMoneyBr(normalizarValorPagamento(valor));
+    if (valorNum <= 0) {
+      setErro("Informe um valor maior que zero.");
+      return;
+    }
+    if (valorNum > tetoPagamento + 0.009) {
+      setErro(`O valor passa do saldo. O máximo é R$ ${formatMoeda(tetoPagamento)}.`);
+      return;
+    }
+    const tipoSalvo = tipo;
+    const editando = editandoId;
     setSaving(true);
     setErro("");
     try {
-      const data = await registrarRecebimentoInventario(item.id, {
-        valor,
-        tipo,
+      const payload = {
+        valor: valorNum,
+        tipo: tipoSalvo,
         pago_em: pagoEm,
         observacao: observacao.trim() || undefined,
-      });
+      };
+      const data = editando
+        ? await atualizarRecebimentoInventario(item.id, editando, payload)
+        : await registrarRecebimentoInventario(item.id, payload);
       setLista(data.recebimentos);
       aplicarResumo(data.resumo);
-      setValor("");
-      setTipo("sinal");
-      setPagoEm(agoraInputLocal());
-      setObservacao("");
-      dashToast("Pagamento registrado.", "success");
+      limparFormulario();
+      setSaving(false);
+      if (!editando && tipoSalvo === "sinal" && "recebimentoId" in data && data.recebimentoId > 0) {
+        await gerarRecibo(data.recebimentoId);
+      } else {
+        dashToast(editando ? "Pagamento atualizado." : "Pagamento registrado.", "success");
+      }
     } catch (err) {
       setErro(err instanceof Error ? err.message : "Erro ao salvar.");
     } finally {
@@ -126,6 +198,7 @@ export function ModalRecebimentos({ open, onClose, item, onSaved }: Props) {
       const data = await excluirRecebimentoInventario(item.id, rec.id);
       setLista(data.recebimentos);
       aplicarResumo(data.resumo);
+      if (editandoId === rec.id) limparFormulario();
       dashToast("Pagamento removido.", "success");
     } catch (err) {
       dashToast(err instanceof Error ? err.message : "Erro.", "danger");
@@ -135,7 +208,7 @@ export function ModalRecebimentos({ open, onClose, item, onSaved }: Props) {
   const titulo = item ? `Pagamentos — ${item.nome}` : "Pagamentos do cliente";
 
   return (
-    <AdminModal open={open} onClose={onClose} dialogClass="modal-lg">
+    <AdminModal open={open} onClose={onClose} dialogClass="modal-lg" closeOnBackdrop={false}>
       <div className="modal-content visitas-orc-modal__content">
         <div className="modal-header visitas-orc-modal__header flex-shrink-0">
           <div className="visitas-orc-modal__head">
@@ -185,12 +258,13 @@ export function ModalRecebimentos({ open, onClose, item, onSaved }: Props) {
                 </div>
               ) : null}
 
-              <form className="dash-form mb-3" onSubmit={(e) => void salvar(e)}>
+              <form ref={formRef} className="dash-form inv-receb-form mb-3" onSubmit={(e) => void salvar(e)}>
                 <h3 className="dash-edit-modal__panel-title h6 mb-2">
-                  <i className="bi bi-plus-circle" aria-hidden="true" /> Registrar pagamento
+                  <i className={`bi ${editandoId ? "bi-pencil" : "bi-plus-circle"}`} aria-hidden="true" />{" "}
+                  {editandoId ? "Corrigir pagamento" : "Registrar pagamento"}
                 </h3>
-                <div className="row g-2 align-items-end">
-                  <div className="col-6 col-md-3">
+                <div className="inv-receb-form__grid">
+                  <div>
                     <label className="dash-edit-modal__label" htmlFor="rec-valor">
                       Valor (R$)
                     </label>
@@ -200,12 +274,13 @@ export function ModalRecebimentos({ open, onClose, item, onSaved }: Props) {
                       inputMode="decimal"
                       required
                       className="form-control dash-edit-modal__input"
-                      placeholder="1.750,00"
+                      placeholder="0,00"
                       value={valor}
                       onChange={(e) => setValor(e.target.value)}
+                      onBlur={() => setValor((atual) => normalizarValorPagamento(atual))}
                     />
                   </div>
-                  <div className="col-6 col-md-3">
+                  <div>
                     <label className="dash-edit-modal__label" htmlFor="rec-tipo">
                       Tipo
                     </label>
@@ -222,9 +297,9 @@ export function ModalRecebimentos({ open, onClose, item, onSaved }: Props) {
                       ))}
                     </select>
                   </div>
-                  <div className="col-12 col-md-4">
+                  <div className="inv-receb-form__quando">
                     <label className="dash-edit-modal__label" htmlFor="rec-pago-em">
-                      Data e hora do pagamento
+                      Data e hora
                     </label>
                     <input
                       id="rec-pago-em"
@@ -235,25 +310,46 @@ export function ModalRecebimentos({ open, onClose, item, onSaved }: Props) {
                       onChange={(e) => setPagoEm(e.target.value)}
                     />
                   </div>
-                  <div className="col-12 col-md-2 d-grid">
+                  <div className="inv-receb-form__save">
                     <button type="submit" className="btn dash-edit-modal__btn-save" disabled={saving}>
-                      {saving ? "Salvando…" : "Salvar"}
+                      {saving ? "Salvando…" : editandoId ? "Atualizar" : "Salvar"}
+                    </button>
+                    {editandoId ? (
+                      <button type="button" className="btn dash-edit-modal__btn-cancel" onClick={limparFormulario}>
+                        Cancelar
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+                {valorOrcamento > 0 && tetoPagamento > 0 ? (
+                  <div className="inv-receb-atalhos">
+                    {(resumo?.valorRecebido ?? 0) <= 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => preencherValor(Math.round(valorOrcamento * 50) / 100)}
+                      >
+                        Entrada 50% · R${" "}
+                        {formatMoeda(Math.round(valorOrcamento * 50) / 100)}
+                      </button>
+                    ) : null}
+                    <button type="button" onClick={() => preencherValor(tetoPagamento)}>
+                      Valor restante · R$ {formatMoeda(tetoPagamento)}
                     </button>
                   </div>
-                  <div className="col-12">
-                    <label className="dash-edit-modal__label" htmlFor="rec-obs">
-                      Observação (opcional)
-                    </label>
-                    <input
-                      id="rec-obs"
-                      type="text"
-                      className="form-control dash-edit-modal__input"
-                      placeholder="Pix, comprovante, banco…"
-                      maxLength={255}
-                      value={observacao}
-                      onChange={(e) => setObservacao(e.target.value)}
-                    />
-                  </div>
+                ) : null}
+                <div className="inv-receb-form__obs">
+                  <label className="dash-edit-modal__label" htmlFor="rec-obs">
+                    Observação (opcional)
+                  </label>
+                  <input
+                    id="rec-obs"
+                    type="text"
+                    className="form-control dash-edit-modal__input"
+                    placeholder="Pix, comprovante, banco…"
+                    maxLength={255}
+                    value={observacao}
+                    onChange={(e) => setObservacao(e.target.value)}
+                  />
                 </div>
               </form>
 
@@ -271,28 +367,56 @@ export function ModalRecebimentos({ open, onClose, item, onSaved }: Props) {
                         <th>Tipo</th>
                         <th className="text-end">Valor</th>
                         <th>Obs.</th>
-                        {isAdmin ? <th className="text-end" /> : null}
+                        <th className="text-end">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
                       {lista.map((rec) => (
-                        <tr key={rec.id}>
+                        <tr key={rec.id} className={editandoId === rec.id ? "is-editing" : ""}>
                           <td>{formatPagoEmExibicao(rec.pago_em)}</td>
                           <td>{labelRecebimentoTipo(rec.tipo)}</td>
                           <td className="text-end">R$ {formatMoeda(rec.valor)}</td>
                           <td className="inv-receb-hist__obs">{rec.observacao || "—"}</td>
-                          {isAdmin ? (
-                            <td className="text-end">
+                          <td className="text-end">
+                            <div className="inv-receb-hist__acoes">
                               <button
                                 type="button"
-                                className="btn btn-sm btn-outline-danger"
-                                title="Excluir"
-                                onClick={() => void excluir(rec)}
+                                className="btn btn-sm btn-outline-success"
+                                title="Editar pagamento"
+                                onClick={() => iniciarEdicao(rec)}
                               >
-                                <i className="bi bi-trash3" aria-hidden="true" />
+                                <i className="bi bi-pencil" aria-hidden="true" />
                               </button>
-                            </td>
-                          ) : null}
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-success"
+                                title="Abrir recibo"
+                                onClick={() => {
+                                  if (!item) return;
+                                  try {
+                                    abrirRecibo(item.id, rec.id);
+                                  } catch (err) {
+                                    dashToast(
+                                      err instanceof Error ? err.message : "Não foi possível abrir o recibo.",
+                                      "danger",
+                                    );
+                                  }
+                                }}
+                              >
+                                PDF
+                              </button>
+                              {isAdmin ? (
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-outline-danger"
+                                  title="Excluir"
+                                  onClick={() => void excluir(rec)}
+                                >
+                                  <i className="bi bi-trash3" aria-hidden="true" />
+                                </button>
+                              ) : null}
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>

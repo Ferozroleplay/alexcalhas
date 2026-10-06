@@ -3,6 +3,7 @@ import {
   RECEBIMENTO_TIPOS,
   labelRecebimentoTipo,
   formatPagoEmExibicao,
+  normalizarValorPagamento,
 } from "@/lib/inventario-recebimento-display";
 import { parseMoneyBr } from "@/lib/orcamento.server";
 
@@ -105,13 +106,22 @@ export function calcularResumoRecebimento(valorOrcamento: number, valorRecebido:
   };
 }
 
+function pagoEmTexto(raw: unknown): string {
+  if (raw instanceof Date && !Number.isNaN(raw.getTime())) {
+    const p = (n: number) => String(n).padStart(2, "0");
+    return `${raw.getFullYear()}-${p(raw.getMonth() + 1)}-${p(raw.getDate())} ${p(raw.getHours())}:${p(raw.getMinutes())}:${p(raw.getSeconds())}`;
+  }
+  const s = String(raw ?? "").trim();
+  return s;
+}
+
 function mapRow(r: Record<string, unknown>): InventarioRecebimentoRow {
   return {
     id: int(r.id),
     inventario_id: int(r.inventario_id),
     valor: num(r.valor),
     tipo: normalizarRecebimentoTipo(String(r.tipo ?? "sinal")),
-    pago_em: String(r.pago_em ?? ""),
+    pago_em: pagoEmTexto(r.pago_em),
     observacao: r.observacao != null ? String(r.observacao) : null,
     registrado_por: r.registrado_por != null ? int(r.registrado_por) : null,
   };
@@ -167,6 +177,12 @@ export async function listarRecebimentosInventario(
   return { recebimentos, resumo };
 }
 
+/** Número a partir de "295,99", "295.99" ou "1.750,00". */
+export function valorPagamentoNumero(raw: unknown): number {
+  if (typeof raw === "number" && Number.isFinite(raw)) return parseMoneyBr(raw);
+  return parseMoneyBr(normalizarValorPagamento(String(raw ?? "")));
+}
+
 export async function criarRecebimentoInventario(input: {
   inventarioId: number;
   valor: unknown;
@@ -176,7 +192,7 @@ export async function criarRecebimentoInventario(input: {
   registradoPor?: number | null;
 }): Promise<{ ok: boolean; message: string; id?: number }> {
   const invId = int(input.inventarioId);
-  const valor = parseMoneyBr(input.valor);
+  const valor = valorPagamentoNumero(input.valor);
   if (invId <= 0) return { ok: false, message: "Registro inválido." };
   if (valor <= 0) return { ok: false, message: "Informe um valor maior que zero." };
 
@@ -196,6 +212,44 @@ export async function criarRecebimentoInventario(input: {
 
   const last = await prisma.$queryRawUnsafe<{ id: unknown }[]>(`SELECT LAST_INSERT_ID() AS id`);
   return { ok: true, message: "Pagamento registrado.", id: int(last[0]?.id) };
+}
+
+export async function atualizarRecebimentoInventario(input: {
+  recebimentoId: number;
+  inventarioId: number;
+  valor: unknown;
+  tipo: string;
+  pagoEm: string;
+  observacao?: string;
+}): Promise<{ ok: boolean; message: string }> {
+  const id = int(input.recebimentoId);
+  const invId = int(input.inventarioId);
+  const valor = valorPagamentoNumero(input.valor);
+  if (id <= 0 || invId <= 0) return { ok: false, message: "Pagamento inválido." };
+  if (valor <= 0) return { ok: false, message: "Informe um valor maior que zero." };
+
+  const pagoSql = pagoEmParaSql(input.pagoEm);
+  if (!pagoSql) return { ok: false, message: "Data ou hora do pagamento inválida." };
+
+  await ensureInventarioRecebimentoTable();
+  const prisma = await getPrisma();
+  const tipo = esc(normalizarRecebimentoTipo(input.tipo));
+  const obs = esc((input.observacao ?? "").trim().slice(0, 255));
+  const existe = await prisma.$queryRawUnsafe<{ id: unknown }[]>(
+    `SELECT id FROM inventario_recebimento WHERE id = ${id} AND inventario_id = ${invId} LIMIT 1`,
+  );
+  if (!existe.length) return { ok: false, message: "Pagamento não encontrado." };
+
+  await prisma.$executeRawUnsafe(
+    `UPDATE inventario_recebimento
+     SET valor = '${valor.toFixed(2)}',
+         tipo = '${tipo}',
+         pago_em = '${esc(pagoSql)}',
+         observacao = ${obs ? `'${obs}'` : "NULL"}
+     WHERE id = ${id} AND inventario_id = ${invId}
+     LIMIT 1`,
+  );
+  return { ok: true, message: "Pagamento atualizado." };
 }
 
 export async function excluirRecebimentoInventario(
