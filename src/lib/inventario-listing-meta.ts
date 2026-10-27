@@ -40,15 +40,15 @@ export const INVENTARIO_LISTING_META: Record<
   finalizado: {
     slug: "finalizado",
     title: "Finalizado",
-    subtitle: "Histórico de serviços concluídos e quitados.",
+    subtitle: "Histórico de serviços concluídos.",
     icon: "bi-flag-fill",
     emptyTitle: "Nenhum serviço finalizado",
-    emptyText: "Ao concluir e quitar um serviço confirmado, ele será arquivado nesta lista.",
+    emptyText: "Ao concluir um serviço confirmado, ele será arquivado nesta lista.",
   },
   pendencias: {
     slug: "pendencias",
     title: "Pendências",
-    subtitle: "Serviços finalizados com saldo em aberto. Cobre pelo WhatsApp.",
+    subtitle: "Serviços finalizados sem pagamento a partir de agora. Cobre pelo WhatsApp.",
     icon: "bi-exclamation-circle",
     emptyTitle: "Nenhuma pendência",
     emptyText: "Quando um serviço for finalizado sem pagamento, ele aparece aqui.",

@@ -7,6 +7,7 @@ import { getAdminSessionFromRequest, isAdminRequest } from "@/lib/auth.server";
 import { getPrisma } from "@/lib/db.server";
 import { baixarEstoqueDoInventario } from "@/lib/estoque-baixa.server";
 import { jsonResponse } from "@/lib/http.server";
+import { marcarPendenciaCobranca } from "@/lib/inventario-pendencia.server";
 import {
   agoraPagoEmLocal,
   calcularResumoRecebimento,
@@ -121,6 +122,14 @@ export const Route = createFileRoute("/api/agendamentos/$id")({
             where: { id },
             data: { status: next },
           });
+
+          if (next === "finalizado" && parsed.data.pagou !== true) {
+            try {
+              await marcarPendenciaCobranca(id);
+            } catch (pendenciaErr) {
+              console.error("[PATCH /api/agendamentos/$id] marcar pendência", pendenciaErr);
+            }
+          }
 
           if (next === "confirmado" && st !== "confirmado") {
             try {

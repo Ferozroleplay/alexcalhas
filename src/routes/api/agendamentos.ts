@@ -12,6 +12,10 @@ import { getAdminSessionFromRequest, isAdminRequest } from "@/lib/auth.server";
 import { getPrisma } from "@/lib/db.server";
 import { jsonResponse, PUBLIC_CORS } from "@/lib/http.server";
 import {
+  listarIdsPendenciaCobranca,
+  mapaCobrarPendencia,
+} from "@/lib/inventario-pendencia.server";
+import {
   calcularResumoRecebimento,
   mapaTotalRecebidoPorInventario,
   statusPermiteRecebimento,
@@ -50,10 +54,26 @@ export const Route = createFileRoute("/api/agendamentos")({
         try {
           const prisma = await getPrisma();
           const session = getAdminSessionFromRequest(request);
-          const statusWhere = inventarioWhereStatus(status);
-          const whereBase = { ...statusWhere };
-          const where =
-            session?.visao === "funcionário"
+          const visaoFuncionario = session?.visao === "funcionário";
+          const funcionarioId = visaoFuncionario ? session.userId : null;
+
+          let rows;
+          if (status === "pendencias") {
+            const idsPendencia = await listarIdsPendenciaCobranca({
+              limit,
+              funcionarioId,
+            });
+            rows =
+              idsPendencia.length === 0
+                ? []
+                : await prisma.inventario.findMany({
+                    where: { id: { in: idsPendencia } },
+                    orderBy: { id: "desc" },
+                  });
+          } else {
+            const statusWhere = inventarioWhereStatus(status);
+            const whereBase = { ...statusWhere };
+            const where = visaoFuncionario
               ? {
                   AND: [
                     whereBase,
@@ -63,17 +83,19 @@ export const Route = createFileRoute("/api/agendamentos")({
                   ],
                 }
               : whereBase;
-          const rows = await prisma.inventario.findMany({
-            where: Object.keys(where).length ? (where as never) : undefined,
-            orderBy: { id: "desc" },
-            take: limit,
-          });
+            rows = await prisma.inventario.findMany({
+              where: Object.keys(where).length ? (where as never) : undefined,
+              orderBy: { id: "desc" },
+              take: limit,
+            });
+          }
           await backfillInventarioHorasVazias(prisma, rows);
 
           const idsRecebimento = rows
             .filter((r) => statusPermiteRecebimento(r.status))
             .map((r) => r.id);
           const mapaRecebido = await mapaTotalRecebidoPorInventario(idsRecebimento);
+          const cobrar = status === "finalizado" ? await mapaCobrarPendencia(idsRecebimento) : null;
 
           const items = rows.map((row) => {
               const item = serializeInventario(row);
@@ -93,7 +115,10 @@ export const Route = createFileRoute("/api/agendamentos")({
             status === "pendencias"
               ? items.filter((i) => (i.saldoPendente ?? 0) > 0.009)
               : status === "finalizado"
-                ? items.filter((i) => (i.saldoPendente ?? 0) <= 0.009)
+                ? items.filter(
+                    (i) =>
+                      !((i.saldoPendente ?? 0) > 0.009 && (cobrar?.has(i.id) ?? false)),
+                  )
                 : items;
 
           return jsonResponse({
