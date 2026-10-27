@@ -311,6 +311,17 @@ export function AdminShell() {
                     <span>Bate-ponto</span>
                   </Link>
                 </li>
+                <li className={navActive(pathname, "/painel/despesas") ? "activeMenu" : ""}>
+                  <Link
+                    to="/painel/despesas"
+                    className="dash-nav-link"
+                    title="Despesas"
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <i className="bi bi-receipt" aria-hidden="true" />
+                    <span>Despesas</span>
+                  </Link>
+                </li>
                 <li className={navActive(pathname, "/painel/funcionarios") ? "activeMenu" : ""}>
                   <Link
                     to="/painel/funcionarios"

@@ -33,6 +33,8 @@ export type DespesaItem = {
   forma_pagamento: string;
   forma_pagamento_label: string;
   observacao: string;
+  registrado_por: number | null;
+  registrado_por_nome: string;
 };
 
 export type DespesaInput = {
@@ -42,6 +44,7 @@ export type DespesaInput = {
   valor: number;
   forma_pagamento: string;
   observacao?: string;
+  registrado_por?: number | null;
 };
 
 export function isCategoriaValida(v: string): v is DespesaCategoria {

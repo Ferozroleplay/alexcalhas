@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { useAdminAuth } from "@/components/admin/admin-auth";
 import { InvActionBtn, InvRowActions } from "@/components/admin/admin-row-actions";
 import { DashPageHero } from "@/components/admin/DashPageHero";
 import { AdminModal } from "@/components/admin/modals/AdminModal";
@@ -33,11 +34,7 @@ const MESES = [
 ];
 
 function hojeIso(): string {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+  return new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
 }
 
 function formatBrl(value: number): string {
@@ -63,16 +60,21 @@ type FormState = {
   observacao: string;
 };
 
-const FORM_VAZIO: FormState = {
-  data: hojeIso(),
-  descricao: "",
-  categoria: "outros",
-  valor: "",
-  forma_pagamento: "pix",
-  observacao: "",
-};
+function formVazio(categoria = "outros"): FormState {
+  return {
+    data: hojeIso(),
+    descricao: "",
+    categoria,
+    valor: "",
+    forma_pagamento: "pix",
+    observacao: "",
+  };
+}
 
 export function DespesasPage() {
+  const { user } = useAdminAuth();
+  const isAdmin = user?.visao === "admin";
+  const categoriaPadrao = isAdmin ? "outros" : "combustivel";
   const yearNow = new Date().getFullYear();
   const [ano, setAno] = useState(yearNow);
   const [mes, setMes] = useState(new Date().getMonth() + 1);
@@ -81,11 +83,11 @@ export function DespesasPage() {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
   const [msg, setMsg] = useState("");
-  const [form, setForm] = useState<FormState>(FORM_VAZIO);
+  const [form, setForm] = useState<FormState>(() => formVazio(categoriaPadrao));
   const [salvando, setSalvando] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-  const [edit, setEdit] = useState<FormState>(FORM_VAZIO);
+  const [edit, setEdit] = useState<FormState>(() => formVazio());
   const [editSaving, setEditSaving] = useState(false);
 
   const anos = useMemo(() => [yearNow, yearNow - 1, yearNow - 2, yearNow - 3], [yearNow]);
@@ -133,7 +135,7 @@ export function DespesasPage() {
         forma_pagamento: form.forma_pagamento,
         observacao: form.observacao.trim() || undefined,
       });
-      setForm({ ...FORM_VAZIO, data: hojeIso() });
+      setForm(formVazio(categoriaPadrao));
       setMsg("Despesa cadastrada.");
       await load();
     } catch (err) {
@@ -205,7 +207,11 @@ export function DespesasPage() {
     <div className="analytics-page dash-form-page--pro despesas-page">
       <DashPageHero
         title="Despesas"
-        subtitle="Registre gastos da empresa por data, categoria e forma de pagamento."
+        subtitle={
+          isAdmin
+            ? "Gastos da empresa. Funcionário também lança abastecimento e outros daqui."
+            : "Abasteceu o carro? Lança aqui na hora. O admin vê na lista."
+        }
         iconClass="bi-receipt"
         accent="financeiro"
         showNovaVisita={false}
@@ -243,7 +249,7 @@ export function DespesasPage() {
                 className="form-control dash-edit-modal__input"
                 value={form.descricao}
                 onChange={(e) => setForm((p) => ({ ...p, descricao: e.target.value }))}
-                placeholder="Ex.: gasolina da semana"
+                placeholder={isAdmin ? "Ex.: gasolina da semana" : "Ex.: abastecimento do carro"}
                 maxLength={255}
                 required
               />
@@ -367,6 +373,7 @@ export function DespesasPage() {
                   <th>Data</th>
                   <th>Descrição</th>
                   <th>Categoria</th>
+                  {isAdmin ? <th>Lançado por</th> : null}
                   <th>Pagamento</th>
                   <th className="text-end">Valor</th>
                   <th />
@@ -375,13 +382,13 @@ export function DespesasPage() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="text-muted text-center py-4">
+                    <td colSpan={isAdmin ? 7 : 6} className="text-muted text-center py-4">
                       Carregando…
                     </td>
                   </tr>
                 ) : itens.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-muted text-center py-4">
+                    <td colSpan={isAdmin ? 7 : 6} className="text-muted text-center py-4">
                       Nenhuma despesa neste período.
                     </td>
                   </tr>
@@ -398,6 +405,7 @@ export function DespesasPage() {
                         </div>
                       </td>
                       <td>{item.categoria_label}</td>
+                      {isAdmin ? <td>{item.registrado_por_nome || "—"}</td> : null}
                       <td>{item.forma_pagamento_label}</td>
                       <td className="text-end fw-semibold">{formatBrl(item.valor)}</td>
                       <td className="text-end">

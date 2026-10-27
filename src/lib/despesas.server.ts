@@ -26,6 +26,8 @@ type DbRow = {
   valor: number | string;
   forma_pagamento: string;
   observacao: string | null;
+  registrado_por?: number | bigint | null;
+  registrado_por_nome?: string | null;
 };
 
 let tabelaPronta = false;
@@ -58,6 +60,7 @@ function formatDataIso(raw: Date | string): string {
 function mapItem(row: DbRow): DespesaItem {
   const categoria = String(row.categoria ?? "outros");
   const forma = String(row.forma_pagamento ?? "pix");
+  const registradoPor = row.registrado_por == null ? null : int(row.registrado_por);
   return {
     id: int(row.id),
     data: formatDataIso(row.data),
@@ -68,6 +71,8 @@ function mapItem(row: DbRow): DespesaItem {
     forma_pagamento: forma,
     forma_pagamento_label: labelForma(forma),
     observacao: String(row.observacao ?? "").trim(),
+    registrado_por: registradoPor && registradoPor > 0 ? registradoPor : null,
+    registrado_por_nome: String(row.registrado_por_nome ?? "").trim(),
   };
 }
 
@@ -83,39 +88,57 @@ async function ensureDespesasTable(): Promise<void> {
       valor DECIMAL(10, 2) NOT NULL,
       forma_pagamento VARCHAR(20) NOT NULL,
       observacao TEXT NULL,
+      registrado_por INT NULL,
       criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       atualizado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       INDEX idx_despesas_data (data),
       INDEX idx_despesas_categoria (categoria)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `);
+  try {
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE despesas ADD COLUMN registrado_por INT NULL`,
+    );
+  } catch {
+    /* coluna já existe */
+  }
   tabelaPronta = true;
 }
+
+const DESPESA_SELECT = `
+    d.id, d.data, d.descricao, d.categoria, d.valor, d.forma_pagamento, d.observacao,
+    d.registrado_por, u.nome AS registrado_por_nome
+`;
 
 export async function listDespesas(opts?: {
   ano?: number;
   mes?: number;
   categoria?: string;
+  registradoPor?: number;
 }): Promise<DespesaItem[]> {
   await ensureDespesasTable();
   const prisma = await getPrisma();
   const where: string[] = [];
 
   if (opts?.ano && opts.ano > 2000 && opts.ano < 2100) {
-    where.push(`YEAR(data) = ${Math.trunc(opts.ano)}`);
+    where.push(`YEAR(d.data) = ${Math.trunc(opts.ano)}`);
   }
   if (opts?.mes && opts.mes >= 1 && opts.mes <= 12) {
-    where.push(`MONTH(data) = ${Math.trunc(opts.mes)}`);
+    where.push(`MONTH(d.data) = ${Math.trunc(opts.mes)}`);
   }
   if (opts?.categoria && isCategoriaValida(opts.categoria)) {
-    where.push(`categoria = '${escSql(opts.categoria)}'`);
+    where.push(`d.categoria = '${escSql(opts.categoria)}'`);
+  }
+  if (opts?.registradoPor && opts.registradoPor > 0) {
+    where.push(`d.registrado_por = ${Math.trunc(opts.registradoPor)}`);
   }
 
   const sql = `
-    SELECT id, data, descricao, categoria, valor, forma_pagamento, observacao
-    FROM despesas
+    SELECT ${DESPESA_SELECT}
+    FROM despesas d
+    LEFT JOIN usuarios u ON u.id = d.registrado_por
     ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
-    ORDER BY data DESC, id DESC
+    ORDER BY d.data DESC, d.id DESC
   `;
   const rows = await prisma.$queryRawUnsafe<DbRow[]>(sql);
   return rows.map(mapItem);
@@ -125,8 +148,10 @@ export async function findDespesaById(id: number): Promise<DespesaItem | null> {
   await ensureDespesasTable();
   const prisma = await getPrisma();
   const rows = await prisma.$queryRawUnsafe<DbRow[]>(
-    `SELECT id, data, descricao, categoria, valor, forma_pagamento, observacao
-     FROM despesas WHERE id = ${Math.trunc(id)} LIMIT 1`,
+    `SELECT ${DESPESA_SELECT}
+     FROM despesas d
+     LEFT JOIN usuarios u ON u.id = d.registrado_por
+     WHERE d.id = ${Math.trunc(id)} LIMIT 1`,
   );
   return rows[0] ? mapItem(rows[0]) : null;
 }
@@ -135,20 +160,25 @@ export async function createDespesa(input: DespesaInput): Promise<DespesaItem> {
   await ensureDespesasTable();
   const prisma = await getPrisma();
   const obs = (input.observacao ?? "").trim();
+  const registradoPor =
+    input.registrado_por != null && input.registrado_por > 0 ? Math.trunc(input.registrado_por) : null;
   await prisma.$executeRawUnsafe(`
-    INSERT INTO despesas (data, descricao, categoria, valor, forma_pagamento, observacao)
+    INSERT INTO despesas (data, descricao, categoria, valor, forma_pagamento, observacao, registrado_por)
     VALUES (
       '${escSql(input.data)}',
       '${escSql(input.descricao.trim().slice(0, 255))}',
       '${escSql(input.categoria)}',
       ${money(input.valor).toFixed(2)},
       '${escSql(input.forma_pagamento)}',
-      ${obs ? `'${escSql(obs.slice(0, 2000))}'` : "NULL"}
+      ${obs ? `'${escSql(obs.slice(0, 2000))}'` : "NULL"},
+      ${registradoPor ?? "NULL"}
     )
   `);
   const rows = await prisma.$queryRawUnsafe<DbRow[]>(
-    `SELECT id, data, descricao, categoria, valor, forma_pagamento, observacao
-     FROM despesas ORDER BY id DESC LIMIT 1`,
+    `SELECT ${DESPESA_SELECT}
+     FROM despesas d
+     LEFT JOIN usuarios u ON u.id = d.registrado_por
+     ORDER BY d.id DESC LIMIT 1`,
   );
   if (!rows[0]) throw new Error("Não foi possível cadastrar a despesa.");
   return mapItem(rows[0]);

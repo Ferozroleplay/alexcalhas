@@ -16,7 +16,6 @@ const ADMIN_ONLY = [
   "/painel/clientes",
   "/painel/usuarios",
   "/painel/financeiro",
-  "/painel/despesas",
   "/painel/logs",
   "/painel/ponto-controle",
   "/painel/produtos",
@@ -27,6 +26,7 @@ const ADMIN_ONLY = [
 const FUNC_ALLOWED_PREFIXES = [
   "/painel/ponto",
   "/painel/visitas",
+  "/painel/despesas",
   "/painel/funcionarios",
   "/painel/calculadora-bobina",
   "/painel/calculadora-condutores",
