@@ -40,7 +40,12 @@ import {
   type AgendamentoItem,
 } from "@/lib/admin-api";
 import { INVENTARIO_LISTING_META } from "@/lib/inventario-listing-meta";
-import { abrirWhatsappCobranca, abrirWhatsappOrcamento, gerarOS } from "@/lib/whatsapp-orcamento";
+import {
+  abrirWhatsappCobranca,
+  abrirWhatsappOrcamento,
+  abrirWhatsappVisita,
+  gerarOS,
+} from "@/lib/whatsapp-orcamento";
 export type InventarioVariant = "visitas" | "orcamentado" | "confirmado" | "finalizado" | "pendencias";
 
 const STATUS_FILTER: Record<InventarioVariant, string> = {
@@ -267,13 +272,26 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
         <InvRowActions
           ariaLabel={`Mais ações #${item.id}`}
           primary={
-            <InvActionBtn
-              icon="bi-check-lg"
-              title="Preencher orçamento e enviar"
-              onClick={() => openOrcamentoNovo(item)}
-            />
+            <>
+              <InvActionBtn
+                icon="bi-whatsapp"
+                title="Avisar que estamos a caminho"
+                variant="whatsapp"
+                onClick={() => abrirWhatsappVisita(item)}
+              />
+              <InvActionBtn
+                icon="bi-check-lg"
+                title="Preencher orçamento e enviar"
+                onClick={() => openOrcamentoNovo(item)}
+              />
+            </>
           }
           menu={[
+            {
+              label: "Avisar visita no WhatsApp",
+              icon: "bi-whatsapp",
+              onClick: () => abrirWhatsappVisita(item),
+            },
             {
               label: "Editar",
               icon: "bi-pencil-square",
@@ -709,7 +727,17 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
                             </span>
                           </td>
                           <td className="inv-col-telefone">
-                            <TelefoneCell telefone={item.telefone} />
+                            <TelefoneCell
+                              telefone={item.telefone}
+                              title={
+                                variant === "visitas"
+                                  ? "Avisar que estamos a caminho"
+                                  : "Chamar no WhatsApp"
+                              }
+                              onWhatsApp={
+                                variant === "visitas" ? () => abrirWhatsappVisita(item) : undefined
+                              }
+                            />
                           </td>
                           <td className="inv-col-endereco inv-col-endereco--compact">
                             <EnderecoCell item={item} />
@@ -795,7 +823,22 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
                     </header>
 
                     <div className="inv-card__body">
-                      <MobileKeyValue label="Telefone" value={<TelefoneCell telefone={item.telefone} />} />
+                      <MobileKeyValue
+                        label="Telefone"
+                        value={
+                          <TelefoneCell
+                            telefone={item.telefone}
+                            title={
+                              variant === "visitas"
+                                ? "Avisar que estamos a caminho"
+                                : "Chamar no WhatsApp"
+                            }
+                            onWhatsApp={
+                              variant === "visitas" ? () => abrirWhatsappVisita(item) : undefined
+                            }
+                          />
+                        }
+                      />
                       <MobileKeyValue label="Endereço" value={<EnderecoCell item={item} />} />
                       {showVisita ? (
                         <>

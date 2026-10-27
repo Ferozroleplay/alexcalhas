@@ -41,7 +41,15 @@ export function ListingHeaderMeta({
   );
 }
 
-export function TelefoneCell({ telefone }: { telefone: string }) {
+export function TelefoneCell({
+  telefone,
+  title = "Chamar no WhatsApp",
+  onWhatsApp,
+}: {
+  telefone: string;
+  title?: string;
+  onWhatsApp?: () => void;
+}) {
   const fmt = formatarTelefone(telefone);
   const wa = telefoneWhatsappLink(telefone);
   if (!wa) return <span className="inv-telefone-text">{fmt}</span>;
@@ -51,7 +59,15 @@ export function TelefoneCell({ telefone }: { telefone: string }) {
       className="inv-whats-chip"
       target="_blank"
       rel="noopener noreferrer"
-      title="Chamar no WhatsApp"
+      title={title}
+      onClick={
+        onWhatsApp
+          ? (e) => {
+              e.preventDefault();
+              onWhatsApp();
+            }
+          : undefined
+      }
     >
       <i className="bi bi-whatsapp" aria-hidden="true" />
       <span>{fmt}</span>
