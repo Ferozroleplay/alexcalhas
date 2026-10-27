@@ -29,6 +29,7 @@ const NAV_ADMIN: { to: string; label: string; icon: string }[] = [
   { to: "/painel/material", label: "Materiais", icon: "bi-box-seam" },
   { to: "/painel/parceiros", label: "Parceiros", icon: "bi-building" },
   { to: "/painel/calculadora-bobina", label: "Calculadora", icon: "bi-calculator" },
+  { to: "/painel/calculadora-condutores", label: "Condutores", icon: "bi-rulers" },
   { to: "/painel/usuarios", label: "Usuários", icon: "bi-people" },
   { to: "/painel/fornecedores", label: "Entregas", icon: "bi-inbox" },
   { to: "/painel/financeiro", label: "Financeiro", icon: "bi-cash-coin" },
@@ -329,6 +330,17 @@ export function AdminShell() {
                   >
                     <i className="bi bi-calculator" aria-hidden="true" />
                     <span>Calculadora</span>
+                  </Link>
+                </li>
+                <li className={navActive(pathname, "/painel/calculadora-condutores") ? "activeMenu" : ""}>
+                  <Link
+                    to="/painel/calculadora-condutores"
+                    className="dash-nav-link"
+                    title="Condutores"
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <i className="bi bi-rulers" aria-hidden="true" />
+                    <span>Condutores</span>
                   </Link>
                 </li>
               </>

@@ -1,0 +1,209 @@
+.dash-condutor-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dash-condutor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
+  gap: 0.9rem 1rem;
+}
+
+.dash-condutor-grid--2 {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  align-items: stretch;
+  margin-bottom: 1rem;
+}
+
+.dash-condutor-hint,
+.dash-condutor-footer {
+  margin: 0.85rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--dash-muted, #64748b);
+  line-height: 1.5;
+}
+
+.dash-condutor-subtitle {
+  margin: 1.15rem 0 0.4rem;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.dash-condutor-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.85rem;
+}
+
+.dash-condutor-metric {
+  background: var(--dash-input-group-bg, #f8fafc);
+  border: 1px solid var(--dash-card-border, #e2e8f0);
+  border-radius: 12px;
+  padding: 0.95rem 1rem;
+}
+
+.dash-condutor-metric__label,
+.dash-condutor-metric__hint {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--dash-muted, #64748b);
+}
+
+.dash-condutor-metric__value {
+  display: block;
+  margin: 0.35rem 0 0.2rem;
+  font-size: 1.45rem;
+  line-height: 1.15;
+  color: var(--dash-text, #173b5d);
+}
+
+.dash-condutor-status {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  border-left: 5px solid #d18a19;
+  background: #fff7e8;
+  color: #684000;
+  line-height: 1.5;
+}
+
+.dash-condutor-status--ok {
+  border-left-color: #1a8055;
+  background: #e9f8f0;
+  color: #145c3c;
+}
+
+.dash-condutor-status--error {
+  border-left-color: #b62727;
+  background: #fff0f0;
+  color: #8a1f1f;
+}
+
+.dash-condutor-total {
+  background: #153b5b;
+  color: #fff;
+  border-radius: 14px;
+  padding: 1.25rem 1.35rem;
+  margin: 0.25rem 0 0.35rem;
+}
+
+.dash-condutor-total__kicker {
+  display: block;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #e0e9f0;
+}
+
+.dash-condutor-total__value {
+  display: block;
+  margin: 0.45rem 0 0.25rem;
+  font-size: 1.85rem;
+  line-height: 1.15;
+}
+
+.dash-condutor-total__formula {
+  display: block;
+  color: #e0e9f0;
+  font-size: 0.875rem;
+}
+
+.dash-condutor-total__caution {
+  background: #fff4d7;
+  color: #684000;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  margin: 0.85rem 0 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.dash-condutor-svg {
+  width: 100%;
+  height: auto;
+  background: #fcfdff;
+  border: 1px solid var(--dash-card-border, #dce5eb);
+  border-radius: 10px;
+}
+
+.dash-condutor-table {
+  margin: 0;
+}
+
+.dash-condutor-table th,
+.dash-condutor-table td {
+  padding: 0.65rem 0.75rem;
+  vertical-align: middle;
+}
+
+.dash-condutor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.dash-condutor-btn-secondary {
+  border: 1px solid var(--dash-card-border, #dce5eb);
+  background: transparent;
+  color: var(--dash-text, #173b5d);
+  font-weight: 650;
+  border-radius: 8px;
+  padding: 0.65rem 0.95rem;
+}
+
+html[data-bs-theme="dark"] .dash-condutor-metric {
+  background: var(--background-imputs, #252525);
+  border-color: var(--dash-card-border, #333);
+}
+
+html[data-bs-theme="dark"] .dash-condutor-metric__value {
+  color: var(--text-secundary, #d4d4d4);
+}
+
+html[data-bs-theme="dark"] .dash-condutor-status {
+  background: rgba(209, 138, 25, 0.14);
+  color: #f3d19a;
+}
+
+html[data-bs-theme="dark"] .dash-condutor-status--ok {
+  background: rgba(26, 128, 85, 0.16);
+  color: #9ee0c0;
+}
+
+html[data-bs-theme="dark"] .dash-condutor-status--error {
+  background: rgba(182, 39, 39, 0.16);
+  color: #f2b0b0;
+}
+
+html[data-bs-theme="dark"] .dash-condutor-btn-secondary {
+  color: var(--text-secundary, #d4d4d4);
+}
+
+html[data-bs-theme="dark"] .dash-condutor-svg {
+  background: #1a2330;
+  border-color: var(--dash-card-border, #333);
+}
+
+html[data-bs-theme="dark"] .dash-condutor-svg__note {
+  fill: #c5d4e0;
+}
+
+@media print {
+  .dash-condutor-print-hide,
+  .dash-form-page__hero,
+  .dashboard-sidebar,
+  .dashboard-topbar,
+  .dash-page-header__actions {
+    display: none !important;
+  }
+
+  .dash-condutor-page,
+  .dash-condutor-stack,
+  .dash-edit-modal__panel {
+    box-shadow: none !important;
+    background: #fff !important;
+    color: #142638 !important;
+  }
+}

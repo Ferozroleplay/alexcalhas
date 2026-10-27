@@ -1,0 +1,14 @@
+---
+description: Após cada atualização concluída, commit no git e push para a Vercel
+alwaysApply: true
+---
+
+# Deploy após atualização
+
+Alex pediu de forma permanente: quando uma alteração de código for concluída neste projeto, **commitar e dar push** em `origin/main`. O GitHub dispara o deploy da Vercel.
+
+- Faça isso ao terminar a tarefa, sem esperar um segundo pedido de commit/push.
+- Mensagem de commit em português, curta, no estilo do histórico (`Adiciona…`, `Corrige…`, `Libera…`).
+- Não commitar `.env`, senhas, tokens ou arquivos de credencial.
+- Não usar force push, skip de hooks nem amend de commit já enviado.
+- Depois do push, informar o hash e que a Vercel vai publicar.

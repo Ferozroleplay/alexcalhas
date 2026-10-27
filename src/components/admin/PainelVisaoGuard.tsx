@@ -28,6 +28,7 @@ const FUNC_ALLOWED_PREFIXES = [
   "/painel/visitas",
   "/painel/funcionarios",
   "/painel/calculadora-bobina",
+  "/painel/calculadora-condutores",
   "/painel/agendar",
 ];
 

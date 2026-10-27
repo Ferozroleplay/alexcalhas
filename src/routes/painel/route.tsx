@@ -25,6 +25,7 @@ export const Route = createFileRoute("/painel")({
       { rel: "stylesheet", href: "/admin/dashboard-saas.css" },
       { rel: "stylesheet", href: "/admin/admin-react.css" },
       { rel: "stylesheet", href: "/admin/calculadora-bobina.css" },
+      { rel: "stylesheet", href: "/admin/calculadora-condutores.css" },
       { rel: "stylesheet", href: "/admin/orcamento-modal.css" },
       { rel: "stylesheet", href: "/admin/parceiros-page.css" },
       { rel: "stylesheet", href: "/admin/empresa-page.css" },
