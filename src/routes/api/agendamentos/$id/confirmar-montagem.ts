@@ -6,9 +6,12 @@ import { isAdminRequest } from "@/lib/auth.server";
 import { getPrisma } from "@/lib/db.server";
 import { baixarEstoqueDoInventario } from "@/lib/estoque-baixa.server";
 import { jsonResponse } from "@/lib/http.server";
+import { parseFormaPagamento } from "@/lib/orcamento.server";
 
 const bodySchema = z.object({
   dataMontagem: z.string().trim().min(1),
+  formaPagamento: z.string().trim().min(1).max(20),
+  observacao: z.string().max(2000).optional(),
 });
 
 export const Route = createFileRoute("/api/agendamentos/$id/confirmar-montagem")({
@@ -33,7 +36,10 @@ export const Route = createFileRoute("/api/agendamentos/$id/confirmar-montagem")
 
         const parsed = bodySchema.safeParse(body);
         if (!parsed.success) {
-          return jsonResponse({ ok: false, message: "Informe a data de montagem." }, 422);
+          return jsonResponse({ ok: false, message: "Informe a data e a forma de pagamento." }, 422);
+        }
+        if (!parseFormaPagamento(parsed.data.formaPagamento).forma) {
+          return jsonResponse({ ok: false, message: "Escolha PIX, débito ou crédito." }, 422);
         }
 
         try {
@@ -53,6 +59,8 @@ export const Route = createFileRoute("/api/agendamentos/$id/confirmar-montagem")
             data: {
               status: "confirmado",
               dataMontagem: dataInputParaDb(parsed.data.dataMontagem),
+              formaPagamento: parsed.data.formaPagamento,
+              observacao: parsed.data.observacao?.trim() ? parsed.data.observacao.trim() : row.observacao,
             },
           });
 

@@ -442,12 +442,17 @@ export async function salvarOrcamentoEdicao(
 export async function confirmarMontagem(
   id: number,
   dataMontagem: string,
+  extra?: { formaPagamento?: string; observacao?: string },
 ): Promise<AgendamentoItem> {
   const res = await fetch(`/api/agendamentos/${id}/confirmar-montagem`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ dataMontagem }),
+    body: JSON.stringify({
+      dataMontagem,
+      formaPagamento: extra?.formaPagamento,
+      observacao: extra?.observacao,
+    }),
   });
   const data = await parseJson<{ ok?: boolean; item?: AgendamentoItem; message?: string }>(res);
   if (!res.ok || !data.item) throw new Error(data.message ?? "Erro ao confirmar.");

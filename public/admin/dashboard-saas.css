@@ -4328,6 +4328,14 @@ html:not([data-bs-theme="dark"]) .visitas-orc-obs-card.is-active {
     }
 }
 
+.montagem-modal .visitas-orc-obs-grid {
+    flex-wrap: wrap;
+}
+
+.montagem-modal .visitas-orc-obs-card {
+    flex: 1 1 calc(50% - 0.3rem);
+}
+
 @media (max-width: 991.98px) {
     .visitas-orc-layout {
         grid-template-columns: 1fr;

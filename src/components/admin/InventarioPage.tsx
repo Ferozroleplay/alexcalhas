@@ -93,7 +93,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
   const [editClienteId, setEditClienteId] = useState<number | null>(null);
 
   const [montagemOpen, setMontagemOpen] = useState(false);
-  const [montagemId, setMontagemId] = useState<number | null>(null);
+  const [montagemItem, setMontagemItem] = useState<AgendamentoItem | null>(null);
 
   const [recebimentosOpen, setRecebimentosOpen] = useState(false);
   const [recebimentosItem, setRecebimentosItem] = useState<AgendamentoItem | null>(null);
@@ -298,7 +298,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
             icon="bi-check-lg"
             title="Confirmar montagem"
             onClick={() => {
-              setMontagemId(item.id);
+              setMontagemItem(item);
               setMontagemOpen(true);
             }}
           />
@@ -798,10 +798,13 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
       />
       <ModalConfirmarMontagem
         open={montagemOpen}
-        onClose={() => setMontagemOpen(false)}
-        inventarioId={montagemId}
+        onClose={() => {
+          setMontagemOpen(false);
+          setMontagemItem(null);
+        }}
+        item={montagemItem}
         onSaved={() => {
-          setItems((prev) => prev.filter((r) => r.id !== montagemId));
+          setItems((prev) => prev.filter((r) => r.id !== montagemItem?.id));
         }}
       />
       <ModalRecebimentos
