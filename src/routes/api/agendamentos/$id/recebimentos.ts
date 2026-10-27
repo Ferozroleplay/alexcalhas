@@ -50,7 +50,7 @@ export const Route = createFileRoute("/api/agendamentos/$id/recebimentos")({
           const row = await prisma.inventario.findUnique({ where: { id } });
           if (!row) return jsonResponse({ ok: false, message: "Registro não encontrado." }, 404);
           if (!statusPermiteRecebimento(row.status)) {
-            return jsonResponse({ ok: false, message: "Recebimentos só em orçamentado ou confirmado." }, 400);
+            return jsonResponse({ ok: false, message: "Recebimentos só em orçamentado, confirmado ou finalizado." }, 400);
           }
 
           const cliente = serializeInventario(row);
@@ -124,7 +124,7 @@ export const Route = createFileRoute("/api/agendamentos/$id/recebimentos")({
           const row = await prisma.inventario.findUnique({ where: { id } });
           if (!row) return jsonResponse({ ok: false, message: "Registro não encontrado." }, 404);
           if (!statusPermiteRecebimento(row.status)) {
-            return jsonResponse({ ok: false, message: "Recebimentos só em orçamentado ou confirmado." }, 400);
+            return jsonResponse({ ok: false, message: "Recebimentos só em orçamentado, confirmado ou finalizado." }, 400);
           }
 
           const valorOrcamento = Number(serializeInventario(row).valor) || 0;
@@ -198,7 +198,7 @@ export const Route = createFileRoute("/api/agendamentos/$id/recebimentos")({
           const row = await prisma.inventario.findUnique({ where: { id } });
           if (!row) return jsonResponse({ ok: false, message: "Registro não encontrado." }, 404);
           if (!statusPermiteRecebimento(row.status)) {
-            return jsonResponse({ ok: false, message: "Recebimentos só em orçamentado ou confirmado." }, 400);
+            return jsonResponse({ ok: false, message: "Recebimentos só em orçamentado, confirmado ou finalizado." }, 400);
           }
 
           const valorOrcamento = Number(serializeInventario(row).valor) || 0;

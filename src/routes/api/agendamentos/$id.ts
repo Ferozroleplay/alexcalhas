@@ -7,9 +7,16 @@ import { getAdminSessionFromRequest, isAdminRequest } from "@/lib/auth.server";
 import { getPrisma } from "@/lib/db.server";
 import { baixarEstoqueDoInventario } from "@/lib/estoque-baixa.server";
 import { jsonResponse } from "@/lib/http.server";
+import {
+  agoraPagoEmLocal,
+  calcularResumoRecebimento,
+  criarRecebimentoInventario,
+  listarRecebimentosInventario,
+} from "@/lib/inventario-recebimento.server";
 
 const patchSchema = z.object({
   status: z.enum(INVENTARIO_STATUS),
+  pagou: z.boolean().optional(),
 });
 
 export const Route = createFileRoute("/api/agendamentos/$id")({
@@ -78,6 +85,7 @@ export const Route = createFileRoute("/api/agendamentos/$id")({
 
         try {
           const prisma = await getPrisma();
+          const session = getAdminSessionFromRequest(request);
           const row = await prisma.inventario.findUnique({ where: { id } });
           if (!row) {
             return jsonResponse({ ok: false, message: "Agendamento não encontrado." }, 404);
@@ -87,6 +95,26 @@ export const Route = createFileRoute("/api/agendamentos/$id")({
           const can = allowed[st]?.includes(next);
           if (!can && st !== next) {
             return jsonResponse({ ok: false, message: "Transição de status inválida." }, 422);
+          }
+
+          if (next === "finalizado" && parsed.data.pagou) {
+            const cliente = serializeInventario(row);
+            const valorOrcamento = Number(cliente.valor) || 0;
+            const atual = await listarRecebimentosInventario(id, valorOrcamento);
+            const resumo = calcularResumoRecebimento(valorOrcamento, atual.resumo.valorRecebido);
+            if (resumo.saldoPendente > 0.009) {
+              const baixa = await criarRecebimentoInventario({
+                inventarioId: id,
+                valor: resumo.saldoPendente,
+                tipo: "saldo",
+                pagoEm: agoraPagoEmLocal(),
+                observacao: "Quitação ao finalizar o serviço",
+                registradoPor: session?.userId ?? null,
+              });
+              if (!baixa.ok) {
+                return jsonResponse({ ok: false, message: baixa.message }, 400);
+              }
+            }
           }
 
           const updated = await prisma.inventario.update({

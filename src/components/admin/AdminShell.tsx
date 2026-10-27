@@ -21,6 +21,7 @@ const NAV_MAIN: { to: string; label: string; icon: string; exact?: boolean }[] =
   { to: "/painel/orcamentado", label: "Orçamentado", icon: "bi-clipboard2-pulse" },
   { to: "/painel/confirmado", label: "Confirmado", icon: "bi-journal-bookmark" },
   { to: "/painel/finalizado", label: "Finalizado", icon: "bi-journal-check" },
+  { to: "/painel/pendencias", label: "Pendências", icon: "bi-exclamation-circle" },
 ];
 
 const NAV_ADMIN: { to: string; label: string; icon: string }[] = [

@@ -36,6 +36,7 @@ import { Route as PainelLogsRouteImport } from './routes/painel/logs'
 import { Route as PainelMaterialRouteImport } from './routes/painel/material'
 import { Route as PainelOrcamentadoRouteImport } from './routes/painel/orcamentado'
 import { Route as PainelParceirosRouteImport } from './routes/painel/parceiros'
+import { Route as PainelPendenciasRouteImport } from './routes/painel/pendencias'
 import { Route as PainelPontoRouteImport } from './routes/painel/ponto'
 import { Route as PainelPontoControleRouteImport } from './routes/painel/ponto-controle'
 import { Route as PainelProdutosRouteImport } from './routes/painel/produtos'
@@ -214,6 +215,11 @@ const PainelOrcamentadoRoute = PainelOrcamentadoRouteImport.update({
 const PainelParceirosRoute = PainelParceirosRouteImport.update({
   id: '/parceiros',
   path: '/parceiros',
+  getParentRoute: () => PainelRouteRoute,
+} as any)
+const PainelPendenciasRoute = PainelPendenciasRouteImport.update({
+  id: '/pendencias',
+  path: '/pendencias',
   getParentRoute: () => PainelRouteRoute,
 } as any)
 const PainelPontoRoute = PainelPontoRouteImport.update({
@@ -468,6 +474,7 @@ export interface FileRoutesByFullPath {
   '/painel/material': typeof PainelMaterialRoute
   '/painel/orcamentado': typeof PainelOrcamentadoRoute
   '/painel/parceiros': typeof PainelParceirosRoute
+  '/painel/pendencias': typeof PainelPendenciasRoute
   '/painel/ponto': typeof PainelPontoRoute
   '/painel/ponto-controle': typeof PainelPontoControleRoute
   '/painel/produtos': typeof PainelProdutosRoute
@@ -539,6 +546,7 @@ export interface FileRoutesByTo {
   '/painel/material': typeof PainelMaterialRoute
   '/painel/orcamentado': typeof PainelOrcamentadoRoute
   '/painel/parceiros': typeof PainelParceirosRoute
+  '/painel/pendencias': typeof PainelPendenciasRoute
   '/painel/ponto': typeof PainelPontoRoute
   '/painel/ponto-controle': typeof PainelPontoControleRoute
   '/painel/produtos': typeof PainelProdutosRoute
@@ -612,6 +620,7 @@ export interface FileRoutesById {
   '/painel/material': typeof PainelMaterialRoute
   '/painel/orcamentado': typeof PainelOrcamentadoRoute
   '/painel/parceiros': typeof PainelParceirosRoute
+  '/painel/pendencias': typeof PainelPendenciasRoute
   '/painel/ponto': typeof PainelPontoRoute
   '/painel/ponto-controle': typeof PainelPontoControleRoute
   '/painel/produtos': typeof PainelProdutosRoute
@@ -686,6 +695,7 @@ export interface FileRouteTypes {
     | '/painel/material'
     | '/painel/orcamentado'
     | '/painel/parceiros'
+    | '/painel/pendencias'
     | '/painel/ponto'
     | '/painel/ponto-controle'
     | '/painel/produtos'
@@ -757,6 +767,7 @@ export interface FileRouteTypes {
     | '/painel/material'
     | '/painel/orcamentado'
     | '/painel/parceiros'
+    | '/painel/pendencias'
     | '/painel/ponto'
     | '/painel/ponto-controle'
     | '/painel/produtos'
@@ -829,6 +840,7 @@ export interface FileRouteTypes {
     | '/painel/material'
     | '/painel/orcamentado'
     | '/painel/parceiros'
+    | '/painel/pendencias'
     | '/painel/ponto'
     | '/painel/ponto-controle'
     | '/painel/produtos'
@@ -1103,6 +1115,13 @@ declare module '@tanstack/react-router' {
       path: '/parceiros'
       fullPath: '/painel/parceiros'
       preLoaderRoute: typeof PainelParceirosRouteImport
+      parentRoute: typeof PainelRouteRoute
+    }
+    '/painel/pendencias': {
+      id: '/painel/pendencias'
+      path: '/pendencias'
+      fullPath: '/painel/pendencias'
+      preLoaderRoute: typeof PainelPendenciasRouteImport
       parentRoute: typeof PainelRouteRoute
     }
     '/painel/ponto': {
@@ -1426,6 +1445,7 @@ interface PainelRouteRouteChildren {
   PainelMaterialRoute: typeof PainelMaterialRoute
   PainelOrcamentadoRoute: typeof PainelOrcamentadoRoute
   PainelParceirosRoute: typeof PainelParceirosRoute
+  PainelPendenciasRoute: typeof PainelPendenciasRoute
   PainelPontoRoute: typeof PainelPontoRoute
   PainelPontoControleRoute: typeof PainelPontoControleRoute
   PainelProdutosRoute: typeof PainelProdutosRoute
@@ -1452,6 +1472,7 @@ const PainelRouteRouteChildren: PainelRouteRouteChildren = {
   PainelMaterialRoute: PainelMaterialRoute,
   PainelOrcamentadoRoute: PainelOrcamentadoRoute,
   PainelParceirosRoute: PainelParceirosRoute,
+  PainelPendenciasRoute: PainelPendenciasRoute,
   PainelPontoRoute: PainelPontoRoute,
   PainelPontoControleRoute: PainelPontoControleRoute,
   PainelProdutosRoute: PainelProdutosRoute,

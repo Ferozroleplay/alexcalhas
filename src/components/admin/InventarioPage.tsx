@@ -19,8 +19,16 @@ import {
   VisitaDataHoraCell,
   VisitaHoraCell,
 } from "@/components/admin/inventario-ui";
-import { horaParaExibicaoVisita, ordenarInventarioPorMontagem } from "@/lib/inventario-format";
+import {
+  dataReferenciaAtraso,
+  diasAtrasoPagamento,
+  horaParaExibicaoVisita,
+  labelDiasAtraso,
+  ordenarInventarioPorAtraso,
+  ordenarInventarioPorMontagem,
+} from "@/lib/inventario-format";
 import { ModalConfirmarMontagem } from "@/components/admin/modals/ModalConfirmarMontagem";
+import { ModalFinalizarServico } from "@/components/admin/modals/ModalFinalizarServico";
 import { ModalEditarCliente } from "@/components/admin/modals/ModalEditarCliente";
 import { ModalOrcamento } from "@/components/admin/modals/ModalOrcamento";
 import { ClienteDashModal } from "@/components/admin/modals/ClienteDashModal";
@@ -29,18 +37,18 @@ import { dashConfirm, dashToast } from "@/lib/dash-ui";
 import {
   deleteAgendamento,
   fetchAgendamentos,
-  finalizarServico,
   type AgendamentoItem,
 } from "@/lib/admin-api";
 import { INVENTARIO_LISTING_META } from "@/lib/inventario-listing-meta";
-import { abrirWhatsappOrcamento, gerarOS } from "@/lib/whatsapp-orcamento";
-export type InventarioVariant = "visitas" | "orcamentado" | "confirmado" | "finalizado";
+import { abrirWhatsappCobranca, abrirWhatsappOrcamento, gerarOS } from "@/lib/whatsapp-orcamento";
+export type InventarioVariant = "visitas" | "orcamentado" | "confirmado" | "finalizado" | "pendencias";
 
 const STATUS_FILTER: Record<InventarioVariant, string> = {
   visitas: "agendado",
   orcamentado: "orcamentado",
   confirmado: "confirmado",
   finalizado: "finalizado",
+  pendencias: "pendencias",
 };
 
 function normalizarBusca(valor: string): string {
@@ -71,6 +79,12 @@ function MobileKeyValue({ label, value }: { label: string; value: React.ReactNod
   );
 }
 
+function AtrasoCell({ item }: { item: AgendamentoItem }) {
+  const dias = diasAtrasoPagamento(dataReferenciaAtraso(item));
+  const tone = dias >= 7 ? "late" : dias >= 1 ? "warn" : "ok";
+  return <span className={`inv-atraso inv-atraso--${tone}`}>{labelDiasAtraso(dias)}</span>;
+}
+
 export function InventarioPage({ variant }: { variant: InventarioVariant }) {
   const meta = INVENTARIO_LISTING_META[
     variant === "visitas" ? "agendado" : variant
@@ -98,6 +112,8 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
   const [recebimentosOpen, setRecebimentosOpen] = useState(false);
   const [recebimentosItem, setRecebimentosItem] = useState<AgendamentoItem | null>(null);
   const [fichaItem, setFichaItem] = useState<AgendamentoItem | null>(null);
+  const [finalizarOpen, setFinalizarOpen] = useState(false);
+  const [finalizarItem, setFinalizarItem] = useState<AgendamentoItem | null>(null);
   const statusFilter = STATUS_FILTER[variant];
 
   const load = useCallback(async () => {
@@ -118,8 +134,9 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
   }, [load]);
 
   const sortedItems = useMemo(() => {
-    if (variant !== "confirmado") return items;
-    return ordenarInventarioPorMontagem(items);
+    if (variant === "confirmado") return ordenarInventarioPorMontagem(items);
+    if (variant === "pendencias") return ordenarInventarioPorAtraso(items);
+    return items;
   }, [items, variant]);
 
   const filteredItems = useMemo(() => {
@@ -209,23 +226,9 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
     }
   }
 
-  async function handleFinalizar(id: number) {
-    if (
-      !(await dashConfirm({
-        title: "Finalizar serviço?",
-        message: "Finalizar este serviço?",
-        confirmText: "Finalizar",
-        variant: "success",
-      }))
-    ) {
-      return;
-    }
-    try {
-      await finalizarServico(id);
-      setItems((prev) => prev.filter((r) => r.id !== id));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao finalizar.");
-    }
+  function handleFinalizar(item: AgendamentoItem) {
+    setFinalizarItem(item);
+    setFinalizarOpen(true);
   }
 
   async function onOrcamentoSaved(item: AgendamentoItem) {
@@ -366,7 +369,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
           <InvActionBtn
             icon="bi-check-lg"
             title="Finalizar"
-            onClick={() => void handleFinalizar(item.id)}
+            onClick={() => handleFinalizar(item)}
           />
           <InvActionBtn icon="bi-file-text" title="Ver orçamento (OS)" variant="secondary" onClick={() => gerarOS(item.id)} />
           <InvActionBtn
@@ -425,6 +428,78 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
       );
     }
 
+    if (variant === "pendencias") {
+      const dias = diasAtrasoPagamento(dataReferenciaAtraso(item));
+      const saldo = Number(item.saldoPendente ?? 0);
+      const primary = (
+        <>
+          <InvActionBtn
+            icon="bi-whatsapp"
+            title="Cobrar no WhatsApp"
+            variant="whatsapp"
+            onClick={() =>
+              abrirWhatsappCobranca({
+                nome: item.nome,
+                telefone: item.telefone,
+                saldo,
+                diasAtraso: dias,
+              })
+            }
+          />
+          <InvActionBtn
+            icon="bi-cash-coin"
+            title="Registrar pagamento"
+            variant="secondary"
+            onClick={() => openRecebimentos(item)}
+          />
+          <InvActionBtn icon="bi-file-text" title="Ver orçamento (OS)" variant="secondary" onClick={() => gerarOS(item.id)} />
+        </>
+      );
+      return (
+        <InvRowActions
+          ariaLabel={`Mais ações #${item.id}`}
+          primary={primary}
+          menu={[
+            {
+              label: "Cobrar no WhatsApp",
+              icon: "bi-whatsapp",
+              onClick: () =>
+                abrirWhatsappCobranca({
+                  nome: item.nome,
+                  telefone: item.telefone,
+                  saldo,
+                  diasAtraso: dias,
+                }),
+            },
+            {
+              label: "Registrar pagamento",
+              icon: "bi-cash-coin",
+              onClick: () => openRecebimentos(item),
+            },
+            {
+              label: "Ver orçamento",
+              icon: "bi-file-text",
+              onClick: () => gerarOS(item.id),
+            },
+            {
+              label: "Ficha do cliente",
+              icon: "bi-eye",
+              onClick: () => setFichaItem(item),
+            },
+            {
+              label: "Editar",
+              icon: "bi-pencil-square",
+              className: "inv-dropdown-item--edit",
+              onClick: () => openEditarCliente(item.id),
+            },
+            ...(isAdmin
+              ? [{ label: "Excluir", icon: "bi-trash", onClick: () => void handleCancelar(item.id) }]
+              : []),
+          ]}
+        />
+      );
+    }
+
     const primary = (
       <>
         <InvActionBtn icon="bi-file-text" title="Ver orçamento (OS)" variant="secondary" onClick={() => gerarOS(item.id)} />
@@ -474,8 +549,9 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
 
   const showVisita = variant === "visitas";
   const showValor = variant !== "visitas";
-  const showRecebido = variant === "orcamentado" || variant === "confirmado";
+  const showRecebido = variant === "orcamentado" || variant === "confirmado" || variant === "pendencias";
   const showMontagem = variant === "confirmado";
+  const showAtraso = variant === "pendencias";
   const showDetalhes = variant === "orcamentado";
 
   const pageCta =
@@ -511,6 +587,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
           )
         }
         cta={pageCta}
+        showNovaVisita={pageCta != null}
       />
       <div className="dash-page-body dash-page-body--with-header dash-page-body--solo">
         <div className={`dashboard-listing inv-listing inv-listing--${listingSlug}`}>
@@ -602,6 +679,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
                         {showVisita ? <th className="inv-col-datetime">Data / Hora</th> : null}
                         {showVisita ? <th className="inv-col-observacao">Observação</th> : null}
                         {showMontagem ? <th className="inv-col-montagem">Montagem</th> : null}
+                        {showAtraso ? <th className="inv-col-atraso">Atraso</th> : null}
                         {showValor ? <th className="inv-col-valor">Valor</th> : null}
                         {showRecebido ? <th className="inv-col-recebido">Recebido</th> : null}
                         {showDetalhes ? <th className="inv-col-detalhes">Detalhes</th> : null}
@@ -651,6 +729,11 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
                           ) : null}
                           {showMontagem ? (
                             <td className="inv-col-montagem">{item.dataMontagem || "—"}</td>
+                          ) : null}
+                          {showAtraso ? (
+                            <td className="inv-col-atraso">
+                              <AtrasoCell item={item} />
+                            </td>
                           ) : null}
                           {showValor ? (
                             <td className="inv-col-valor">
@@ -729,6 +812,9 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
                       ) : null}
                       {showMontagem ? (
                         <MobileKeyValue label="Montagem" value={item.dataMontagem || "—"} />
+                      ) : null}
+                      {showAtraso ? (
+                        <MobileKeyValue label="Atraso" value={<AtrasoCell item={item} />} />
                       ) : null}
                       {showValor ? (
                         <MobileKeyValue
@@ -815,7 +901,23 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
         }}
         item={recebimentosItem}
         onSaved={(patch) => {
-          if (recebimentosItem) patchRecebimentosItem(recebimentosItem.id, patch);
+          if (!recebimentosItem) return;
+          if (variant === "pendencias" && (patch.quitado || (patch.saldoPendente ?? 0) <= 0.009)) {
+            setItems((prev) => prev.filter((r) => r.id !== recebimentosItem.id));
+            return;
+          }
+          patchRecebimentosItem(recebimentosItem.id, patch);
+        }}
+      />
+      <ModalFinalizarServico
+        open={finalizarOpen}
+        item={finalizarItem}
+        onClose={() => {
+          setFinalizarOpen(false);
+          setFinalizarItem(null);
+        }}
+        onSaved={() => {
+          setItems((prev) => prev.filter((r) => r.id !== finalizarItem?.id));
         }}
       />
     </div>

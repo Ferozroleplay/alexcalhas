@@ -75,9 +75,7 @@ export const Route = createFileRoute("/api/agendamentos")({
             .map((r) => r.id);
           const mapaRecebido = await mapaTotalRecebidoPorInventario(idsRecebimento);
 
-          return jsonResponse({
-            ok: true,
-            items: rows.map((row) => {
+          const items = rows.map((row) => {
               const item = serializeInventario(row);
               if (!statusPermiteRecebimento(row.status)) return item;
               const agg = mapaRecebido[row.id];
@@ -89,7 +87,18 @@ export const Route = createFileRoute("/api/agendamentos")({
                 quitado: resumo.quitado,
                 qtdPagamentos: agg?.qtd ?? 0,
               };
-            }),
+            });
+
+          const listados =
+            status === "pendencias"
+              ? items.filter((i) => (i.saldoPendente ?? 0) > 0.009)
+              : status === "finalizado"
+                ? items.filter((i) => (i.saldoPendente ?? 0) <= 0.009)
+                : items;
+
+          return jsonResponse({
+            ok: true,
+            items: listados,
           });
         } catch (err) {
           console.error("[GET /api/agendamentos]", err);

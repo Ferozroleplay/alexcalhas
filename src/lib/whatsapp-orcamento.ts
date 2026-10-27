@@ -36,3 +36,40 @@ export function abrirWhatsappOrcamento(item: {
 export function gerarOS(id: number): void {
   window.open(`/os?id=${id}`, "_blank", "noopener,noreferrer");
 }
+
+export function mensagemWhatsappCobranca(opts: {
+  nome: string;
+  saldo: number;
+  diasAtraso: number;
+}): string {
+  const primeiro = opts.nome.trim().split(/\s+/)[0] || "";
+  const saudacao = primeiro ? `Olá, ${primeiro}! Tudo bem?` : "Olá! Tudo bem?";
+  const v = opts.saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const atraso =
+    opts.diasAtraso <= 0
+      ? "com o serviço já concluído"
+      : opts.diasAtraso === 1
+        ? "há 1 dia"
+        : `há ${opts.diasAtraso} dias`;
+  return (
+    `${saudacao}\n\n` +
+    `Aqui é da *Alex Calhas*. O serviço já foi finalizado e ficou um saldo de *${v}* em aberto (${atraso}).\n\n` +
+    `Quando puder, nos avise para combinarmos o pagamento. Qualquer dúvida estamos à disposição.\n\n` +
+    `Obrigado!`
+  );
+}
+
+export function abrirWhatsappCobranca(item: {
+  nome: string;
+  telefone: string;
+  saldo: number;
+  diasAtraso: number;
+}): void {
+  const wa = telefoneWhatsappLink(item.telefone);
+  if (!wa) {
+    void dashAlert({ message: "Telefone inválido para WhatsApp.", variant: "warning" });
+    return;
+  }
+  const text = mensagemWhatsappCobranca(item);
+  window.open(`${wa}?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+}

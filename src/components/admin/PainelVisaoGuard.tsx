@@ -10,6 +10,7 @@ const ADMIN_ONLY = [
   "/painel/orcamentado",
   "/painel/confirmado",
   "/painel/finalizado",
+  "/painel/pendencias",
   "/painel/material",
   "/painel/empresa",
   "/painel/clientes",

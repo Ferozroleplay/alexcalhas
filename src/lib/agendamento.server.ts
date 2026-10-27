@@ -122,6 +122,9 @@ export function inventarioWhereStatus(status?: string) {
   if (status === "orcamentado") {
     return { OR: [{ status: "orcamentado" }, { status: "orçamentado" }] };
   }
+  if (status === "pendencias") {
+    return { status: "finalizado" };
+  }
   return { status };
 }
 

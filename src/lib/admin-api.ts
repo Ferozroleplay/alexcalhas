@@ -459,8 +459,19 @@ export async function confirmarMontagem(
   return data.item;
 }
 
-export async function finalizarServico(id: number): Promise<AgendamentoItem> {
-  return updateAgendamentoStatus(id, "finalizado");
+export async function finalizarServico(
+  id: number,
+  opts?: { pagou?: boolean },
+): Promise<AgendamentoItem> {
+  const res = await fetch(`/api/agendamentos/${id}`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status: "finalizado", pagou: opts?.pagou === true }),
+  });
+  const data = await parseJson<{ ok?: boolean; item?: AgendamentoItem; message?: string }>(res);
+  if (!res.ok || !data.item) throw new Error(data.message ?? "Não foi possível finalizar.");
+  return data.item;
 }
 
 export async function fetchRecebimentosInventario(inventarioId: number): Promise<{

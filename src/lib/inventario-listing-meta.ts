@@ -1,6 +1,6 @@
 import type { InventarioStatus } from "@/lib/agendamento-constants";
 
-export type ListingSlug = InventarioStatus;
+export type ListingSlug = InventarioStatus | "pendencias";
 
 export const INVENTARIO_LISTING_META: Record<
   ListingSlug,
@@ -40,9 +40,17 @@ export const INVENTARIO_LISTING_META: Record<
   finalizado: {
     slug: "finalizado",
     title: "Finalizado",
-    subtitle: "Histórico de serviços concluídos e entregues ao cliente.",
+    subtitle: "Histórico de serviços concluídos e quitados.",
     icon: "bi-flag-fill",
     emptyTitle: "Nenhum serviço finalizado",
-    emptyText: "Ao concluir um serviço confirmado, ele será arquivado nesta lista.",
+    emptyText: "Ao concluir e quitar um serviço confirmado, ele será arquivado nesta lista.",
+  },
+  pendencias: {
+    slug: "pendencias",
+    title: "Pendências",
+    subtitle: "Serviços finalizados com saldo em aberto. Cobre pelo WhatsApp.",
+    icon: "bi-exclamation-circle",
+    emptyTitle: "Nenhuma pendência",
+    emptyText: "Quando um serviço for finalizado sem pagamento, ele aparece aqui.",
   },
 };

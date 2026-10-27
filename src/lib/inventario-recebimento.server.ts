@@ -272,5 +272,15 @@ export async function excluirRecebimentoInventario(
 
 export function statusPermiteRecebimento(status: string): boolean {
   const s = status.trim().toLowerCase();
-  return s === "orcamentado" || s === "orçamentado" || s === "confirmado";
+  return (
+    s === "orcamentado" ||
+    s === "orçamentado" ||
+    s === "confirmado" ||
+    s === "finalizado"
+  );
+}
+
+export function agoraPagoEmLocal(): string {
+  const s = new Date().toLocaleString("sv-SE", { timeZone: "America/Sao_Paulo" });
+  return s.slice(0, 16).replace(" ", "T");
 }

@@ -2863,6 +2863,7 @@ html[data-bs-theme="dark"] .inv-search-bar__clear:hover {
 .dash-page-header__icon--orcamentado,
 .dash-page-header__icon--confirmado,
 .dash-page-header__icon--finalizado,
+.dash-page-header__icon--pendencias,
 .dash-page-header__icon--usuarios,
 .dash-page-header__icon--materiais,
 .dash-page-header__icon--produtos,
@@ -7159,6 +7160,19 @@ html[data-bs-theme="dark"] .inv-list-footer__info strong {
 .inv-empty-state__icon--orcamentado { background: rgba(245, 158, 11, 0.14); color: #d97706; }
 .inv-empty-state__icon--confirmado { background: rgba(22, 202, 133, 0.12); color: var(--primary); }
 .inv-empty-state__icon--finalizado { background: rgba(124, 58, 237, 0.12); color: #7c3aed; }
+.inv-empty-state__icon--pendencias { background: rgba(234, 88, 12, 0.14); color: #ea580c; }
+
+.inv-atraso {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+}
+.inv-atraso--ok { color: #3dba86; }
+.inv-atraso--warn { color: #d08a2f; }
+.inv-atraso--late { color: #e07a7a; }
 
 .inv-empty-state__title {
     font-size: 1.1rem;

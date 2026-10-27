@@ -131,3 +131,41 @@ export function ordenarInventarioPorMontagem<T extends { id: number; dataMontage
     return b.id - a.id;
   });
 }
+
+export function dataReferenciaAtraso(item: {
+  dataMontagem?: string | null;
+  dataVisita?: string | null;
+}): string | null {
+  const montagem = item.dataMontagem?.trim();
+  if (montagem) return montagem;
+  const visita = item.dataVisita?.trim();
+  return visita || null;
+}
+
+/** Dias desde a montagem (ou visita) até hoje em São Paulo. Sem data → 0. */
+export function diasAtrasoPagamento(data: string | null | undefined): number {
+  const ts = timestampDataMontagemBr(data);
+  if (!ts) return 0;
+  const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  const [y, m, d] = hoje.split("-").map((p) => Number.parseInt(p, 10));
+  if (!y || !m || !d) return 0;
+  const startToday = new Date(y, m - 1, d).getTime();
+  return Math.max(0, Math.floor((startToday - ts) / 86_400_000));
+}
+
+export function labelDiasAtraso(dias: number): string {
+  if (dias <= 0) return "Hoje";
+  if (dias === 1) return "1 dia";
+  return `${dias} dias`;
+}
+
+export function ordenarInventarioPorAtraso<
+  T extends { id: number; dataMontagem?: string | null; dataVisita?: string | null },
+>(items: T[]): T[] {
+  return [...items].sort((a, b) => {
+    const diff =
+      diasAtrasoPagamento(dataReferenciaAtraso(b)) - diasAtrasoPagamento(dataReferenciaAtraso(a));
+    if (diff !== 0) return diff;
+    return b.id - a.id;
+  });
+}
