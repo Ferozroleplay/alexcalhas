@@ -108,6 +108,57 @@ export function calcTotaisOrcamento(itens: OrcamentoLinha[], valorFinal: number)
   return { subtotalMateriais: bruto, bruto, desconto, total };
 }
 
+export type OsDocumentoRotulo = {
+  titulo: string;
+  numeroLabel: string;
+  itensTitulo: string;
+  pixNota: string;
+  aprovacaoTitulo: string;
+  aprovacaoDecl: string;
+  arquivoPrefixo: string;
+  paginaTitulo: string;
+};
+
+/** Título do PDF/impressão segue o status da ficha. */
+export function rotuloDocumentoOs(status?: string | null): OsDocumentoRotulo {
+  const s = (status ?? "").trim().toLowerCase();
+  if (s === "finalizado") {
+    return {
+      titulo: "FINALIZADO",
+      numeroLabel: "Nº do serviço",
+      itensTitulo: "Itens do serviço",
+      pixNota: "Este serviço também pode ser quitado via Pix.",
+      aprovacaoTitulo: "Serviço finalizado",
+      aprovacaoDecl:
+        "Declaro que o serviço foi executado conforme os itens, valores e condições deste documento.",
+      arquivoPrefixo: "Finalizado",
+      paginaTitulo: "Finalizado",
+    };
+  }
+  if (s === "confirmado") {
+    return {
+      titulo: "CONFIRMADO",
+      numeroLabel: "Nº do pedido",
+      itensTitulo: "Itens do pedido",
+      pixNota: "Este pedido também pode ser quitado via Pix.",
+      aprovacaoTitulo: "Pedido confirmado",
+      aprovacaoDecl: "Declaro que confirmo os itens, valores e condições deste documento.",
+      arquivoPrefixo: "Confirmado",
+      paginaTitulo: "Confirmado",
+    };
+  }
+  return {
+    titulo: "ORÇAMENTO",
+    numeroLabel: "Nº do orçamento",
+    itensTitulo: "Itens do orçamento",
+    pixNota: "Este orçamento também pode ser quitado via Pix.",
+    aprovacaoTitulo: "Aprovação do orçamento",
+    aprovacaoDecl: "Declaro que li e aprovo os itens, valores e condições deste orçamento.",
+    arquivoPrefixo: "Orcamento",
+    paginaTitulo: "Orçamento",
+  };
+}
+
 export function dataEmissaoOs(): { data: string; hora: string } {
   const now = new Date();
   const data = now.toLocaleDateString("pt-BR", {

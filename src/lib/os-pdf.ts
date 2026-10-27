@@ -1,15 +1,16 @@
 import type { AgendamentoItem } from "@/lib/admin-api";
+import { rotuloDocumentoOs } from "@/lib/os-document";
 import type { OrcamentoLinha } from "@/lib/orcamento.server";
 
-export function nomeArquivoOrcamentoPdf(id: number, nome?: string): string {
-  return `${baseNomeArquivoOrcamento(id, nome)}.pdf`;
+export function nomeArquivoOrcamentoPdf(id: number, nome?: string, status?: string): string {
+  return `${baseNomeArquivoOrcamento(id, nome, status)}.pdf`;
 }
 
-export function nomeArquivoOrcamentoPng(id: number, nome?: string): string {
-  return `${baseNomeArquivoOrcamento(id, nome)}.png`;
+export function nomeArquivoOrcamentoPng(id: number, nome?: string, status?: string): string {
+  return `${baseNomeArquivoOrcamento(id, nome, status)}.png`;
 }
 
-function baseNomeArquivoOrcamento(id: number, nome?: string): string {
+function baseNomeArquivoOrcamento(id: number, nome?: string, status?: string): string {
   const slug =
     (nome ?? "cliente")
       .normalize("NFD")
@@ -17,7 +18,8 @@ function baseNomeArquivoOrcamento(id: number, nome?: string): string {
       .replace(/[^a-zA-Z0-9]+/g, "-")
       .replace(/^-|-$/g, "")
       .slice(0, 40) || "cliente";
-  return `Orcamento-${id}-${slug}`;
+  const prefixo = rotuloDocumentoOs(status).arquivoPrefixo;
+  return `${prefixo}-${id}-${slug}`;
 }
 
 function baixarBlob(blob: Blob, filename: string): void {

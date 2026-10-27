@@ -11,6 +11,7 @@ import {
   observacaoExibicao,
   OS_ORCAMENTO_EMPRESA,
   quantidadeLinhaOrcamento,
+  rotuloDocumentoOs,
   totalLinhaOrcamento,
 } from "@/lib/os-document";
 import { mesclarLinhasOrcamento, gerarParcelasOrcamento, parseFormaPagamento, type OrcamentoLinha } from "@/lib/orcamento.server";
@@ -86,6 +87,7 @@ export function OrcamentoDocument({ item, itens }: Props) {
   const valorParcelaResumo =
     isCredito && qtdParcelasCredito > 1 && parcelas.length > 0 ? parcelas[0].valor : 0;
   const empresa = OS_ORCAMENTO_EMPRESA;
+  const rotulo = rotuloDocumentoOs(item.status);
 
   return (
     <div className="os-orc-page" id="orcamento-documento">
@@ -158,10 +160,10 @@ export function OrcamentoDocument({ item, itens }: Props) {
       <div className="os-orc-divider" aria-hidden="true" />
 
       <div className="os-orc-title-row">
-        <h1 className="os-orc-title">ORÇAMENTO</h1>
+        <h1 className="os-orc-title">{rotulo.titulo}</h1>
         <div className="os-orc-meta-row">
           <MetaChip
-            label="Nº do orçamento"
+            label={rotulo.numeroLabel}
             value={item.id > 0 ? item.id : "—"}
             icon={
               <svg viewBox="0 0 24 24">
@@ -220,7 +222,7 @@ export function OrcamentoDocument({ item, itens }: Props) {
       </div>
 
       <section className="os-orc-block">
-        <SecHead title="Itens do orçamento">
+        <SecHead title={rotulo.itensTitulo}>
           <svg viewBox="0 0 24 24">
             <path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 00-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z" />
           </svg>
@@ -355,7 +357,7 @@ export function OrcamentoDocument({ item, itens }: Props) {
                   <p className="os-orc-pix__lead">
                     {isPix
                       ? "Escaneie o QR Code no app do seu banco."
-                      : "Este orçamento também pode ser quitado via Pix."}
+                      : rotulo.pixNota}
                   </p>
                   <p className="os-orc-pix__chave">
                     <span className="os-orc-pix__chave-label">Chave Pix</span>
@@ -382,11 +384,9 @@ export function OrcamentoDocument({ item, itens }: Props) {
       </section>
 
       <div className="os-orc-pix-page">
-        <section className="os-orc-aprovacao" aria-label="Aprovação do orçamento">
-          <h3 className="os-orc-aprovacao__title">Aprovação do orçamento</h3>
-          <p className="os-orc-aprovacao__decl">
-            Declaro que li e aprovo os itens, valores e condições deste orçamento.
-          </p>
+        <section className="os-orc-aprovacao" aria-label={rotulo.aprovacaoTitulo}>
+          <h3 className="os-orc-aprovacao__title">{rotulo.aprovacaoTitulo}</h3>
+          <p className="os-orc-aprovacao__decl">{rotulo.aprovacaoDecl}</p>
           <div className="os-orc-aprovacao__grid">
             <div className="os-orc-aprovacao__col">
               <div className="os-orc-aprovacao__sign-area">

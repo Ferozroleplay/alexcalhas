@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { OrcamentoDocument } from "@/components/os/OrcamentoDocument";
 import type { AgendamentoItem } from "@/lib/admin-api";
+import { rotuloDocumentoOs } from "@/lib/os-document";
 import {
   gerarPdfDoElemento,
   gerarPngDoElemento,
@@ -60,6 +61,12 @@ function OsPage() {
   }, [id]);
 
   useEffect(() => {
+    if (!item) return;
+    const rotulo = rotuloDocumentoOs(item.status);
+    document.title = `${rotulo.paginaTitulo} — Alex Calhas`;
+  }, [item]);
+
+  useEffect(() => {
     if (!print || !item) return;
     const t = window.setTimeout(() => window.print(), 400);
     return () => window.clearTimeout(t);
@@ -75,7 +82,7 @@ function OsPage() {
         if (cancelled) return;
         const el = document.getElementById("orcamento-documento");
         if (!el) throw new Error("Documento não encontrado.");
-        const arquivo = nomeArquivoOrcamentoPdf(item.id, nome || item.nome);
+        const arquivo = nomeArquivoOrcamentoPdf(item.id, nome || item.nome, item.status);
         await gerarPdfDoElemento(el, arquivo);
         if (cancelled) return;
         if (window.parent !== window) {
@@ -111,7 +118,7 @@ function OsPage() {
         if (cancelled) return;
         const el = document.getElementById("orcamento-documento");
         if (!el) throw new Error("Documento não encontrado.");
-        const arquivo = nomeArquivoOrcamentoPng(item.id, nome || item.nome);
+        const arquivo = nomeArquivoOrcamentoPng(item.id, nome || item.nome, item.status);
         await gerarPngDoElemento(el, arquivo);
         if (cancelled) return;
         if (window.parent !== window) {
@@ -143,7 +150,7 @@ function OsPage() {
     try {
       const el = document.getElementById("orcamento-documento");
       if (!el) throw new Error("Documento não encontrado.");
-      await gerarPdfDoElemento(el, nomeArquivoOrcamentoPdf(item.id, item.nome));
+      await gerarPdfDoElemento(el, nomeArquivoOrcamentoPdf(item.id, item.nome, item.status));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao gerar PDF.");
     } finally {
@@ -157,7 +164,7 @@ function OsPage() {
     try {
       const el = document.getElementById("orcamento-documento");
       if (!el) throw new Error("Documento não encontrado.");
-      await gerarPngDoElemento(el, nomeArquivoOrcamentoPng(item.id, item.nome));
+      await gerarPngDoElemento(el, nomeArquivoOrcamentoPng(item.id, item.nome, item.status));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao gerar imagem.");
     } finally {
