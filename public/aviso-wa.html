@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WhatsApp — Alex Calhas</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        display: grid;
+        place-items: center;
+        padding: 1.4rem;
+        text-align: center;
+        font-family: system-ui, sans-serif;
+        background: #0b1612;
+        color: #e7f7ef;
+      }
+      p {
+        margin: 0.35rem 0;
+      }
+      .sub {
+        opacity: 0.72;
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <p id="status">Deixe esta janela aberta</p>
+      <p class="sub" id="dica">A fila de avisos usa ela para abrir o WhatsApp.</p>
+    </div>
+    <iframe id="go" title="" hidden></iframe>
+    <script>
+      const q = new URLSearchParams(location.search);
+      const phone = q.get("phone") || "";
+      const text = q.get("text") || "";
+      const nome = q.get("nome") || "";
+      const status = document.getElementById("status");
+      const dica = document.getElementById("dica");
+      const go = document.getElementById("go");
+      if (phone && status && dica && go) {
+        status.textContent = nome ? "Abrindo " + nome + "…" : "Abrindo WhatsApp…";
+        dica.textContent = "Clique Enviar no WhatsApp. Não feche esta janela.";
+        const url = "whatsapp://send?phone=" + phone + "&text=" + encodeURIComponent(text);
+        go.src = "about:blank";
+        requestAnimationFrame(function () {
+          go.src = url;
+        });
+      }
+    </script>
+  </body>
+</html>

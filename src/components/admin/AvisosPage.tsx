@@ -5,7 +5,7 @@ import { aplicarAvisoCliente, AVISO_MODELOS } from "@/lib/aviso-clientes";
 import { fetchClientesAviso, type ClienteAviso } from "@/lib/clientes-client";
 import { dashAlert, dashConfirm } from "@/lib/dash-ui";
 import { formatarTelefone } from "@/lib/format-br";
-import { abrirWhatsappComTexto } from "@/lib/whatsapp-orcamento";
+import { abrirJanelaAvisoFila, abrirWhatsappComTexto, abrirWhatsappFila, fecharJanelaAvisoFila } from "@/lib/whatsapp-orcamento";
 
 const JANELA_WA = "alexcalhas_aviso";
 const INTERVALOS_SEG = [6, 8, 10, 12, 15, 20] as const;
@@ -137,11 +137,14 @@ export function AvisosPage() {
     return -1;
   }
 
-  function dispararIndice(i: number): "ok" | "bloqueado" | "invalido" {
+  function dispararIndice(i: number, modo: "fila" | "unico"): "ok" | "bloqueado" | "invalido" {
     const c = filtradosRef.current[i];
     if (!c) return "invalido";
     const msg = aplicarAvisoCliente(textoRef.current, c.nome);
-    const abriu = abrirWhatsappComTexto(c.telefone, msg, JANELA_WA);
+    const abriu =
+      modo === "fila"
+        ? abrirWhatsappFila(c.telefone, msg, c.nome)
+        : abrirWhatsappComTexto(c.telefone, msg, JANELA_WA);
     setIndice(i);
     if (!abriu) return "bloqueado";
     setEnviados((prev) => new Set(prev).add(chaveTel(c.telefone)));
@@ -174,17 +177,12 @@ export function AvisosPage() {
         tickRef.current = null;
       }
       if (!rodandoRef.current) return;
-      const status = dispararIndice(next);
+      const status = dispararIndice(next, "fila");
       if (status === "bloqueado") {
         rodandoRef.current = false;
         setRodando(false);
         setBloqueado(true);
         setContaRegressiva(null);
-        void dashAlert({
-          title: "O navegador bloqueou a janela",
-          message: "Clique em Continuar para o próximo cliente. O WhatsApp precisa de um clique seu de vez em quando.",
-          variant: "warning",
-        });
         return;
       }
       agendarProximo();
@@ -203,7 +201,7 @@ export function AvisosPage() {
       return;
     }
     const i = filtrados.indexOf(atual);
-    const status = dispararIndice(i < 0 ? indice : i);
+    const status = dispararIndice(i < 0 ? indice : i, "unico");
     if (status === "bloqueado") {
       void dashAlert({
         message: "O navegador bloqueou o WhatsApp. Permita pop-ups nesta página.",
@@ -228,6 +226,14 @@ export function AvisosPage() {
       void dashAlert({ message: "Todos desta lista já foram abertos.", variant: "info" });
       return;
     }
+    if (!abrirJanelaAvisoFila()) {
+      void dashAlert({
+        title: "Permita a janela",
+        message: "O navegador bloqueou. Clique no ícone de pop-up na barra de endereço, permita neste site, e tente de novo. É só uma janela — o resto troca nela.",
+        variant: "warning",
+      });
+      return;
+    }
     const ok = await dashConfirm({
       title: "Enviar para todos?",
       message: `Abre o WhatsApp de ${falta} clientes, um a cada ${intervaloSeg} segundos (cerca de ${minutosEstimados(falta, intervaloSeg)} min). Em cada conversa você clica Enviar. Pode pausar a qualquer hora.`,
@@ -235,19 +241,22 @@ export function AvisosPage() {
       cancelText: "Cancelar",
       variant: "primary",
       icon: "bi-whatsapp",
-      hint: "O WhatsApp não dispara sozinho: a tela só abre a conversa com o texto pronto.",
+      hint: "Usa o WhatsApp instalado no computador. Na primeira vez, permita abrir o aplicativo.",
     });
-    if (!ok) return;
+    if (!ok) {
+      fecharJanelaAvisoFila();
+      return;
+    }
     const start = proximoNaoEnviado(indice);
     if (start < 0) return;
     rodandoRef.current = true;
     setRodando(true);
     setBloqueado(false);
-    const status = dispararIndice(start);
+    const status = dispararIndice(start, "fila");
     if (status === "bloqueado") {
       pararFila();
       void dashAlert({
-        message: "O navegador bloqueou o WhatsApp. Permita pop-ups e tente de novo.",
+        message: "Telefone inválido. Pule este cliente e clique em Continuar.",
         variant: "warning",
       });
       return;
@@ -266,18 +275,23 @@ export function AvisosPage() {
       void dashAlert({ message: "Todos desta lista já foram abertos.", variant: "info" });
       return;
     }
+    if (!abrirJanelaAvisoFila()) {
+      setBloqueado(true);
+      void dashAlert({
+        title: "Permita a janela",
+        message: "O navegador bloqueou. Clique no ícone de pop-up na barra de endereço, permita neste site, e clique em Continuar.",
+        variant: "warning",
+      });
+      return;
+    }
     rodandoRef.current = true;
     setRodando(true);
     setBloqueado(false);
-    const status = dispararIndice(start);
+    const status = dispararIndice(start, "fila");
     if (status === "bloqueado") {
       rodandoRef.current = false;
       setRodando(false);
       setBloqueado(true);
-      void dashAlert({
-        message: "O navegador bloqueou de novo. Clique em Continuar.",
-        variant: "warning",
-      });
       return;
     }
     agendarProximo();
@@ -296,7 +310,7 @@ export function AvisosPage() {
     <div className="analytics-page dash-form-page--pro avisos-page">
       <DashPageHero
         title="Avisos aos clientes"
-        subtitle="Escreve o recado e manda no WhatsApp em fila, com pausa entre cada cliente. Em cada conversa você clica Enviar."
+        subtitle="Escreve o recado e manda no WhatsApp do computador, um cliente após o outro. Deixe a janelinha aberta e clique Enviar em cada conversa."
         iconClass="bi-megaphone"
         accent="clientes"
         showNovaVisita={false}
@@ -429,9 +443,13 @@ export function AvisosPage() {
                 </p>
               ) : bloqueado ? (
                 <p className="avisos-auto__cd avisos-auto__cd--warn" role="status">
-                  Navegador bloqueou a janela. Clique em Continuar.
+                  Não abriu. Clique em Continuar e permita o WhatsApp se o navegador perguntar.
                 </p>
-              ) : null}
+              ) : (
+                <p className="avisos-auto__hint">
+                  Abre uma janelinha e troca o cliente nela. Precisa do WhatsApp neste computador — na primeira vez, permita abrir o aplicativo.
+                </p>
+              )}
             </div>
 
             <label className="avisos-label" htmlFor="aviso-busca">

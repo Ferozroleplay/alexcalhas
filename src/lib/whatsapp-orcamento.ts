@@ -23,6 +23,12 @@ export function saudacaoPeriodoDia(): "Bom dia" | "Boa tarde" | "Boa noite" {
   return "Boa noite";
 }
 
+function telefoneWhatsappDigits(telefone: string): string {
+  const digits = telefone.replace(/\D/g, "");
+  if (!digits) return "";
+  return digits.startsWith("55") ? digits : `55${digits.replace(/^0+/, "")}`;
+}
+
 export function abrirWhatsappComTexto(telefone: string, text: string, janela?: string): boolean {
   const wa = telefoneWhatsappLink(telefone);
   if (!wa) {
@@ -35,6 +41,69 @@ export function abrirWhatsappComTexto(telefone: string, text: string, janela?: s
     ? window.open(url, alvo)
     : window.open(url, "_blank", "noopener,noreferrer");
   return popup !== null;
+}
+
+const JANELA_AVISO = "alexcalhas_aviso";
+let avisoWin: Window | null = null;
+
+function janelaAvisoViva(): Window | null {
+  if (avisoWin && !avisoWin.closed) return avisoWin;
+  avisoWin = null;
+  return null;
+}
+
+function navegarJanelaAviso(url: string): boolean {
+  const viva = janelaAvisoViva();
+  if (viva) {
+    try {
+      (viva as unknown as { location: string }).location = url;
+      viva.focus();
+      return true;
+    } catch {
+      /* tenta reabrir pelo nome */
+    }
+  }
+  const aberta = window.open(url, JANELA_AVISO, "width=480,height=340");
+  avisoWin = aberta;
+  return Boolean(aberta && !aberta.closed);
+}
+
+/** Abre a janelinha da fila no clique (gesto do usuário). Sem isso o navegador bloqueia o resto. */
+export function abrirJanelaAvisoFila(): boolean {
+  const viva = janelaAvisoViva();
+  if (viva) {
+    viva.focus();
+    return true;
+  }
+  return navegarJanelaAviso(`${window.location.origin}/aviso-wa.html`);
+}
+
+export function fecharJanelaAvisoFila(): void {
+  try {
+    janelaAvisoViva()?.close();
+  } catch {
+    /* ignore */
+  }
+  avisoWin = null;
+}
+
+/**
+ * Troca o cliente na janela da fila (mesma janela, sem pop-up novo).
+ * A página aviso-wa.html dispara o WhatsApp instalado no computador.
+ */
+export function abrirWhatsappFila(telefone: string, text: string, nome = ""): boolean {
+  const phone = telefoneWhatsappDigits(telefone);
+  if (!phone) {
+    void dashAlert({ message: "Telefone inválido para WhatsApp.", variant: "warning" });
+    return false;
+  }
+  const params = new URLSearchParams({
+    phone,
+    text,
+    nome: nome.trim().split(/\s+/)[0] || "",
+    t: String(Date.now()),
+  });
+  return navegarJanelaAviso(`${window.location.origin}/aviso-wa.html?${params.toString()}`);
 }
 
 export function mensagemWhatsappVisita(nome: string): string {
