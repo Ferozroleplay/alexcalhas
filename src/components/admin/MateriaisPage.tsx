@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { DashPageHero } from "@/components/admin/DashPageHero";
 import { ModalCadastroMaterial } from "@/components/admin/modals/ModalCadastroMaterial";
 import {
   atualizarMaterial,
-  definirEstoquesMinimosEmMassa,
   excluirMaterial,
   fetchMateriais,
   type MaterialItem,
@@ -18,8 +17,6 @@ import {
   estoqueReferenciaBarra,
 } from "@/lib/estoque-alerta";
 import { calcularPrecosChapaGalvalume, isChapaGalvalumeMetros } from "@/lib/orcamento-empresa";
-
-const ESTOQUE_MIN_2_FLAG = "alex-materiais-estoque-min-2-v1";
 
 type StockNivel = "normal" | "alerta" | "critico" | "zerado";
 
@@ -76,7 +73,6 @@ export function MateriaisPage() {
   const [editItem, setEditItem] = useState<MaterialItem | null>(null);
   const [ajustandoId, setAjustandoId] = useState<number | null>(null);
   const [sincronizando, setSincronizando] = useState(false);
-  const syncFeitoRef = useRef(false);
 
   const aplicarPrecoEmpresa = useCallback(async (item: MaterialItem): Promise<MaterialItem | null> => {
     const calc = calcularPrecosChapaGalvalume({
@@ -167,25 +163,14 @@ export function MateriaisPage() {
     setLoading(true);
     setErro("");
     try {
-      let lista = await fetchMateriais();
-
-      // Uma vez: estoque mínimo 2 m em todos (alerta amarelo).
-      if (typeof window !== "undefined" && localStorage.getItem(ESTOQUE_MIN_2_FLAG) !== "1") {
-        lista = await definirEstoquesMinimosEmMassa(ESTOQUE_MINIMO_PADRAO_M);
-        localStorage.setItem(ESTOQUE_MIN_2_FLAG, "1");
-        dashToast("Estoque mínimo definido em 2 metros para todos.", "success");
-      }
-
-      const sincronizada = await sincronizarChapasEmpresa(lista, { silent: syncFeitoRef.current });
-      syncFeitoRef.current = true;
-      setItens(sincronizada);
+      setItens(await fetchMateriais());
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro ao carregar materiais.");
       setItens([]);
     } finally {
       setLoading(false);
     }
-  }, [sincronizarChapasEmpresa]);
+  }, []);
 
   useEffect(() => {
     void load();

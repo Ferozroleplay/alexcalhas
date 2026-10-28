@@ -81,7 +81,7 @@ export async function backfillInventarioHorasVazias(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function serializeInventario(row: any) {
+export function serializeInventario(row: any, opts?: { incluirItens?: boolean }) {
   const orcamentoItens = parseOrcamentoJson(row.orcamento);
   const valorGravado = row.valor != null ? Number(row.valor) : 0;
   const descontoPercent = row.descontoPercent != null ? Number(row.descontoPercent) : 0;
@@ -112,7 +112,7 @@ export function serializeInventario(row: any) {
     descontoPercent,
     formaPagamento: row.formaPagamento ?? null,
     dataMontagem: row.dataMontagem ?? null,
-    orcamentoItens,
+    orcamentoItens: opts?.incluirItens === false ? undefined : orcamentoItens,
     materiaisCount: orcamentoItens.length,
   };
 }

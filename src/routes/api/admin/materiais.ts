@@ -3,7 +3,6 @@ import { z } from "zod";
 
 import { dbErrorMessage } from "@/lib/agendamento.server";
 import { isAdminRequest, isAdminVisaoRequest } from "@/lib/auth.server";
-import { baixarEstoquesConfirmadosPendentes } from "@/lib/estoque-baixa.server";
 import { jsonResponse } from "@/lib/http.server";
 import {
   createMaterial,
@@ -142,12 +141,6 @@ export const Route = createFileRoute("/api/admin/materiais")({
           return jsonResponse({ ok: false, message: "Não autorizado." }, 401);
         }
         try {
-          // Confirmados antigos (sem baixa) — desconta agora, ex.: Simone.
-          try {
-            await baixarEstoquesConfirmadosPendentes();
-          } catch (baixaErr) {
-            console.error("[GET materiais] baixa pendente", baixaErr);
-          }
           const itens = await listMateriais();
           return jsonResponse({ ok: true, itens });
         } catch (err) {

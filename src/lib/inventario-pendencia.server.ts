@@ -6,6 +6,13 @@ export async function ensureCobrarPendenciaColumn(): Promise<void> {
   if (colunaPronta) return;
   const prisma = await getPrisma();
   try {
+    await prisma.$queryRawUnsafe(`SELECT cobrar_pendencia FROM inventario LIMIT 1`);
+    colunaPronta = true;
+    return;
+  } catch {
+    /* coluna ainda não existe */
+  }
+  try {
     await prisma.$executeRawUnsafe(
       `ALTER TABLE inventario ADD COLUMN cobrar_pendencia TINYINT NOT NULL DEFAULT 0`,
     );

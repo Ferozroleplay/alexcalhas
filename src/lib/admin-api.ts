@@ -205,7 +205,7 @@ export async function fetchAgendamentos(
   if (status) qs.set("status", status);
   const q = opts?.q?.trim();
   if (q) qs.set("q", q);
-  qs.set("limit", String(opts?.limit && opts.limit > 0 ? opts.limit : 1000));
+  qs.set("limit", String(opts?.limit && opts.limit > 0 ? opts.limit : 250));
   const res = await fetch(`/api/agendamentos?${qs}`, { credentials: "include" });
   const data = await parseJson<{ ok?: boolean; items?: AgendamentoItem[]; message?: string }>(res);
   if (!res.ok) throw new Error(data.message ?? "Não foi possível carregar agendamentos.");

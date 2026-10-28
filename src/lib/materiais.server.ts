@@ -152,6 +152,13 @@ function str(v: unknown): string {
 async function ensureExtraColumns(): Promise<void> {
   if (colsReady) return;
   const prisma = await getPrisma();
+  try {
+    await prisma.$queryRawUnsafe(`SELECT box FROM materiais LIMIT 1`);
+    colsReady = true;
+    return;
+  } catch {
+    /* colunas antigas — aplica ALTER abaixo */
+  }
   const alters = [
     "MODIFY COLUMN material VARCHAR(255) NULL",
     "ADD COLUMN codigo VARCHAR(40) NULL",

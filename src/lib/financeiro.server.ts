@@ -167,7 +167,8 @@ export async function resumoFinanceiroGlobal() {
 
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
     `SELECT id, nome, status, valor, orcamento, \`data-visita\` AS data_visita, \`data-montagem\` AS data_montagem
-     FROM inventario`,
+     FROM inventario
+     WHERE LOWER(TRIM(status)) IN ('confirmado','finalizado')`,
   );
 
   for (const row of rows) {

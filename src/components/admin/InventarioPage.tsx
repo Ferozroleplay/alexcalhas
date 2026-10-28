@@ -131,7 +131,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
       setItems(
         await fetchAgendamentos(statusFilter, {
           q: buscaDebounced,
-          limit: 1000,
+          limit: buscaDebounced ? 1000 : 250,
         }),
       );
     } catch (err) {

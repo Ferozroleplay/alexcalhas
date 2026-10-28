@@ -51,43 +51,70 @@ function parseOrcamentoParts(raw: string | null) {
 export async function getDashboardStats() {
   const prisma = await getPrisma();
   const now = new Date();
-  const mesAtualYm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const mesLabel = now.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 
-  const rows = await prisma.inventario.findMany({
-    select: {
-      status: true,
-      valor: true,
-      orcamento: true,
-      dataVisita: true,
-      dataMontagem: true,
-    },
-  });
+  const visitKeys: string[] = [];
+  const dailyLabels: string[] = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    visitKeys.push(`${day}-${month}-${year}`);
+    dailyLabels.push(`${day}/${month}`);
+  }
+
+  const [counts, moneyRows, visitRows] = await Promise.all([
+    prisma.inventario.groupBy({
+      by: ["status"],
+      _count: true,
+      _sum: { valor: true },
+    }),
+    prisma.inventario.findMany({
+      where: {
+        OR: [{ status: "confirmado" }, { status: "finalizado" }],
+      },
+      select: {
+        status: true,
+        valor: true,
+        orcamento: true,
+        dataVisita: true,
+        dataMontagem: true,
+      },
+    }),
+    prisma.inventario.findMany({
+      where: { dataVisita: { in: visitKeys } },
+      select: { dataVisita: true },
+    }),
+  ]);
 
   const operacional = { agendado: 0, orcamentado: 0, confirmado: 0, finalizado: 0 };
   let receitaConfirmado = 0;
+
+  for (const row of counts) {
+    const b = bucketStatus(row.status);
+    const n = Number(row._count) || 0;
+    if (b === "agendado") operacional.agendado += n;
+    else if (b === "orcamentado") operacional.orcamentado += n;
+    else if (b === "confirmado") {
+      operacional.confirmado += n;
+      receitaConfirmado += Number(row._sum.valor ?? 0);
+    } else if (b === "finalizado") {
+      operacional.finalizado += n;
+    }
+  }
+
   let receitaFaturadaMes = 0;
   let qtdFaturadoMes = 0;
-  let margemMes = 0;
-
   const porStatusMes = {
     confirmado: { venda: 0, custo: 0 },
     finalizado: { venda: 0, custo: 0 },
   };
 
-  for (const row of rows) {
+  for (const row of moneyRows) {
     const b = bucketStatus(row.status);
-    if (b === "agendado") operacional.agendado++;
-    else if (b === "orcamentado") operacional.orcamentado++;
-    else if (b === "confirmado") {
-      operacional.confirmado++;
-      receitaConfirmado += Number(row.valor);
-    } else if (b === "finalizado") {
-      operacional.finalizado++;
-    }
-
     if (b !== "confirmado" && b !== "finalizado") continue;
-
     const parts = parseOrcamentoParts(row.orcamento);
     const dt = parseDataInventario(row);
     const noMes =
@@ -105,7 +132,7 @@ export async function getDashboardStats() {
     }
   }
 
-  margemMes =
+  const margemMes =
     porStatusMes.confirmado.venda -
     porStatusMes.confirmado.custo +
     (porStatusMes.finalizado.venda - porStatusMes.finalizado.custo);
@@ -113,24 +140,13 @@ export async function getDashboardStats() {
   const totalGeral = receitaConfirmado + receitaFaturadaMes;
 
   const countByVisitDate = new Map<string, number>();
-  for (const row of rows) {
+  for (const row of visitRows) {
     const dv = row.dataVisita?.trim();
     if (!dv || dv === "0000-00-00") continue;
     countByVisitDate.set(dv, (countByVisitDate.get(dv) ?? 0) + 1);
   }
 
-  const dailyLabels: string[] = [];
-  const dailyValues: number[] = [];
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    const day = String(d.getDate()).padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const year = d.getFullYear();
-    const key = `${day}-${month}-${year}`;
-    dailyLabels.push(`${day}/${month}`);
-    dailyValues.push(countByVisitDate.get(key) ?? 0);
-  }
+  const dailyValues: number[] = visitKeys.map((key) => countByVisitDate.get(key) ?? 0);
 
   return {
     updatedAt: now.toISOString(),

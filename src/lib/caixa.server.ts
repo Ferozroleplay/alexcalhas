@@ -205,7 +205,12 @@ export async function getCaixaDia(dataYmd: string): Promise<CaixaDiaResumo> {
   const status = await getCaixaStatus(ymd);
 
   const prisma = await getPrisma();
+  const [yStr, mStr, dStr] = ymd.split("-");
+  const dataBr = `${dStr}-${mStr}-${yStr}`;
   const rows = await prisma.inventario.findMany({
+    where: {
+      OR: [{ dataMontagem: dataBr }, { dataVisita: dataBr }],
+    },
     select: {
       id: true,
       nome: true,

@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import {
-  backfillInventarioHorasVazias,
   buildInventarioCreateData,
   dbErrorMessage,
   inventarioWhereStatus,
@@ -66,13 +65,13 @@ export const Route = createFileRoute("/api/agendamentos")({
         const parsedQuery = listQuerySchema.safeParse({
           status: url.searchParams.get("status") ?? undefined,
           q: url.searchParams.get("q") ?? undefined,
-          limit: url.searchParams.get("limit") ?? 1000,
+          limit: url.searchParams.get("limit") ?? 250,
         });
         if (!parsedQuery.success) {
           return jsonResponse({ ok: false, message: "Parâmetros inválidos." }, 400);
         }
 
-        const { status, q, limit = 1000 } = parsedQuery.data;
+        const { status, q, limit = 250 } = parsedQuery.data;
 
         try {
           const prisma = await getPrisma();
@@ -118,7 +117,6 @@ export const Route = createFileRoute("/api/agendamentos")({
               take: limit,
             });
           }
-          await backfillInventarioHorasVazias(prisma, rows);
 
           const idsRecebimento = rows
             .filter((r) => statusPermiteRecebimento(r.status))
@@ -128,7 +126,7 @@ export const Route = createFileRoute("/api/agendamentos")({
 
           const items = rows.map((row) => {
               const item = {
-                ...serializeInventario(row),
+                ...serializeInventario(row, { incluirItens: false }),
                 osToken: criarOsToken(row.id),
               };
               if (!statusPermiteRecebimento(row.status)) return item;

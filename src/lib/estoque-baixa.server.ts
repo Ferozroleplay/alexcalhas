@@ -41,6 +41,13 @@ async function ensureEstoqueBaixadoColumn(): Promise<void> {
   if (estoqueBaixadoColReady) return;
   const prisma = await getPrisma();
   try {
+    await prisma.$queryRawUnsafe(`SELECT estoque_baixado FROM inventario LIMIT 1`);
+    estoqueBaixadoColReady = true;
+    return;
+  } catch {
+    /* coluna ainda não existe */
+  }
+  try {
     await prisma.$executeRawUnsafe(
       `ALTER TABLE inventario ADD COLUMN estoque_baixado TINYINT NOT NULL DEFAULT 0`,
     );
