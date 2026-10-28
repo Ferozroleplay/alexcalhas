@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
+import { SiteChatCard } from "@/components/admin/SiteChatCard";
 import {
   EMPRESA_DEFAULTS,
   type EmpresaConfig,
@@ -132,7 +133,7 @@ export function EmpresaPage() {
           <span className="empresa-page__eyebrow">Configurações</span>
           <h1 className="empresa-page__title">Empresa e formação de preços</h1>
           <p className="empresa-page__subtitle">
-            Organize os dados da empresa, condições padrão e valores usados nos cálculos.
+            Organize os dados da empresa, o chat do site e os valores usados nos cálculos.
           </p>
         </div>
         <span className="empresa-page__saved" role="status">
@@ -142,6 +143,7 @@ export function EmpresaPage() {
       </header>
 
       <div className="dash-page-body dash-page-body--with-header empresa-page__body">
+        <SiteChatCard />
         <div className="empresa-page__grid">
           <section className="empresa-card">
             <header className="empresa-card__head">

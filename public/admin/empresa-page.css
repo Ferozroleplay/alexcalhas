@@ -333,3 +333,189 @@ html[data-bs-theme="light"] .empresa-logo-preview__box {
 html[data-bs-theme="light"] .empresa-fator__value {
   background: #fff;
 }
+
+.empresa-chat {
+  margin-bottom: 1.15rem;
+}
+
+.empresa-chat__layout {
+  display: grid;
+  grid-template-columns: 10.5rem minmax(0, 1fr);
+  gap: 1.25rem 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .empresa-chat__layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.empresa-chat__photo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.empresa-chat__avatar-wrap {
+  position: relative;
+  width: 6.5rem;
+  height: 6.5rem;
+}
+
+.empresa-chat__avatar {
+  width: 6.5rem;
+  height: 6.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center 18%;
+  border: 3px solid rgba(34, 197, 94, 0.55);
+  display: block;
+  background: #0f172a;
+}
+
+.empresa-chat__avatar--fallback {
+  display: grid;
+  place-items: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.empresa-chat__online {
+  position: absolute;
+  right: 0.2rem;
+  bottom: 0.2rem;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  background: #4ade80;
+  border: 2px solid #052e16;
+}
+
+.empresa-chat__photo-btn {
+  width: 100%;
+  border: 1px solid var(--empresa-border);
+  background: transparent;
+  color: inherit;
+  border-radius: 0.65rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.empresa-chat__photo-btn:hover:not(:disabled) {
+  border-color: var(--empresa-accent);
+  color: var(--empresa-accent);
+}
+
+.empresa-chat__photo-btn--ghost {
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.empresa-chat__photo-btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.empresa-chat__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.empresa-chat__hint {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--empresa-muted);
+  font-size: 0.75rem;
+}
+
+.empresa-chat__preview-label {
+  margin: 0 0 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--empresa-muted);
+}
+
+.empresa-chat__bubble-preview {
+  border: 1px solid var(--empresa-border);
+  border-radius: 0.9rem;
+  padding: 0.85rem 0.95rem;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+html[data-bs-theme="light"] .empresa-chat__bubble-preview {
+  background: #f8fafc;
+}
+
+.empresa-chat__bubble-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.55rem;
+}
+
+.empresa-chat__bubble-head img {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center 18%;
+}
+
+.empresa-chat__bubble-head strong {
+  display: block;
+  font-size: 0.9rem;
+}
+
+.empresa-chat__bubble-head span {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--empresa-muted);
+}
+
+.empresa-chat__bubble-preview > p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.empresa-chat__save {
+  align-self: flex-start;
+  border: none;
+  border-radius: 0.7rem;
+  padding: 0.6rem 1.1rem;
+  background: #16a34a;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.empresa-chat__save:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.empresa-chat__erro {
+  margin: 0;
+  color: #f87171;
+  font-size: 0.86rem;
+}
+
+.empresa-chat__ok {
+  margin: 0;
+  color: var(--empresa-accent);
+  font-size: 0.86rem;
+}
+
+.empresa-chat__status {
+  margin: 0;
+  color: var(--empresa-muted);
+}

@@ -20,6 +20,7 @@ import { Route as ApiConsultaDocumentoRouteImport } from './routes/api/consulta-
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiHorariosVisitaRouteImport } from './routes/api/horarios-visita'
 import { Route as ApiOsRouteImport } from './routes/api/os'
+import { Route as ApiSiteChatRouteImport } from './routes/api/site-chat'
 import { Route as PainelIndexRouteImport } from './routes/painel/index'
 import { Route as PainelAgendarRouteImport } from './routes/painel/agendar'
 import { Route as PainelCalculadoraBobinaRouteImport } from './routes/painel/calculadora-bobina'
@@ -68,11 +69,13 @@ import { Route as ApiAdminPontoControleRouteImport } from './routes/api/admin/po
 import { Route as ApiAdminProdutosRouteImport } from './routes/api/admin/produtos'
 import { Route as ApiAdminProdutosMenuRouteImport } from './routes/api/admin/produtos-menu'
 import { Route as ApiAdminSessionRouteImport } from './routes/api/admin/session'
+import { Route as ApiAdminSiteChatRouteImport } from './routes/api/admin/site-chat'
 import { Route as ApiAdminUsuariosRouteImport } from './routes/api/admin/usuarios'
 import { Route as ApiAdminVisaoRouteImport } from './routes/api/admin/visao'
 import { Route as ApiAgendamentosIdRouteImport } from './routes/api/agendamentos/$id'
 import { Route as ApiMediaBlobRouteImport } from './routes/api/media/blob'
 import { Route as ApiAdminProdutosIdRouteImport } from './routes/api/admin/produtos/$id'
+import { Route as ApiAdminSiteChatFotoRouteImport } from './routes/api/admin/site-chat/foto'
 import { Route as ApiAdminUsuariosIdRouteImport } from './routes/api/admin/usuarios/$id'
 import { Route as ApiAgendamentosIdClienteRouteImport } from './routes/api/agendamentos/$id/cliente'
 import { Route as ApiAgendamentosIdConfirmarMontagemRouteImport } from './routes/api/agendamentos/$id/confirmar-montagem'
@@ -136,6 +139,11 @@ const ApiHorariosVisitaRoute = ApiHorariosVisitaRouteImport.update({
 const ApiOsRoute = ApiOsRouteImport.update({
   id: '/api/os',
   path: '/api/os',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSiteChatRoute = ApiSiteChatRouteImport.update({
+  id: '/api/site-chat',
+  path: '/api/site-chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PainelIndexRoute = PainelIndexRouteImport.update({
@@ -383,6 +391,11 @@ const ApiAdminSessionRoute = ApiAdminSessionRouteImport.update({
   path: '/api/admin/session',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminSiteChatRoute = ApiAdminSiteChatRouteImport.update({
+  id: '/api/admin/site-chat',
+  path: '/api/admin/site-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminUsuariosRoute = ApiAdminUsuariosRouteImport.update({
   id: '/api/admin/usuarios',
   path: '/api/admin/usuarios',
@@ -407,6 +420,11 @@ const ApiAdminProdutosIdRoute = ApiAdminProdutosIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => ApiAdminProdutosRoute,
+} as any)
+const ApiAdminSiteChatFotoRoute = ApiAdminSiteChatFotoRouteImport.update({
+  id: '/foto',
+  path: '/foto',
+  getParentRoute: () => ApiAdminSiteChatRoute,
 } as any)
 const ApiAdminUsuariosIdRoute = ApiAdminUsuariosIdRouteImport.update({
   id: '/$id',
@@ -471,6 +489,7 @@ export interface FileRoutesByFullPath {
   '/api/health': typeof ApiHealthRoute
   '/api/horarios-visita': typeof ApiHorariosVisitaRoute
   '/api/os': typeof ApiOsRoute
+  '/api/site-chat': typeof ApiSiteChatRoute
   '/painel/agendar': typeof PainelAgendarRoute
   '/painel/calculadora-bobina': typeof PainelCalculadoraBobinaRoute
   '/painel/calculadora-condutores': typeof PainelCalculadoraCondutoresRoute
@@ -519,11 +538,13 @@ export interface FileRoutesByFullPath {
   '/api/admin/produtos': typeof ApiAdminProdutosRouteWithChildren
   '/api/admin/produtos-menu': typeof ApiAdminProdutosMenuRoute
   '/api/admin/session': typeof ApiAdminSessionRoute
+  '/api/admin/site-chat': typeof ApiAdminSiteChatRouteWithChildren
   '/api/admin/usuarios': typeof ApiAdminUsuariosRouteWithChildren
   '/api/admin/visao': typeof ApiAdminVisaoRoute
   '/api/agendamentos/$id': typeof ApiAgendamentosIdRouteWithChildren
   '/api/media/blob': typeof ApiMediaBlobRoute
   '/api/admin/produtos/$id': typeof ApiAdminProdutosIdRouteWithChildren
+  '/api/admin/site-chat/foto': typeof ApiAdminSiteChatFotoRoute
   '/api/admin/usuarios/$id': typeof ApiAdminUsuariosIdRouteWithChildren
   '/api/agendamentos/$id/cliente': typeof ApiAgendamentosIdClienteRoute
   '/api/agendamentos/$id/confirmar-montagem': typeof ApiAgendamentosIdConfirmarMontagemRoute
@@ -545,6 +566,7 @@ export interface FileRoutesByTo {
   '/api/health': typeof ApiHealthRoute
   '/api/horarios-visita': typeof ApiHorariosVisitaRoute
   '/api/os': typeof ApiOsRoute
+  '/api/site-chat': typeof ApiSiteChatRoute
   '/painel/agendar': typeof PainelAgendarRoute
   '/painel/calculadora-bobina': typeof PainelCalculadoraBobinaRoute
   '/painel/calculadora-condutores': typeof PainelCalculadoraCondutoresRoute
@@ -593,11 +615,13 @@ export interface FileRoutesByTo {
   '/api/admin/produtos': typeof ApiAdminProdutosRouteWithChildren
   '/api/admin/produtos-menu': typeof ApiAdminProdutosMenuRoute
   '/api/admin/session': typeof ApiAdminSessionRoute
+  '/api/admin/site-chat': typeof ApiAdminSiteChatRouteWithChildren
   '/api/admin/usuarios': typeof ApiAdminUsuariosRouteWithChildren
   '/api/admin/visao': typeof ApiAdminVisaoRoute
   '/api/agendamentos/$id': typeof ApiAgendamentosIdRouteWithChildren
   '/api/media/blob': typeof ApiMediaBlobRoute
   '/api/admin/produtos/$id': typeof ApiAdminProdutosIdRouteWithChildren
+  '/api/admin/site-chat/foto': typeof ApiAdminSiteChatFotoRoute
   '/api/admin/usuarios/$id': typeof ApiAdminUsuariosIdRouteWithChildren
   '/api/agendamentos/$id/cliente': typeof ApiAgendamentosIdClienteRoute
   '/api/agendamentos/$id/confirmar-montagem': typeof ApiAgendamentosIdConfirmarMontagemRoute
@@ -621,6 +645,7 @@ export interface FileRoutesById {
   '/api/health': typeof ApiHealthRoute
   '/api/horarios-visita': typeof ApiHorariosVisitaRoute
   '/api/os': typeof ApiOsRoute
+  '/api/site-chat': typeof ApiSiteChatRoute
   '/painel/agendar': typeof PainelAgendarRoute
   '/painel/calculadora-bobina': typeof PainelCalculadoraBobinaRoute
   '/painel/calculadora-condutores': typeof PainelCalculadoraCondutoresRoute
@@ -669,11 +694,13 @@ export interface FileRoutesById {
   '/api/admin/produtos': typeof ApiAdminProdutosRouteWithChildren
   '/api/admin/produtos-menu': typeof ApiAdminProdutosMenuRoute
   '/api/admin/session': typeof ApiAdminSessionRoute
+  '/api/admin/site-chat': typeof ApiAdminSiteChatRouteWithChildren
   '/api/admin/usuarios': typeof ApiAdminUsuariosRouteWithChildren
   '/api/admin/visao': typeof ApiAdminVisaoRoute
   '/api/agendamentos/$id': typeof ApiAgendamentosIdRouteWithChildren
   '/api/media/blob': typeof ApiMediaBlobRoute
   '/api/admin/produtos/$id': typeof ApiAdminProdutosIdRouteWithChildren
+  '/api/admin/site-chat/foto': typeof ApiAdminSiteChatFotoRoute
   '/api/admin/usuarios/$id': typeof ApiAdminUsuariosIdRouteWithChildren
   '/api/agendamentos/$id/cliente': typeof ApiAgendamentosIdClienteRoute
   '/api/agendamentos/$id/confirmar-montagem': typeof ApiAgendamentosIdConfirmarMontagemRoute
@@ -698,6 +725,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/horarios-visita'
     | '/api/os'
+    | '/api/site-chat'
     | '/painel/agendar'
     | '/painel/calculadora-bobina'
     | '/painel/calculadora-condutores'
@@ -746,11 +774,13 @@ export interface FileRouteTypes {
     | '/api/admin/produtos'
     | '/api/admin/produtos-menu'
     | '/api/admin/session'
+    | '/api/admin/site-chat'
     | '/api/admin/usuarios'
     | '/api/admin/visao'
     | '/api/agendamentos/$id'
     | '/api/media/blob'
     | '/api/admin/produtos/$id'
+    | '/api/admin/site-chat/foto'
     | '/api/admin/usuarios/$id'
     | '/api/agendamentos/$id/cliente'
     | '/api/agendamentos/$id/confirmar-montagem'
@@ -772,6 +802,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/horarios-visita'
     | '/api/os'
+    | '/api/site-chat'
     | '/painel/agendar'
     | '/painel/calculadora-bobina'
     | '/painel/calculadora-condutores'
@@ -820,11 +851,13 @@ export interface FileRouteTypes {
     | '/api/admin/produtos'
     | '/api/admin/produtos-menu'
     | '/api/admin/session'
+    | '/api/admin/site-chat'
     | '/api/admin/usuarios'
     | '/api/admin/visao'
     | '/api/agendamentos/$id'
     | '/api/media/blob'
     | '/api/admin/produtos/$id'
+    | '/api/admin/site-chat/foto'
     | '/api/admin/usuarios/$id'
     | '/api/agendamentos/$id/cliente'
     | '/api/agendamentos/$id/confirmar-montagem'
@@ -847,6 +880,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/horarios-visita'
     | '/api/os'
+    | '/api/site-chat'
     | '/painel/agendar'
     | '/painel/calculadora-bobina'
     | '/painel/calculadora-condutores'
@@ -895,11 +929,13 @@ export interface FileRouteTypes {
     | '/api/admin/produtos'
     | '/api/admin/produtos-menu'
     | '/api/admin/session'
+    | '/api/admin/site-chat'
     | '/api/admin/usuarios'
     | '/api/admin/visao'
     | '/api/agendamentos/$id'
     | '/api/media/blob'
     | '/api/admin/produtos/$id'
+    | '/api/admin/site-chat/foto'
     | '/api/admin/usuarios/$id'
     | '/api/agendamentos/$id/cliente'
     | '/api/agendamentos/$id/confirmar-montagem'
@@ -923,6 +959,7 @@ export interface RootRouteChildren {
   ApiHealthRoute: typeof ApiHealthRoute
   ApiHorariosVisitaRoute: typeof ApiHorariosVisitaRoute
   ApiOsRoute: typeof ApiOsRoute
+  ApiSiteChatRoute: typeof ApiSiteChatRoute
   ApiAdminCaixaRoute: typeof ApiAdminCaixaRoute
   ApiAdminClientesRoute: typeof ApiAdminClientesRoute
   ApiAdminConsultaCnpjRoute: typeof ApiAdminConsultaCnpjRoute
@@ -947,6 +984,7 @@ export interface RootRouteChildren {
   ApiAdminProdutosRoute: typeof ApiAdminProdutosRouteWithChildren
   ApiAdminProdutosMenuRoute: typeof ApiAdminProdutosMenuRoute
   ApiAdminSessionRoute: typeof ApiAdminSessionRoute
+  ApiAdminSiteChatRoute: typeof ApiAdminSiteChatRouteWithChildren
   ApiAdminUsuariosRoute: typeof ApiAdminUsuariosRouteWithChildren
   ApiAdminVisaoRoute: typeof ApiAdminVisaoRoute
   ApiMediaBlobRoute: typeof ApiMediaBlobRoute
@@ -1029,6 +1067,13 @@ declare module '@tanstack/react-router' {
       path: '/api/os'
       fullPath: '/api/os'
       preLoaderRoute: typeof ApiOsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/site-chat': {
+      id: '/api/site-chat'
+      path: '/api/site-chat'
+      fullPath: '/api/site-chat'
+      preLoaderRoute: typeof ApiSiteChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/painel/': {
@@ -1367,6 +1412,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminSessionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/site-chat': {
+      id: '/api/admin/site-chat'
+      path: '/api/admin/site-chat'
+      fullPath: '/api/admin/site-chat'
+      preLoaderRoute: typeof ApiAdminSiteChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/usuarios': {
       id: '/api/admin/usuarios'
       path: '/api/admin/usuarios'
@@ -1401,6 +1453,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/admin/produtos/$id'
       preLoaderRoute: typeof ApiAdminProdutosIdRouteImport
       parentRoute: typeof ApiAdminProdutosRoute
+    }
+    '/api/admin/site-chat/foto': {
+      id: '/api/admin/site-chat/foto'
+      path: '/foto'
+      fullPath: '/api/admin/site-chat/foto'
+      preLoaderRoute: typeof ApiAdminSiteChatFotoRouteImport
+      parentRoute: typeof ApiAdminSiteChatRoute
     }
     '/api/admin/usuarios/$id': {
       id: '/api/admin/usuarios/$id'
@@ -1603,6 +1662,17 @@ const ApiAdminProdutosRouteChildren: ApiAdminProdutosRouteChildren = {
 const ApiAdminProdutosRouteWithChildren =
   ApiAdminProdutosRoute._addFileChildren(ApiAdminProdutosRouteChildren)
 
+interface ApiAdminSiteChatRouteChildren {
+  ApiAdminSiteChatFotoRoute: typeof ApiAdminSiteChatFotoRoute
+}
+
+const ApiAdminSiteChatRouteChildren: ApiAdminSiteChatRouteChildren = {
+  ApiAdminSiteChatFotoRoute: ApiAdminSiteChatFotoRoute,
+}
+
+const ApiAdminSiteChatRouteWithChildren =
+  ApiAdminSiteChatRoute._addFileChildren(ApiAdminSiteChatRouteChildren)
+
 interface ApiAdminUsuariosIdRouteChildren {
   ApiAdminUsuariosIdThumbRoute: typeof ApiAdminUsuariosIdThumbRoute
 }
@@ -1637,6 +1707,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHealthRoute: ApiHealthRoute,
   ApiHorariosVisitaRoute: ApiHorariosVisitaRoute,
   ApiOsRoute: ApiOsRoute,
+  ApiSiteChatRoute: ApiSiteChatRoute,
   ApiAdminCaixaRoute: ApiAdminCaixaRoute,
   ApiAdminClientesRoute: ApiAdminClientesRoute,
   ApiAdminConsultaCnpjRoute: ApiAdminConsultaCnpjRoute,
@@ -1661,6 +1732,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminProdutosRoute: ApiAdminProdutosRouteWithChildren,
   ApiAdminProdutosMenuRoute: ApiAdminProdutosMenuRoute,
   ApiAdminSessionRoute: ApiAdminSessionRoute,
+  ApiAdminSiteChatRoute: ApiAdminSiteChatRouteWithChildren,
   ApiAdminUsuariosRoute: ApiAdminUsuariosRouteWithChildren,
   ApiAdminVisaoRoute: ApiAdminVisaoRoute,
   ApiMediaBlobRoute: ApiMediaBlobRoute,

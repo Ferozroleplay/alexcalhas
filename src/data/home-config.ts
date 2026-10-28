@@ -18,7 +18,8 @@ export const HOME_SITE = {
   chat: {
     nome: "Poliane",
     cargo: "Atendimento Alex Calhas",
-    foto: "/images/perfil/poliane.jpeg",
+    foto: "/images/perfil/poliane.jpg",
+    mensagem: "Oi! 😊 Sou a {nome}, da Alex Calhas. Em que posso te ajudar hoje?",
   },
   img: {
     logoHeader: "/images/logo/logo-home.png",

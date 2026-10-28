@@ -189,6 +189,18 @@ model Despesa {
   @@map("despesas")
 }
 
+/** Atendente do chat no site (foto, nome e mensagem). Uma linha (id = 1). */
+model SiteChat {
+  id           Int      @id @default(1)
+  nome         String   @db.VarChar(80)
+  cargo        String   @db.VarChar(120)
+  mensagem     String   @db.VarChar(500)
+  foto         String?  @db.VarChar(255)
+  atualizadoEm DateTime @default(now()) @updatedAt @map("atualizado_em")
+
+  @@map("site_chat")
+}
+
 /** Status aberto/fechado do caixa por dia — compartilhado entre todos os admins. */
 model CaixaDia {
   id           Int      @id @default(autoincrement())
