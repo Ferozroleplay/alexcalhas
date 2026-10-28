@@ -138,7 +138,10 @@ export const Route = createFileRoute("/api/agendamentos/$id")({
             }
           }
 
-          if (next === "confirmado" && st !== "confirmado") {
+          if (
+            (next === "confirmado" && st !== "confirmado") ||
+            (next === "finalizado" && st !== "finalizado")
+          ) {
             try {
               await baixarEstoqueDoInventario(id);
             } catch (estoqueErr) {

@@ -76,11 +76,24 @@ export const Route = createFileRoute("/api/agendamentos/$id/confirmar-montagem")
           let estoqueMsg = "";
           try {
             const baixa = await baixarEstoqueDoInventario(id);
-            if (baixa.baixas.length > 0) {
+            if (baixa.jaBaixado) {
+              estoqueMsg = " Estoque já tinha sido baixado neste serviço.";
+            } else if (baixa.baixas.length > 0) {
               const totalM = baixa.baixas.reduce((s, b) => s + b.metros, 0);
               estoqueMsg = ` Estoque: −${totalM.toLocaleString("pt-BR")} m.`;
+              if (baixa.substitutos.length > 0) {
+                const txt = baixa.substitutos
+                  .map((s) => `${s.especial} no ${s.padrao}`)
+                  .join(", ");
+                estoqueMsg += ` Cortes especiais: ${txt}.`;
+              }
+              if (baixa.naoEncontrados.length > 0) {
+                const nomes = baixa.naoEncontrados.map((n) => n.material).join(", ");
+                estoqueMsg += ` Sem cadastro no estoque: ${nomes}.`;
+              }
             } else if (baixa.naoEncontrados.length > 0) {
-              estoqueMsg = " Atenção: algum item do orçamento não foi encontrado no estoque.";
+              const nomes = baixa.naoEncontrados.map((n) => n.material).join(", ");
+              estoqueMsg = ` Atenção: não achei no estoque: ${nomes}.`;
             }
           } catch (estoqueErr) {
             console.error("[POST confirmar-montagem] baixa estoque", estoqueErr);

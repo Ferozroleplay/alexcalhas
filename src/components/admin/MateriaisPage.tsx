@@ -4,7 +4,6 @@ import { DashPageHero } from "@/components/admin/DashPageHero";
 import { ModalCadastroMaterial } from "@/components/admin/modals/ModalCadastroMaterial";
 import {
   atualizarMaterial,
-  definirEstoquesEmMassa,
   definirEstoquesMinimosEmMassa,
   excluirMaterial,
   fetchMateriais,
@@ -16,10 +15,10 @@ import {
   estoqueAlertaLabel,
   estoqueAlertaNivel,
   estoqueAlertaPct,
+  estoqueReferenciaBarra,
 } from "@/lib/estoque-alerta";
 import { calcularPrecosChapaGalvalume, isChapaGalvalumeMetros } from "@/lib/orcamento-empresa";
 
-const ESTOQUE_100_FLAG = "alex-materiais-estoque-100-v2";
 const ESTOQUE_MIN_2_FLAG = "alex-materiais-estoque-min-2-v1";
 
 type StockNivel = "normal" | "alerta" | "critico" | "zerado";
@@ -56,13 +55,15 @@ function stockPct(item: MaterialItem): number {
   return estoqueAlertaPct(
     Number(item.saldo_loja ?? 0),
     Number(item.estoque_minimo ?? ESTOQUE_MINIMO_PADRAO_M),
+    Number(item.capacidade_total ?? 0),
+    item.unidade,
   );
 }
 
 function stockRefLabel(item: MaterialItem): string {
   const saldo = Number(item.saldo_loja ?? 0);
-  const minimo = Number(item.estoque_minimo ?? ESTOQUE_MINIMO_PADRAO_M);
-  return `${formatQtd(saldo, item.unidade)} / mín. ${formatQtd(minimo, item.unidade)}`;
+  const cap = estoqueReferenciaBarra(saldo, Number(item.capacidade_total ?? 0), item.unidade);
+  return `${formatQtd(saldo, item.unidade)} / ${formatQtd(cap, item.unidade)}`;
 }
 
 export function MateriaisPage() {
@@ -173,13 +174,6 @@ export function MateriaisPage() {
         lista = await definirEstoquesMinimosEmMassa(ESTOQUE_MINIMO_PADRAO_M);
         localStorage.setItem(ESTOQUE_MIN_2_FLAG, "1");
         dashToast("Estoque mínimo definido em 2 metros para todos.", "success");
-      }
-
-      // Uma vez por navegador: define todos os estoques em 100 metros.
-      if (typeof window !== "undefined" && localStorage.getItem(ESTOQUE_100_FLAG) !== "1") {
-        lista = await definirEstoquesEmMassa(100);
-        localStorage.setItem(ESTOQUE_100_FLAG, "1");
-        dashToast("Todos os estoques foram definidos em 100 metros.", "success");
       }
 
       const sincronizada = await sincronizarChapasEmpresa(lista, { silent: syncFeitoRef.current });

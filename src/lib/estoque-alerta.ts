@@ -23,14 +23,31 @@ export function estoqueAlertaLabel(nivel: EstoqueAlertaNivel): string {
   return "Normal";
 }
 
-/** Percentual da barrinha (0–100) com referência no mínimo (2 m) + folga. */
+/** Cheio = capacidade cadastrada, ou 100 m nas chapas. */
+export function estoqueReferenciaBarra(
+  saldo: number,
+  capacidade: number = 0,
+  unidade?: string,
+): number {
+  const cap = Number(capacidade) || 0;
+  if (cap > 0) return cap;
+  const u = (unidade || "M").toUpperCase();
+  if (u === "UN" || u === "PC" || u === "KG") {
+    return Math.max(Number(saldo) || 0, 10);
+  }
+  return 100;
+}
+
+/** Percentual da barrinha (0–100) conforme o saldo em relação à capacidade. */
 export function estoqueAlertaPct(
   saldo: number,
   minimo: number = ESTOQUE_MINIMO_PADRAO_M,
+  capacidade: number = 0,
+  unidade?: string,
 ): number {
   const s = Math.max(0, Number(saldo) || 0);
-  const min = Number(minimo) > 0 ? Number(minimo) : ESTOQUE_MINIMO_PADRAO_M;
-  const ref = Math.max(min * 3, 6);
+  const ref = estoqueReferenciaBarra(s, capacidade, unidade);
+  if (ref <= 0) return 0;
   return Math.max(0, Math.min(100, (s / ref) * 100));
 }
 

@@ -272,6 +272,8 @@ export function ModalOrcamento({
       pct: estoqueAlertaPct(
         Number(materialAtualEstoque.saldo_loja ?? 0),
         Number(materialAtualEstoque.estoque_minimo ?? ESTOQUE_MINIMO_PADRAO_M),
+        Number(materialAtualEstoque.capacidade_total ?? 0),
+        materialAtualEstoque.unidade,
       ),
     };
   }, [form.corteCm, materialAtualEstoque, nivelMaterialAtual]);
@@ -362,6 +364,8 @@ export function ModalOrcamento({
       pct: estoqueAlertaPct(
         estoqueDisponivelBusca,
         Number(materialBusca.estoque_minimo ?? ESTOQUE_MINIMO_PADRAO_M),
+        Number(materialBusca.capacidade_total ?? 0),
+        materialBusca.unidade,
       ),
     };
   }, [
@@ -1210,6 +1214,8 @@ export function ModalOrcamento({
                                         materialAtualEstoque.estoque_minimo ??
                                           ESTOQUE_MINIMO_PADRAO_M,
                                       ),
+                                      Number(materialAtualEstoque.capacidade_total ?? 0),
+                                      materialAtualEstoque.unidade,
                                     ),
                                     nivelMaterialAtual === "normal" ? 12 : 8,
                                   )}%`,
