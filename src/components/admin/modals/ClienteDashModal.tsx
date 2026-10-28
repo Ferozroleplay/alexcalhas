@@ -12,7 +12,7 @@ import {
 import { dashToast } from "@/lib/dash-ui";
 import { formatarTelefone, telefoneWhatsappLink } from "@/lib/format-br";
 import { formatMoeda } from "@/lib/financeiro-display";
-import { googleMapsUrlEndereco } from "@/lib/inventario-format";
+import { googleMapsUrlEndereco, montarEnderecoExibicao } from "@/lib/inventario-format";
 import {
   formatPagoEmExibicao,
   labelRecebimentoTipo,
@@ -77,22 +77,7 @@ function dataCurta(raw: string): string {
 }
 
 function enderecoFicha(item: AgendamentoItem): string {
-  const end = item.endereco.trim();
-  const num = item.numero.trim();
-  const bairro = item.bairro.trim();
-  const cep = item.cep.trim();
-
-  let rua = end;
-  if (num && end && !new RegExp(`\\b${num.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(end)) {
-    const corte = end.indexOf(" - ");
-    rua = corte > 0 ? `${end.slice(0, corte)}, ${num}${end.slice(corte)}` : `${end}, ${num}`;
-  } else if (num && !end) {
-    rua = num;
-  }
-
-  const base = [rua, bairro].filter(Boolean).join(" · ");
-  if (!base && !cep) return "";
-  return cep ? `${base} · ${cep}` : base;
+  return montarEnderecoExibicao(item);
 }
 
 export function ClienteDashModal({ open, onClose, item, onPagamentoSalvo }: Props) {

@@ -1,4 +1,5 @@
 import type { AgendamentoItem } from "@/lib/admin-api";
+import { montarEnderecoExibicao } from "@/lib/inventario-format";
 import type { OrcamentoLinha } from "@/lib/orcamento.server";
 import { parseFormaPagamento, calcularCreditoMaquininha } from "@/lib/orcamento.server";
 
@@ -71,11 +72,7 @@ export function formatOsDocumento(doc: string | null | undefined): string {
 }
 
 export function formatOsEndereco(item: AgendamentoItem): string {
-  const parts = [item.endereco, item.numero, item.bairro].filter(Boolean);
-  const base = parts.join(", ");
-  const cep = (item.cep ?? "").trim();
-  if (!base && !cep) return "—";
-  return cep ? `${base} — ${cep}` : base;
+  return montarEnderecoExibicao(item) || "—";
 }
 
 /** Quantidade na linha do PDF (metros ≤ 0 → 1). */

@@ -1,6 +1,7 @@
 import type { InventarioRecebimentoItem, RecebimentoResumo } from "@/lib/admin-api";
 import { formatMoeda } from "@/lib/financeiro-display";
 import { parsePagoEm, valorReaisPorExtenso } from "@/lib/inventario-recebimento-display";
+import { montarEnderecoExibicao } from "@/lib/inventario-format";
 import { formatOsDocumento, formatOsTelefone, OS_ORCAMENTO_EMPRESA } from "@/lib/os-document";
 
 export type ReciboServico = {
@@ -39,22 +40,7 @@ const FORMAS = [
 ] as const;
 
 function enderecoCliente(c: ReciboCliente): string {
-  const end = c.endereco.trim();
-  const num = c.numero.trim();
-  const bairro = c.bairro.trim();
-  const cep = c.cep.trim();
-
-  let rua = end;
-  if (num && end && !new RegExp(`\\b${num.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(end)) {
-    const corte = end.indexOf(" - ");
-    rua = corte > 0 ? `${end.slice(0, corte)}, ${num}${end.slice(corte)}` : `${end}, ${num}`;
-  } else if (num && !end) {
-    rua = num;
-  }
-
-  const base = [rua, bairro].filter(Boolean).join(" — ");
-  if (!base && !cep) return "";
-  return cep ? `${base} — CEP ${cep}` : base;
+  return montarEnderecoExibicao(c);
 }
 
 function dataCurta(raw: string): string {

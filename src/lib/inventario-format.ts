@@ -78,13 +78,38 @@ export function formatHoraVisitaExibicao(hora: string): string {
   return h.length > 8 ? h.slice(0, 8) : h;
 }
 
+function escapeReEndereco(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function tirarParteRepetida(endereco: string, parte: string): string {
+  const p = parte.trim();
+  if (!p) return endereco.trim();
+  const re = new RegExp(`(?:[,;]\\s*|\\s*[-–—]\\s+)\\s*${escapeReEndereco(p)}\\b`, "gi");
+  return endereco
+    .replace(re, " ")
+    .replace(/\s+/g, " ")
+    .replace(/\s*[-–—,;]\s*$/g, "")
+    .trim();
+}
+
+/** Junta rua, número, bairro e CEP sem repetir o que já veio no campo endereço. */
+export function montarEnderecoExibicao(parts: EnderecoParts): string {
+  let endereco = (parts.endereco ?? "").trim();
+  const numero = (parts.numero ?? "").trim();
+  const bairro = (parts.bairro ?? "").trim();
+  const cep = (parts.cep ?? "").trim();
+  if (numero) endereco = tirarParteRepetida(endereco, numero);
+  if (bairro) endereco = tirarParteRepetida(endereco, bairro);
+  const linha = [endereco, numero, bairro].filter(Boolean).join(", ");
+  if (!linha && !cep) return "";
+  if (cep) return linha ? `${linha} — ${cep}` : cep;
+  return linha;
+}
+
 /** Endereço completo como no PHP parseInventarioRow(). */
 export function buildEnderecoCompleto(item: Pick<AgendamentoItem, "endereco" | "numero" | "bairro" | "cep">): string {
-  const linha = [item.endereco, item.numero, item.bairro].filter(Boolean).join(", ");
-  const cep = item.cep?.trim();
-  if (!linha && !cep) return "";
-  if (cep) return linha ? `${linha} - ${cep}` : cep;
-  return linha;
+  return montarEnderecoExibicao(item);
 }
 
 export function googleMapsUrlEndereco(endereco: string): string {
@@ -100,14 +125,7 @@ export type EnderecoParts = {
 
 /** Monta linha de endereço para exibição e link do Maps. */
 export function joinEnderecoParts(parts: EnderecoParts): string {
-  const linha = [parts.endereco, parts.numero, parts.bairro]
-    .map((p) => (p ?? "").trim())
-    .filter(Boolean)
-    .join(", ");
-  const cep = (parts.cep ?? "").trim();
-  if (!linha && !cep) return "";
-  if (cep) return linha ? `${linha} — ${cep}` : cep;
-  return linha;
+  return montarEnderecoExibicao(parts);
 }
 
 /** Timestamp para ordenar data de montagem (DD-MM-YYYY ou YYYY-MM-DD). Sem data → topo. */

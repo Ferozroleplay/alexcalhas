@@ -28,6 +28,7 @@ export type PolianeFicha = {
   pendenteConfirmacao?: boolean;
   enderecoConfirmado?: boolean;
   aguardandoConfirmaCadastro?: boolean;
+  aguardandoMaisAjuda?: boolean;
 };
 
 export type PolianePill = { label: string; value: string };
@@ -85,6 +86,7 @@ function limparFicha(raw: unknown): PolianeFicha {
     pendenteConfirmacao: o.pendenteConfirmacao === true,
     enderecoConfirmado: o.enderecoConfirmado === true,
     aguardandoConfirmaCadastro: o.aguardandoConfirmaCadastro === true,
+    aguardandoMaisAjuda: o.aguardandoMaisAjuda === true,
   };
 }
 
@@ -225,6 +227,19 @@ function nao(texto: string): boolean {
   return /^(n[aã]o|agora n[aã]o|cancela isso)[\s!.]*$/i.test(texto.trim());
 }
 
+function querMaisAjuda(texto: string): boolean {
+  return /^(sim|isso|quero|pode|claro|pode sim|sim,? por favor)[\s!.]*$/i.test(texto.trim());
+}
+
+function encerraAtendimento(texto: string): boolean {
+  const t = texto.trim();
+  if (querMaisAjuda(t)) return false;
+  if (nao(t)) return true;
+  return /^(n[aã]o\b.*|obrigad[oa].*|valeu.*|tchau.*|s[oó] isso.*|por enquanto.*|n[aã]o precisa.*|pode deixar.*|ok([,!.]?\s*obrigad[oa])?)[\s!.😅😊💜🙏]*$/i.test(
+    t,
+  );
+}
+
 function querOutroEndereco(texto: string): boolean {
   return /\b(outro endere[cç]o|endere[cç]o (errado|diferente)|trocar (o )?endere[cç]o|mudar (o )?endere[cç]o|n[aã]o [eé] (esse|o mesmo))\b/i.test(
     texto,
@@ -312,6 +327,96 @@ function comTipoLogradouro(rua: string): string {
   return `Rua ${capNome(t)}`;
 }
 
+const CIDADE_PADRAO = { nome: "Tarumã", uf: "SP" };
+
+const CIDADES_ATENDIMENTO: { re: RegExp; nome: string; uf: string }[] = [
+  { re: /\bparagua[cç]u(?:\s+paulista)?\b/i, nome: "Paraguaçu Paulista", uf: "SP" },
+  { re: /\bc[aâ]ndido\s+mota\b/i, nome: "Cândido Mota", uf: "SP" },
+  { re: /\bpedrinhas(?:\s+paulista)?\b/i, nome: "Pedrinhas Paulista", uf: "SP" },
+  { re: /\boscar\s+bressane\b/i, nome: "Oscar Bressane", uf: "SP" },
+  { re: /\btarum[aã]\b/i, nome: "Tarumã", uf: "SP" },
+  { re: /\bassis\b/i, nome: "Assis", uf: "SP" },
+  { re: /\bmaraca[ií]\b/i, nome: "Maracaí", uf: "SP" },
+  { re: /\bpalmital\b/i, nome: "Palmital", uf: "SP" },
+  { re: /\bcruz[aá]lia\b/i, nome: "Cruzália", uf: "SP" },
+  { re: /\bflor[ií]nea\b/i, nome: "Florínea", uf: "SP" },
+  { re: /\biep[eê]\b/i, nome: "Iepê", uf: "SP" },
+  { re: /\bplatina\b/i, nome: "Platina", uf: "SP" },
+  { re: /\bnantes\b/i, nome: "Nantes", uf: "SP" },
+];
+
+type ViaCepHit = { cep: string; rua: string; bairro: string; cidade: string };
+
+function semAcento(s: string): string {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function slugViaCep(s: string): string {
+  return semAcento(s)
+    .replace(/[^a-zA-Z0-9\s-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normAddr(s: string): string {
+  return slugViaCep(s)
+    .toLowerCase()
+    .replace(/\b(rua|r|av|avenida|travessa|alameda|estrada|rodovia|praca)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function tokensAddr(s: string): string[] {
+  const stop = new Set(["de", "da", "do", "das", "dos", "e", "em"]);
+  return normAddr(s).split(" ").filter((w) => w.length >= 2 && !stop.has(w));
+}
+
+function nomeRuaBusca(rua: string): string {
+  return slugViaCep(rua.replace(/^(rua|r\.|av\.?|avenida|travessa|alameda|estrada|rodovia|pra[cç]a)\s+/i, ""));
+}
+
+function ufDaCidade(cidade: string): string {
+  const base = cidade.split("/")[0].trim();
+  const hit = CIDADES_ATENDIMENTO.find((c) => c.re.test(base) || normAddr(c.nome) === normAddr(base));
+  return hit?.uf ?? CIDADE_PADRAO.uf;
+}
+
+function cidadeParaViaCep(cidade: string): string {
+  const base = cidade.split("/")[0].trim();
+  const hit = CIDADES_ATENDIMENTO.find((c) => c.re.test(base) || normAddr(c.nome) === normAddr(base));
+  return slugViaCep(hit?.nome ?? base);
+}
+
+function tirarCidadeDoTexto(t: string): { cidade?: string; uf?: string; resto: string } {
+  let s = t.trim();
+  let uf: string | undefined;
+  const comUf = s.match(/^(.*?)[/\s,-]+(SP|PR|MS)$/i);
+  if (comUf) {
+    s = comUf[1].trim();
+    uf = comUf[2].toUpperCase();
+  }
+  for (const c of CIDADES_ATENDIMENTO) {
+    const m = c.re.exec(s);
+    if (!m || m.index === undefined) continue;
+    const after = s.slice(m.index + m[0].length).trim();
+    if (after) continue;
+    const resto = s.slice(0, m.index).replace(/[,-]+$/g, "").trim();
+    return { cidade: c.nome, uf: c.uf, resto };
+  }
+  return { cidade: undefined, uf, resto: s };
+}
+
+function tirarBairroDoTexto(t: string): { bairro?: string; resto: string } {
+  const m = t.match(
+    /^(.*?)\s+(vila|vl\.?|jardim|jd\.?|parque|pq\.?|conjunto|cj\.?|residencial|distrito(?:\s+industrial)?|bairro)\b(.*)$/i,
+  );
+  if (m && m[1].trim().length >= 3) {
+    const bruto = `${m[2]} ${m[3]}`.replace(/^bairro\s+/i, "").replace(/\s+/g, " ").trim();
+    return { bairro: capNome(bruto || m[2]), resto: m[1].trim() };
+  }
+  return { resto: t };
+}
+
 function acharNumeroNoTexto(t: string): { numero: string; antes: string; depois: string } | null {
   const labeled = t.match(/^(.*?)\b(?:n[uú]mero|n[ºo°])\s+(\d{1,6}[A-Za-z]?)\b(.*)$/i);
   if (labeled && numeroImovelOk(labeled[2])) {
@@ -377,34 +482,33 @@ function parseEnderecoLivre(texto: string): Partial<PolianeFicha> {
   }
   t = t.replace(/[;,]/g, " ").replace(/\s+/g, " ").trim();
   if (!t) return out;
+
+  const cid = tirarCidadeDoTexto(t);
+  if (cid.cidade) out.cidade = cid.cidade;
+  t = cid.resto;
+
   const achado = acharNumeroNoTexto(t);
   if (achado) {
-    if (pareceRua(achado.antes) || /[a-zA-ZÀ-ÿ]{3,}/.test(achado.antes)) {
-      out.rua = comTipoLogradouro(achado.antes);
-    }
     out.numero = achado.numero;
+    t = [achado.antes, achado.depois].filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+  }
+
+  const bai = tirarBairroDoTexto(t);
+  if (bai.bairro) out.bairro = bai.bairro;
+  t = bai.resto.replace(/[,-]+$/g, "").trim();
+
+  if (!out.bairro && !out.cidade && achado?.depois) {
     const resto = partirBairroCidade(achado.depois);
     if (resto.bairro) out.bairro = resto.bairro;
-    if (resto.cidade) out.cidade = resto.cidade;
-    return out;
+    if (resto.cidade && !out.cidade) out.cidade = resto.cidade;
+    if (achado.antes) t = achado.antes;
   }
-  const partes = textoEndereco(texto).split(/[,;\n]/).map((s) => s.trim()).filter(Boolean);
-  if (partes.length >= 2 && /^(rua|r\.|av\.?|avenida|travessa|alameda|estrada|rodovia|pra[cç]a)\b/i.test(partes[0])) {
-    out.rua = comTipoLogradouro(partes[0]);
-    let i = 1;
-    if (numeroImovelOk(partes[i])) {
-      out.numero = partes[i];
-      i += 1;
+
+  if (t && /[a-zA-ZÀ-ÿ]{3,}/.test(t)) {
+    const temPrefixo = /^(rua|r\.|av\.?|avenida|travessa|alameda|estrada|rodovia|pra[cç]a)\b/i.test(t);
+    if (temPrefixo || out.bairro || out.cidade || out.numero) {
+      out.rua = comTipoLogradouro(t);
     }
-    if (partes[i] && !/^cep\b/i.test(partes[i])) {
-      out.bairro = capNome(partes[i]);
-      i += 1;
-    }
-    if (partes[i] && !/^cep\b/i.test(partes[i])) out.cidade = capNome(partes[i]);
-    return out;
-  }
-  if (/^(rua|r\.|av\.?|avenida|travessa|alameda|estrada|rodovia|pra[cç]a)\b/i.test(t)) {
-    out.rua = comTipoLogradouro(t);
   }
   return out;
 }
@@ -482,11 +586,14 @@ function sanitizarEnderecoFicha(f: PolianeFicha): PolianeFicha {
   }
   if (next.rua) next.rua = comTipoLogradouro(next.rua);
   if (next.bairro) next.bairro = capNome(next.bairro);
-  if (next.cidade) next.cidade = capNome(next.cidade);
+  if (next.cidade) {
+    const [local, uf] = next.cidade.split("/");
+    next.cidade = uf ? `${capNome(local)}/${uf.trim().toUpperCase()}` : capNome(local);
+  }
   return next;
 }
 
-function pedirEndereco(f: PolianeFicha, prefixo = ""): PolianeResult | null {
+function pedirEndereco(f: PolianeFicha, prefixo = "", opts?: { naoAchouRua?: boolean }): PolianeResult | null {
   if (!f.rua && !f.cep) {
     return {
       reply: fala(prefixo, "Qual seu endereço?"),
@@ -501,9 +608,19 @@ function pedirEndereco(f: PolianeFicha, prefixo = ""): PolianeResult | null {
       pills: [],
     };
   }
+  if (!f.cep && !f.cidade) {
+    return {
+      reply: fala(
+        prefixo,
+        opts?.naoAchouRua ? "Não achei essa rua em Tarumã. Qual a cidade?" : "Qual a cidade?",
+      ),
+      ficha: { ...f, enderecoConfirmado: false },
+      pills: [],
+    };
+  }
   if (!numeroImovelOk(f.numero)) {
     return {
-      reply: fala(prefixo, "E o número?"),
+      reply: fala(prefixo, f.rua ? `Qual o número da casa na ${f.rua}?` : "Qual o número da casa?"),
       ficha: { ...f, enderecoConfirmado: false },
       pills: [],
     };
@@ -548,8 +665,7 @@ function limparEndereco(f: PolianeFicha, opts?: { manterCep?: boolean }): Polian
 }
 
 function enderecoLinha(f: PolianeFicha): string {
-  const ruaNum = [f.rua, f.numero].filter(Boolean).join(", ");
-  return [ruaNum, f.bairro, f.cidade].filter(Boolean).join(" - ");
+  return [f.rua, f.cidade].filter(Boolean).join(" - ");
 }
 
 function enderecoCompleto(f: PolianeFicha): string {
@@ -638,26 +754,131 @@ function aplicarCadastro(
   };
 }
 
-async function viaCep(cep: string): Promise<{ rua?: string; bairro?: string; cidade?: string } | null> {
+function hitDeViaCep(data: {
+  cep?: string;
+  logradouro?: string;
+  bairro?: string;
+  localidade?: string;
+  uf?: string;
+  erro?: boolean;
+}): ViaCepHit | null {
+  if (!data || data.erro) return null;
+  const cep = (data.cep ?? "").replace(/\D/g, "");
+  const rua = data.logradouro?.trim();
+  const bairro = data.bairro?.trim();
+  const local = data.localidade?.trim();
+  const uf = data.uf?.trim()?.toUpperCase();
+  const cidade = local ? (uf ? `${capNome(local)}/${uf}` : capNome(local)) : "";
+  if (!cep && !rua && !bairro) return null;
+  return {
+    cep,
+    rua: rua ?? "",
+    bairro: bairro ?? "",
+    cidade: cidade || CIDADE_PADRAO.nome,
+  };
+}
+
+function aplicarViaCep(f: PolianeFicha, end: ViaCepHit): PolianeFicha {
+  return sanitizarEnderecoFicha({
+    ...f,
+    rua: end.rua ? comTipoLogradouro(end.rua) : f.rua,
+    bairro: end.bairro ? capNome(end.bairro) : f.bairro,
+    cidade: end.cidade || f.cidade,
+    cep: end.cep || f.cep,
+    enderecoConfirmado: false,
+  });
+}
+
+function scoreHit(queryRua: string, queryBairro: string | undefined, hit: ViaCepHit): number {
+  const q = tokensAddr(queryRua);
+  const h = tokensAddr(hit.rua);
+  if (!q.length || !h.length) return 0;
+  if (q.join(" ") === h.join(" ")) return 1000;
+  let s = 0;
+  for (const w of h) s += q.includes(w) ? 12 : -10;
+  for (const w of q) if (!h.includes(w)) s -= 4;
+  if (queryBairro && normAddr(queryBairro) === normAddr(hit.bairro)) s += 25;
+  else if (queryBairro && tokensAddr(queryBairro).every((w) => tokensAddr(hit.bairro).includes(w))) s += 18;
+  return s;
+}
+
+function escolherHits(ficha: PolianeFicha, hits: ViaCepHit[]): { best?: ViaCepHit; ambigua?: ViaCepHit[] } {
+  if (!hits.length) return {};
+  if (hits.length === 1) return { best: hits[0] };
+  const scored = hits
+    .map((h) => ({ h, s: scoreHit(ficha.rua ?? "", ficha.bairro, h) }))
+    .sort((a, b) => b.s - a.s);
+  const top = scored[0];
+  const second = scored[1];
+  if (!second || top.s >= second.s + 8) return { best: top.h };
+  const proximas = scored.filter((x) => top.s - x.s <= 8 && x.s > 0).map((x) => x.h);
+  if (proximas.length > 1) return { ambigua: proximas.slice(0, 3) };
+  return { best: top.h };
+}
+
+async function viaCep(cep: string): Promise<ViaCepHit | null> {
   try {
-    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-    const data = (await res.json()) as {
-      erro?: boolean;
-      logradouro?: string;
-      bairro?: string;
-      localidade?: string;
-      uf?: string;
-    };
-    if (!data || data.erro) return null;
-    const cidade = [data.localidade, data.uf].filter(Boolean).join("/");
-    return {
-      rua: data.logradouro?.trim(),
-      bairro: data.bairro?.trim(),
-      cidade: cidade || undefined,
-    };
+    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`, { signal: AbortSignal.timeout(4500) });
+    if (!res.ok) return null;
+    return hitDeViaCep((await res.json()) as Parameters<typeof hitDeViaCep>[0]);
   } catch {
     return null;
   }
+}
+
+async function viaCepPorRua(rua: string, cidade: string, uf: string): Promise<ViaCepHit[]> {
+  const logradouro = nomeRuaBusca(rua);
+  const cid = cidadeParaViaCep(cidade);
+  if (logradouro.replace(/\s/g, "").length < 3 || cid.length < 3) return [];
+  try {
+    const url = `https://viacep.com.br/ws/${encodeURIComponent(uf)}/${encodeURIComponent(cid)}/${encodeURIComponent(logradouro)}/json/`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(4500) });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const rows = Array.isArray(data) ? data : [];
+    return rows.map((row) => hitDeViaCep(row as Parameters<typeof hitDeViaCep>[0])).filter((h): h is ViaCepHit => Boolean(h?.rua));
+  } catch {
+    return [];
+  }
+}
+
+async function viaCepPorRuaFlex(rua: string, cidade: string, uf: string): Promise<ViaCepHit[]> {
+  const nome = nomeRuaBusca(rua);
+  const words = nome.split(/\s+/).filter(Boolean);
+  const queries = [nome];
+  if (words.length > 4) queries.push(words.slice(0, 4).join(" "));
+  const seen = new Set<string>();
+  for (const q of queries) {
+    const key = normAddr(q);
+    if (seen.has(key) || key.replace(/\s/g, "").length < 3) continue;
+    seen.add(key);
+    const hits = await viaCepPorRua(q, cidade, uf);
+    if (hits.length) return hits;
+  }
+  return [];
+}
+
+async function completarEnderecoPeloCep(f: PolianeFicha): Promise<{
+  ficha: PolianeFicha;
+  ambigua?: ViaCepHit[];
+  naoAchouRua?: boolean;
+}> {
+  let ficha = { ...f };
+  const cepDigits = (ficha.cep ?? "").replace(/\D/g, "");
+  if (cepDigits.length === 8 && (!ficha.rua || ehSaudacao(ficha.rua) || !ficha.bairro || !ficha.cidade)) {
+    const end = await viaCep(cepDigits);
+    if (end) return { ficha: aplicarViaCep({ ...ficha, cep: cepDigits }, end) };
+  }
+  if (ficha.cep && ficha.rua && ficha.bairro && ficha.cidade) return { ficha };
+  if (!ficha.rua || ehSaudacao(ficha.rua) || !pareceRua(ficha.rua)) return { ficha };
+
+  const cidade = ficha.cidade || CIDADE_PADRAO.nome;
+  const hits = await viaCepPorRuaFlex(ficha.rua, cidade, ufDaCidade(cidade));
+  if (!hits.length) return { ficha, naoAchouRua: true };
+  const pick = escolherHits(ficha, hits);
+  if (pick.ambigua) return { ficha, ambigua: pick.ambigua };
+  if (pick.best) ficha = aplicarViaCep(ficha, pick.best);
+  return { ficha };
 }
 
 async function proximosLivres(
@@ -756,7 +977,8 @@ function confirmacao(f: PolianeFicha, id: number): string {
   return fala(
     "Ok, vou fazer seu agendamento.",
     `${resumo(f)}\n📌 Protocolo: ${id}`,
-    "A visita é pra orçamento e medição. Qualquer coisa é só chamar.",
+    "A visita é pra orçamento e medição.",
+    "Te ajudo em algo mais?",
   );
 }
 
@@ -845,7 +1067,9 @@ function aplicarTexto(ficha: PolianeFicha, texto: string, hoje: string): Poliane
 function campoPendente(f: PolianeFicha): string | null {
   if (!f.servico) return "servico";
   if (!f.nome) return "nome";
-  if (!f.rua) return "endereco";
+  if (!f.rua && !f.cep) return "endereco";
+  if (!f.rua) return "rua";
+  if (!f.cep && !f.cidade) return "cidade";
   if (!f.numero) return "numero";
   if (!f.bairro) return "bairro";
   if (!f.cidade) return "cidade";
@@ -862,6 +1086,44 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
   const texto = mensagem.trim();
   const soTexto = texto.replace(/[^a-zA-ZÀ-ÿ0-9\s/-]/g, "").trim();
   const prefixo = ehSaudacao(texto) ? cumprimentoDe(texto) : "";
+
+  if (ficha.aguardandoMaisAjuda) {
+    if (encerraAtendimento(texto)) {
+      return {
+        reply: fala("Ok! Obrigada pela preferência.", "Qualquer dúvida, estou aqui."),
+        ficha: { ...ficha, aguardandoMaisAjuda: false },
+        pills: [],
+        done: true,
+      };
+    }
+    if (querMaisAjuda(texto)) {
+      return {
+        reply: fala("Claro!", "Em que posso ajudar?"),
+        ficha: {
+          ...ficha,
+          aguardandoMaisAjuda: false,
+          servico: undefined,
+          descricao: undefined,
+          dataIso: undefined,
+          hora: undefined,
+          periodo: undefined,
+          intencao: undefined,
+          protocolo: undefined,
+        },
+        pills: [],
+      };
+    }
+    ficha = {
+      ...ficha,
+      aguardandoMaisAjuda: false,
+      servico: extrairServico(texto),
+      descricao: undefined,
+      dataIso: undefined,
+      hora: undefined,
+      periodo: undefined,
+      protocolo: undefined,
+    };
+  }
 
   if (/\b(whatsapp|atendente humano|falar com (uma )?pessoa|operador)\b/i.test(texto)) {
     return {
@@ -1052,6 +1314,13 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
       ficha = aplicarEnderecoColado(ficha, texto);
     } else if ((faltava === "endereco" || faltava === "rua") && !ficha.rua && pareceRua(textoEndereco(texto))) {
       ficha = aplicarEnderecoColado(ficha, texto);
+      if (!ficha.rua) {
+        ficha = sanitizarEnderecoFicha({
+          ...ficha,
+          rua: comTipoLogradouro(textoEndereco(texto)),
+          enderecoConfirmado: false,
+        });
+      }
     }
     if (faltava === "numero" && !numeroImovelOk(ficha.numero)) {
       const soNumero = textoEndereco(texto);
@@ -1062,20 +1331,27 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
       ficha.bairro = capNome(textoEndereco(texto)).slice(0, 80);
     }
     if (faltava === "cidade" && !ficha.cidade && soTexto.length >= 2 && !sim(texto) && !nao(texto) && !ehSaudacao(texto)) {
-      ficha.cidade = capNome(textoEndereco(texto)).slice(0, 80);
+      if (!/^\d+[A-Za-z]?$/.test(soTexto)) {
+        const cid = tirarCidadeDoTexto(textoEndereco(texto));
+        ficha.cidade = cid.cidade || capNome(textoEndereco(texto)).slice(0, 80);
+      }
     }
   }
 
   ficha = sanitizarEnderecoFicha(ficha);
   if (ficha.nome && !ficha.responsavel) ficha.responsavel = ficha.nome;
 
-  if (ficha.cep && ficha.cep.length === 8 && (!ficha.rua || ehSaudacao(ficha.rua) || !ficha.bairro || !ficha.cidade)) {
-    const end = await viaCep(ficha.cep);
-    if (end) {
-      if (!ficha.rua || ehSaudacao(ficha.rua) || !pareceRua(ficha.rua)) ficha.rua = end.rua ? comTipoLogradouro(end.rua) : ficha.rua;
-      if (!ficha.bairro || /^cep\b/i.test(ficha.bairro)) ficha.bairro = end.bairro ? capNome(end.bairro) : ficha.bairro;
-      ficha.cidade = ficha.cidade || (end.cidade ? capNome(end.cidade) : undefined);
-    }
+  const cepRua = await completarEnderecoPeloCep(ficha);
+  ficha = cepRua.ficha;
+  if (cepRua.ambigua?.length) {
+    return {
+      reply: fala("Achei mais de uma rua com esse nome. Qual é?"),
+      ficha,
+      pills: cepRua.ambigua.map((a) => ({
+        label: a.rua.replace(/^Rua\s+/i, ""),
+        value: a.rua,
+      })),
+    };
   }
   if (enderecoPronto(ficha)) ficha.enderecoConfirmado = true;
 
@@ -1117,7 +1393,7 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
     }
   }
 
-  const faltaEnd = pedirEndereco(ficha, prefixo);
+  const faltaEnd = pedirEndereco(ficha, prefixo, { naoAchouRua: cepRua.naoAchouRua });
   if (faltaEnd) return faltaEnd;
 
   if (!ficha.descricao && /\b(goteira|telhado|muro|port[aã]o|cozinha|quarto)\b/i.test(texto) && texto.length > 12) {
@@ -1174,6 +1450,14 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
     };
   }
 
+  if (ficha.protocolo) {
+    return {
+      reply: fala("Seu agendamento já está feito.", "Te ajudo em algo mais?"),
+      ficha: { ...ficha, aguardandoMaisAjuda: true },
+      pills: [],
+    };
+  }
+
   try {
     const criado = await criarVisita(ficha);
     if ("erro" in criado) {
@@ -1183,11 +1467,11 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
       return { reply: `${criado.erro}${extra}`, ficha, pills: [] };
     }
     ficha.protocolo = criado.id;
+    ficha.aguardandoMaisAjuda = true;
     return {
       reply: confirmacao(ficha, criado.id),
       ficha,
-      pills: [{ label: "Falar no WhatsApp", value: "__whatsapp__" }],
-      done: true,
+      pills: [],
     };
   } catch (err) {
     console.error("[poliane criar]", err);
