@@ -56,11 +56,11 @@ function OsPage() {
     })
       .then((r) => r.json())
       .then((d: { ok?: boolean; item?: AgendamentoItem; itens?: OrcamentoLinha[]; message?: string }) => {
-        if (!d.ok || !d.item) throw new Error(d.message ?? "Erro");
+        if (!d.ok || !d.item) throw new Error(d.message ?? "Este orçamento não está disponível.");
         setItem(d.item);
         setItens(d.itens ?? []);
       })
-      .catch((e) => setError(e instanceof Error ? e.message : "Orçamento não encontrado."));
+      .catch((e) => setError(e instanceof Error ? e.message : "Este orçamento não está disponível."));
   }, [id, t]);
 
   useEffect(() => {

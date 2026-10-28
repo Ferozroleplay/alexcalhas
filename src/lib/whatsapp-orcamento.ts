@@ -121,16 +121,21 @@ export function abrirWhatsappVisita(item: { nome: string; telefone: string }): v
   abrirWhatsappComTexto(item.telefone, mensagemWhatsappVisita(item.nome));
 }
 
-export function osPublicPath(id: number, token?: string | null): string {
-  const qs = new URLSearchParams({ id: String(id) });
-  const t = token?.trim();
-  if (t) qs.set("t", t);
-  return `/os?${qs.toString()}`;
+const SITE_PUBLIC_ORIGIN = "https://www.alexcalhas.com";
+
+export function osPublicPath(id: number, _token?: string | null): string {
+  return `/os?id=${Math.trunc(id)}`;
+}
+
+function origemLinkOrcamento(): string {
+  if (typeof window === "undefined") return SITE_PUBLIC_ORIGIN;
+  const host = window.location.hostname;
+  if (host === "localhost" || host === "127.0.0.1") return window.location.origin;
+  return SITE_PUBLIC_ORIGIN;
 }
 
 function osPublicUrl(id: number, token?: string | null): string {
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  return `${origin}${osPublicPath(id, token)}`;
+  return `${origemLinkOrcamento()}${osPublicPath(id, token)}`;
 }
 
 function dataBrAmigavel(data: string | null | undefined): string {

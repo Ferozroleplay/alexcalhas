@@ -2,11 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { dbErrorMessage, serializeInventario } from "@/lib/agendamento.server";
-import { isAdminRequest } from "@/lib/auth.server";
 import { getPrisma } from "@/lib/db.server";
 import { jsonResponse } from "@/lib/http.server";
 import { parseOrcamentoJson } from "@/lib/orcamento.server";
-import { osTokenValido } from "@/lib/os-token.server";
 
 const querySchema = z.object({
   id: z.coerce.number().int().positive(),
@@ -26,17 +24,12 @@ export const Route = createFileRoute("/api/os")({
           return jsonResponse({ ok: false, message: "ID inválido." }, 400);
         }
 
-        const token = parsed.data.t?.trim() || "";
-        const autorizado =
-          osTokenValido(parsed.data.id, token) || isAdminRequest(request);
-        if (!autorizado) {
-          return jsonResponse({ ok: false, message: "Não encontrado." }, 404);
-        }
-
         try {
           const prisma = await getPrisma();
           const row = await prisma.inventario.findUnique({ where: { id: parsed.data.id } });
-          if (!row) return jsonResponse({ ok: false, message: "Não encontrado." }, 404);
+          if (!row) {
+            return jsonResponse({ ok: false, message: "Este orçamento não está disponível." }, 404);
+          }
 
           const item = serializeInventario(row);
 
