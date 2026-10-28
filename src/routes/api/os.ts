@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { dbErrorMessage, serializeInventario } from "@/lib/agendamento.server";
+import { isAdminRequest } from "@/lib/auth.server";
 import { getPrisma } from "@/lib/db.server";
 import { jsonResponse } from "@/lib/http.server";
 import { parseOrcamentoJson } from "@/lib/orcamento.server";
@@ -26,8 +27,10 @@ export const Route = createFileRoute("/api/os")({
         }
 
         const token = parsed.data.t?.trim() || "";
-        if (token && !osTokenValido(parsed.data.id, token)) {
-          return jsonResponse({ ok: false, message: "Link inválido." }, 403);
+        const autorizado =
+          osTokenValido(parsed.data.id, token) || isAdminRequest(request);
+        if (!autorizado) {
+          return jsonResponse({ ok: false, message: "Não encontrado." }, 404);
         }
 
         try {
@@ -36,9 +39,6 @@ export const Route = createFileRoute("/api/os")({
           if (!row) return jsonResponse({ ok: false, message: "Não encontrado." }, 404);
 
           const item = serializeInventario(row);
-          if (!osTokenValido(parsed.data.id, token)) {
-            item.cpfCnpj = null;
-          }
 
           const itens = parseOrcamentoJson(row.orcamento);
           return jsonResponse({

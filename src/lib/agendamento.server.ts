@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 
+import { getPrisma } from "@/lib/db.server";
 import {
   formatHoraVisitaExibicao,
   resolveHoraVisitaInventario,
@@ -128,17 +129,52 @@ export function inventarioWhereStatus(status?: string) {
   return { status };
 }
 
+let inventarioTextosProntos = false;
+
+/** Nome/endereço no dump legado são VARCHAR(50) e cortam ViaCEP. */
+export async function ensureInventarioTextosCliente(): Promise<void> {
+  if (inventarioTextosProntos) return;
+  const prisma = await getPrisma();
+  try {
+    const rows = await prisma.$queryRawUnsafe<Array<{ len: unknown }>>(
+      `SELECT CHARACTER_MAXIMUM_LENGTH AS len
+       FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = 'inventario'
+         AND COLUMN_NAME = 'endereco'
+       LIMIT 1`,
+    );
+    if (Number(rows[0]?.len ?? 0) >= 180) {
+      inventarioTextosProntos = true;
+      return;
+    }
+  } catch {
+    /* tenta o ALTER mesmo assim */
+  }
+  try {
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE inventario
+        MODIFY COLUMN nome VARCHAR(120) NOT NULL,
+        MODIFY COLUMN endereco VARCHAR(180) NOT NULL,
+        MODIFY COLUMN bairro VARCHAR(80) NOT NULL
+    `);
+  } catch (err) {
+    console.error("[inventario] alargar nome/endereço", err);
+  }
+  inventarioTextosProntos = true;
+}
+
 export function buildInventarioCreateData(
   data: AgendamentoInput | AgendamentoSiteInput,
   funcionarioId?: number | null,
 ) {
   return {
     status: "agendado",
-    nome: data.nome.slice(0, 50),
+    nome: data.nome.slice(0, 120),
     telefone: data.telefone.slice(0, 50),
     cpfCnpj: data.cpfCnpj?.trim() || null,
-    endereco: data.endereco.slice(0, 50),
-    bairro: data.bairro.slice(0, 50),
+    endereco: data.endereco.slice(0, 180),
+    bairro: data.bairro.slice(0, 80),
     numero: data.numero.slice(0, 50),
     cep: (data.cep?.trim() || "").slice(0, 50),
     dataVisita: toDataVisitaBr(data.data),

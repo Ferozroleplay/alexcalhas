@@ -13694,8 +13694,10 @@ html[data-bs-theme="dark"] .cli-orc-picker-item__meta {
 .ponto-folha th,
 .ponto-folha td {
     padding: 4px 6px;
-    border-bottom: 1px solid #e5f0e9;
+    border: 1px solid #b7d4c2;
     text-align: center;
+    background: #fff !important;
+    color: #173528 !important;
 }
 
 .ponto-folha thead th {
@@ -13704,6 +13706,10 @@ html[data-bs-theme="dark"] .cli-orc-picker-item__meta {
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+}
+
+.ponto-folha tbody tr:nth-child(even) td {
+    background: #f4faf6 !important;
 }
 
 .ponto-folha tfoot th,

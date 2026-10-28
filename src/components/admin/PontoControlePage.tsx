@@ -13,7 +13,7 @@ import { AdminModal } from "@/components/admin/modals/AdminModal";
 import type { HoleriteFuncionario } from "@/lib/holerite";
 import { mesLabel } from "@/lib/holerite";
 import { gerarPdfsHolerite } from "@/lib/holerite-pdf";
-import { gerarPdfNoConteudo } from "@/lib/os-pdf";
+import { gerarPdfsPontoFolha } from "@/lib/ponto-folha-pdf";
 import {
   formatDataHoraPonto,
   pontoClasseBadge,
@@ -183,16 +183,26 @@ export function PontoControlePage() {
 
   async function baixarPdf() {
     if (gerandoPdf) return;
-    const el = document.getElementById("ponto-folha-documento");
-    if (!el) {
-      dashToast("Não foi possível montar o PDF.", "danger");
+    const ids = [...new Set(jornadas.map((j) => j.usuario_id))];
+    if (ids.length === 0) {
+      dashToast("Nenhuma jornada neste período.", "warning");
       return;
     }
     setGerandoPdf(true);
     try {
-      const slug = `${de}_${ate}`.replace(/[^\d_-]/g, "");
-      await gerarPdfNoConteudo(el, `ponto-${slug}.pdf`);
-      dashToast("PDF do ponto baixado.", "success");
+      const folhas = ids.map((id) => {
+        const el = document.getElementById(`ponto-folha-${id}`);
+        const nome = jornadas.find((j) => j.usuario_id === id)?.usuario_nome ?? "funcionario";
+        if (!el) throw new Error(`Não foi possível montar a folha de ${nome}.`);
+        return { el, nome, de, ate };
+      });
+      const qtd = await gerarPdfsPontoFolha(folhas);
+      dashToast(
+        qtd === 1
+          ? "Folha de ponto baixada."
+          : `${qtd} folhas baixadas (uma por funcionário).`,
+        "success",
+      );
     } catch (err) {
       dashToast(err instanceof Error ? err.message : "Erro ao gerar o PDF.", "danger");
     } finally {

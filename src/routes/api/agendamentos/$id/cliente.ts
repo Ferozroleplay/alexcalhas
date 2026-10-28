@@ -6,6 +6,7 @@ import {
   dataBrParaInput,
   dataInputParaDb,
   dbErrorMessage,
+  ensureInventarioTextosCliente,
   normalizarHoraVisitaDb,
   serializeInventario,
 } from "@/lib/agendamento.server";
@@ -16,11 +17,11 @@ import { jsonResponse } from "@/lib/http.server";
 import { podeEditarClienteInventario } from "@/lib/inventario-permissions.server";
 
 const patchSchema = z.object({
-  nome: z.string().trim().min(1).max(50),
+  nome: z.string().trim().min(1).max(120),
   telefone: z.string().trim().max(50),
   cpfCnpj: z.string().trim().max(20).optional(),
-  endereco: z.string().trim().max(50),
-  bairro: z.string().trim().max(50),
+  endereco: z.string().trim().max(180),
+  bairro: z.string().trim().max(80),
   numero: z.string().trim().max(50),
   cep: z.string().trim().max(50).optional(),
   data: z.string().trim().optional(),
@@ -115,6 +116,7 @@ export const Route = createFileRoute("/api/agendamentos/$id/cliente")({
             return jsonResponse({ ok: false, message: "Sem permissão." }, 403);
           }
 
+          await ensureInventarioTextosCliente();
           const d = parsed.data;
           const cpfRaw = (d.cpfCnpj ?? "").replace(/\D/g, "");
           const cpfCnpj = cpfRaw !== "" ? cpfRaw : "00000000000";

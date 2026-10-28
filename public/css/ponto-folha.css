@@ -1,0 +1,169 @@
+html,
+body.ponto-folha-embed {
+  margin: 0;
+  padding: 0;
+  background: #fff !important;
+  color: #173528 !important;
+  color-scheme: light !important;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.ponto-folha,
+.ponto-folha * {
+  box-sizing: border-box;
+  color: #173528 !important;
+  font-family: Arial, Helvetica, sans-serif !important;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.ponto-folha {
+  width: 794px;
+  padding: 28px 32px 24px;
+  background: #fff !important;
+}
+
+.ponto-folha__topo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #146b38;
+}
+
+.ponto-folha__topo img {
+  height: 52px;
+  width: auto;
+}
+
+.ponto-folha__topo h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #146b38 !important;
+}
+
+.ponto-folha__topo p {
+  margin: 3px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ponto-folha__topo small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: #5d7268 !important;
+  font-weight: 400;
+}
+
+.ponto-folha__func-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 8px;
+}
+
+.ponto-folha__func-head strong {
+  font-size: 15px;
+  color: #146b38 !important;
+}
+
+.ponto-folha__func-head span {
+  font-size: 12px;
+  color: #146b38 !important;
+  font-weight: 700;
+}
+
+.ponto-folha table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  border: 1.5px solid #146b38;
+  background: #fff !important;
+  font-size: 12px;
+}
+
+.ponto-folha th,
+.ponto-folha td {
+  padding: 7px 8px;
+  border: 1px solid #b7d4c2;
+  text-align: center;
+  background: #fff !important;
+  color: #173528 !important;
+  vertical-align: middle;
+  line-height: 1.25;
+}
+
+.ponto-folha td:first-child,
+.ponto-folha th:first-child {
+  text-align: left;
+  width: 110px;
+}
+
+.ponto-folha thead th {
+  background: #146b38 !important;
+  color: #fff !important;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+
+.ponto-folha tbody tr:nth-child(even) td {
+  background: #f4faf6 !important;
+}
+
+.ponto-folha tfoot th,
+.ponto-folha tfoot td {
+  background: #e7f6ec !important;
+  font-weight: 800;
+  border-bottom: 0;
+  color: #173528 !important;
+}
+
+.ponto-folha tfoot th {
+  text-align: right;
+}
+
+.ponto-folha tfoot td {
+  text-align: center;
+}
+
+.ponto-folha__vazio,
+.ponto-folha__nota {
+  font-size: 10px;
+  color: #5d7268 !important;
+  margin: 10px 0 0;
+}
+
+.ponto-folha__assin {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  margin-top: 36px;
+  padding-top: 8px;
+}
+
+.ponto-folha__assin-col {
+  flex: 1;
+  text-align: center;
+}
+
+.ponto-folha__assin-linha {
+  display: block;
+  border-bottom: 1px solid #173528;
+  height: 36px;
+  margin-bottom: 6px;
+}
+
+.ponto-folha__assin-col span {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5d7268 !important;
+}

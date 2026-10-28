@@ -5,6 +5,7 @@ import { PONTO_CARGA_DIA_LABEL, PONTO_JORNADA } from "@/lib/ponto-jornada";
 export type PontoFolhaJornada = {
   usuario_id: number;
   usuario_nome: string;
+  data?: string;
   data_fmt: string;
   entrada_fmt: string;
   almoco_fmt: string;
@@ -24,6 +25,12 @@ type Grupo = {
   dias: number;
 };
 
+function dataSortKey(j: PontoFolhaJornada): string {
+  if (j.data && /^\d{4}-\d{2}-\d{2}$/.test(j.data)) return j.data;
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(j.data_fmt.trim());
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : j.data_fmt;
+}
+
 function agrupar(jornadas: PontoFolhaJornada[]): Grupo[] {
   const map = new Map<number, Grupo>();
   for (const j of jornadas) {
@@ -37,6 +44,9 @@ function agrupar(jornadas: PontoFolhaJornada[]): Grupo[] {
     if (j.minutos_trabalhados != null && j.minutos_trabalhados > 0) {
       g.minutos += j.minutos_trabalhados;
     }
+  }
+  for (const g of map.values()) {
+    g.jornadas.sort((a, b) => dataSortKey(a).localeCompare(dataSortKey(b)));
   }
   return [...map.values()].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 }
@@ -55,38 +65,43 @@ type Props = {
 
 export function PontoFolhaDocument({ de, ate, jornadas }: Props) {
   const grupos = agrupar(jornadas);
-  const totalMin = grupos.reduce((s, g) => s + g.minutos, 0);
   const empresa = OS_ORCAMENTO_EMPRESA;
+  const periodo = `Período ${dataBr(de)} a ${dataBr(ate)}`;
+  const jornadaTxt = `Jornada ${PONTO_JORNADA.entrada}–${PONTO_JORNADA.almoco} e ${PONTO_JORNADA.retorno}–${PONTO_JORNADA.saida} (${PONTO_CARGA_DIA_LABEL})`;
+
+  if (grupos.length === 0) {
+    return (
+      <article className="ponto-folha" id="ponto-folha-documento">
+        <p className="ponto-folha__vazio">Nenhuma jornada neste período.</p>
+      </article>
+    );
+  }
 
   return (
-    <article className="ponto-folha" id="ponto-folha-documento">
-      <header className="ponto-folha__topo">
-        <img src={empresa.logoSrc} alt="Alex Calhas" />
-        <div>
-          <h1>Folha de ponto</h1>
-          <p>
-            Período {dataBr(de)} a {dataBr(ate)}
-          </p>
-          <small>
-            Jornada {PONTO_JORNADA.entrada}–{PONTO_JORNADA.almoco} e {PONTO_JORNADA.retorno}–
-            {PONTO_JORNADA.saida} ({PONTO_CARGA_DIA_LABEL}) · {grupos.length} funcionário
-            {grupos.length === 1 ? "" : "s"} · {jornadas.length} jornada
-            {jornadas.length === 1 ? "" : "s"} · total {formatMinutosPontoLabel(totalMin)}
-          </small>
-        </div>
-      </header>
+    <>
+      {grupos.map((g) => {
+        const temAberto = g.jornadas.some((j) => j.aberto);
+        return (
+          <article key={g.id} className="ponto-folha" id={`ponto-folha-${g.id}`}>
+            <header className="ponto-folha__topo">
+              <img src={empresa.logoSrc} alt="Alex Calhas" />
+              <div>
+                <h1>Folha de ponto</h1>
+                <p>{periodo}</p>
+                <small>
+                  {jornadaTxt} · {g.dias} dia{g.dias === 1 ? "" : "s"} ·{" "}
+                  {formatMinutosPontoLabel(g.minutos)}
+                </small>
+              </div>
+            </header>
 
-      {grupos.length === 0 ? (
-        <p className="ponto-folha__vazio">Nenhuma jornada neste período.</p>
-      ) : (
-        grupos.map((g) => (
-          <section key={g.id} className="ponto-folha__func">
             <div className="ponto-folha__func-head">
               <strong>{g.nome}</strong>
               <span>
                 {g.dias} dia{g.dias === 1 ? "" : "s"} · {formatMinutosPontoLabel(g.minutos)}
               </span>
             </div>
+
             <table>
               <thead>
                 <tr>
@@ -101,7 +116,7 @@ export function PontoFolhaDocument({ de, ate, jornadas }: Props) {
               </thead>
               <tbody>
                 {g.jornadas.map((j) => (
-                  <tr key={`${j.usuario_id}-${j.data_fmt}-${j.entrada_fmt}`}>
+                  <tr key={`${j.usuario_id}-${dataSortKey(j)}-${j.entrada_fmt}`}>
                     <td>{j.data_fmt}</td>
                     <td>{j.entrada_fmt || "—"}</td>
                     <td>{j.almoco_fmt || "—"}</td>
@@ -118,17 +133,30 @@ export function PontoFolhaDocument({ de, ate, jornadas }: Props) {
               <tfoot>
                 <tr>
                   <th colSpan={6}>Total do funcionário</th>
-                  <th>{formatMinutosPontoLabel(g.minutos)}</th>
+                  <td>{formatMinutosPontoLabel(g.minutos)}</td>
                 </tr>
               </tfoot>
             </table>
-          </section>
-        ))
-      )}
 
-      <p className="ponto-folha__nota">
-        * Jornada em aberto. Horas calculadas até o momento da emissão.
-      </p>
-    </article>
+            {temAberto ? (
+              <p className="ponto-folha__nota">
+                * Jornada em aberto. Horas calculadas até o momento da emissão.
+              </p>
+            ) : null}
+
+            <div className="ponto-folha__assin">
+              <div className="ponto-folha__assin-col">
+                <span className="ponto-folha__assin-linha" />
+                <span>Assinatura do funcionário</span>
+              </div>
+              <div className="ponto-folha__assin-col">
+                <span className="ponto-folha__assin-linha" />
+                <span>Data ____ / ____ / ________</span>
+              </div>
+            </div>
+          </article>
+        );
+      })}
+    </>
   );
 }

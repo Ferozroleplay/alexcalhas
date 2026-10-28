@@ -4,6 +4,7 @@ import { z } from "zod";
 import {
   buildInventarioCreateData,
   dbErrorMessage,
+  ensureInventarioTextosCliente,
   inventarioWhereStatus,
   serializeInventario,
 } from "@/lib/agendamento.server";
@@ -187,13 +188,14 @@ export const Route = createFileRoute("/api/agendamentos")({
         }
 
         try {
+          await ensureInventarioTextosCliente();
           const prisma = await getPrisma();
           const data = parsed.data;
           const dup = await prisma.inventario.findFirst({
             where: {
               status: "agendado",
               numero: data.numero.slice(0, 50),
-              bairro: data.bairro.slice(0, 50),
+              bairro: data.bairro.slice(0, 80),
             },
           });
           if (dup) {
