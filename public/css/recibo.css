@@ -270,6 +270,97 @@ html.recibo-embed body {
   color: #5d7268 !important;
 }
 
+.recibo-desc tfoot th,
+.recibo-desc tfoot td {
+  border-bottom: 0;
+  padding-top: 6px;
+  background: #f0f7f2 !important;
+  font-size: 11px;
+  color: #173528 !important;
+}
+
+.recibo-desc tfoot th {
+  text-align: right !important;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 700;
+}
+
+.recibo-desc tfoot .recibo-desc__total th,
+.recibo-desc tfoot .recibo-desc__total td {
+  background: #146b38 !important;
+  color: #fff !important;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.recibo-resumo {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.recibo-resumo > div {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #fff !important;
+  border: 1px solid #d5e6db;
+}
+
+.recibo-resumo span {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #5d7268 !important;
+}
+
+.recibo-resumo b {
+  display: block;
+  margin-top: 4px;
+  font-size: 16px;
+  line-height: 1.1;
+  color: #173528 !important;
+}
+
+.recibo-resumo em {
+  display: block;
+  margin-top: 3px;
+  font-style: normal;
+  font-size: 10px;
+  line-height: 1.25;
+  color: #3e564b !important;
+}
+
+.recibo-resumo .is-pago {
+  background: #e7f6ec !important;
+  border-color: #b7e0c4;
+}
+
+.recibo-resumo .is-pago span,
+.recibo-resumo .is-pago b {
+  color: #146b38 !important;
+}
+
+.recibo-resumo .is-pago b {
+  font-size: 20px;
+}
+
+.recibo-resumo .is-saldo {
+  background: #fff8e8 !important;
+  border-color: #f0d48a;
+}
+
+.recibo-resumo .is-saldo span,
+.recibo-resumo .is-saldo b {
+  color: #9a6700 !important;
+}
+
+.recibo-resumo .is-quitado b {
+  color: #146b38 !important;
+}
+
 .recibo-recebido {
   display: flex;
   align-items: center;

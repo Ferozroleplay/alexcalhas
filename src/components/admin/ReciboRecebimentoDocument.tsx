@@ -126,8 +126,14 @@ export function ReciboRecebimentoDocument({ cliente, pagamento, valorOrcamento, 
   const situacao = situacaoMarcada(pagamento, valorOrcamento, resumo);
   const extenso = capitalizar(valorReaisPorExtenso(pagamento.valor));
   const obsLivre = pagamento.observacao?.trim() ?? "";
-  const saldo =
-    resumo.quitado || resumo.saldoPendente <= 0.009 ? "" : `Saldo em aberto deste serviço: R$ ${formatMoeda(resumo.saldoPendente)}.`;
+  const subtotalItens = servicos.reduce(
+    (s, item) => s + (typeof item.valor === "number" ? item.valor : 0),
+    0,
+  );
+  const totalOrcamento =
+    valorOrcamento > 0.009 ? valorOrcamento : Math.round(subtotalItens * 100) / 100;
+  const desconto = Math.round(Math.max(0, subtotalItens - totalOrcamento) * 100) / 100;
+  const saldoAberto = resumo.quitado || resumo.saldoPendente <= 0.009 ? 0 : resumo.saldoPendente;
 
   return (
     <article className="recibo-page" id="recibo-documento">
@@ -236,24 +242,47 @@ export function ReciboRecebimentoDocument({ cliente, pagamento, valorOrcamento, 
             ) : (
               <tr>
                 <td>Materiais e/ou serviços conforme orçamento aprovado.</td>
-                <td>R$ {formatMoeda(pagamento.valor)}</td>
+                <td>R$ {formatMoeda(totalOrcamento)}</td>
               </tr>
             )}
           </tbody>
+          {servicos.length > 0 && totalOrcamento > 0.009 ? (
+            <tfoot>
+              {desconto > 0.009 ? (
+                <>
+                  <tr>
+                    <th>Subtotal</th>
+                    <td>R$ {formatMoeda(subtotalItens)}</td>
+                  </tr>
+                  <tr>
+                    <th>Desconto</th>
+                    <td>− R$ {formatMoeda(desconto)}</td>
+                  </tr>
+                </>
+              ) : null}
+              <tr className="recibo-desc__total">
+                <th>Total do orçamento</th>
+                <td>R$ {formatMoeda(totalOrcamento)}</td>
+              </tr>
+            </tfoot>
+          ) : null}
         </table>
       </section>
 
-      <section className="recibo-recebido">
+      <section className="recibo-resumo">
         <div>
-          <span>
-            <Ico>M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14.5h-2V15h2zm0-3.2h-2v-6h2z</Ico>
-          </span>
-          <div>
-            <strong>Valor recebido</strong>
-            <em>({extenso})</em>
-          </div>
+          <span>Total do orçamento</span>
+          <b>R$ {formatMoeda(totalOrcamento)}</b>
         </div>
-        <b>R$ {formatMoeda(pagamento.valor)}</b>
+        <div className="is-pago">
+          <span>Valor recebido</span>
+          <b>R$ {formatMoeda(pagamento.valor)}</b>
+          <em>({extenso})</em>
+        </div>
+        <div className={saldoAberto > 0.009 ? "is-saldo" : "is-quitado"}>
+          <span>Saldo restante</span>
+          <b>{saldoAberto > 0.009 ? `R$ ${formatMoeda(saldoAberto)}` : "Quitado"}</b>
+        </div>
       </section>
 
       <section className="recibo-opcoes">
@@ -311,14 +340,8 @@ export function ReciboRecebimentoDocument({ cliente, pagamento, valorOrcamento, 
               <br />
             </>
           ) : null}
-          Este recibo comprova exclusivamente o recebimento do valor indicado acima, referente ao pagamento dos
-          materiais e/ou serviços descritos no orçamento correspondente.
-          {saldo ? (
-            <>
-              {" "}
-              {saldo}
-            </>
-          ) : null}
+          Este recibo comprova o recebimento do valor indicado acima. O total do orçamento e o saldo
+          restante constam neste documento.
         </p>
       </section>
 
