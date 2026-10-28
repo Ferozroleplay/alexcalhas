@@ -51,9 +51,12 @@ async function buildFromDb(): Promise<Omit<HomeLandingData, "parceiros"> | null>
       img: img || resolvePublicUrl(`/images/galeria/${p.slug}.jpg`),
     });
 
+    if (galeria.length >= 12) continue;
+
     const fotos = await prisma.produtoFoto.findMany({
       where: { produtoId: p.id },
       orderBy: [{ ehCapa: "desc" }, { ordem: "asc" }, { id: "asc" }],
+      take: 12 - galeria.length,
     });
 
     if (fotos.length === 0) {
@@ -68,18 +71,21 @@ async function buildFromDb(): Promise<Omit<HomeLandingData, "parceiros"> | null>
         src: fotoPublicUrl(f.arquivo),
         legenda: f.legenda?.trim() || p.nome,
       });
+      if (galeria.length >= 12) break;
     }
     if (fotos.length > 0 && galeria.length === antes) {
       galeria.push({ src: img, legenda: p.nome });
     }
   }
 
+  const capas = servicos
+    .map((s) => ({ src: s.img, alt: s.titulo }))
+    .filter((s) => Boolean(s.src))
+    .slice(0, 6);
   const heroSlides: HomeSlide[] =
-    galeria.length > 0
-      ? galeria.map((g) => ({ src: g.src, alt: g.legenda || "Alex Calhas" }))
-      : staticLanding().heroSlides;
+    capas.length > 0 ? capas : staticLanding().heroSlides;
 
-  return { servicos, galeria, heroSlides };
+  return { servicos, galeria: galeria.slice(0, 12), heroSlides };
 }
 
 async function loadParceirosHome(): Promise<HomePartner[]> {

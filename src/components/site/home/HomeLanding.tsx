@@ -2,6 +2,8 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { AcAgendarForm } from "@/components/site/home/AcAgendarForm";
+import { AcHeroSlider } from "@/components/site/home/AcHeroSlider";
+import { AcLazyMap } from "@/components/site/home/AcLazyMap";
 import { AcLoginModal } from "@/components/site/home/AcLoginModal";
 import { AcPartnersMarquee } from "@/components/site/home/AcPartnersMarquee";
 import { AcSiteChat } from "@/components/site/home/AcSiteChat";
@@ -166,30 +168,7 @@ export function HomeLanding({ data, painelLoginOpen, onPainelLoginOpenChange, lo
                 Atendimento rápido e garantia de qualidade
               </p>
             </div>
-            <div className="ac-hero__media ac-hero-slider" id="ac-hero-slider" aria-label="Galeria de trabalhos — Alex Calhas">
-              {heroSlides.map((slide, i) => (
-                <div key={`${slide.src}-${i}`} className={`ac-hero-slider__slide${i === 0 ? " is-active" : ""}`} data-slide={i}>
-                  <img
-                    src={slide.src}
-                    alt={slide.alt}
-                    width={900}
-                    height={560}
-                    fetchPriority={i === 0 ? "high" : undefined}
-                    loading={i === 0 ? undefined : "lazy"}
-                  />
-                </div>
-              ))}
-              {heroSlides.length > 1 ? (
-                <>
-                  <button type="button" className="ac-hero-slider__arrow ac-hero-slider__arrow--prev" id="ac-hero-prev" aria-label="Imagem anterior">
-                    <i className="bi bi-chevron-left" aria-hidden="true" />
-                  </button>
-                  <button type="button" className="ac-hero-slider__arrow ac-hero-slider__arrow--next" id="ac-hero-next" aria-label="Próxima imagem">
-                    <i className="bi bi-chevron-right" aria-hidden="true" />
-                  </button>
-                </>
-              ) : null}
-            </div>
+            <AcHeroSlider slides={heroSlides} />
           </div>
         </section>
 
@@ -262,9 +241,20 @@ export function HomeLanding({ data, painelLoginOpen, onPainelLoginOpenChange, lo
             <div className="ac-portfolio-carousel" id="ac-portfolio-carousel" aria-label="Galeria de trabalhos realizados">
               <div className="ac-portfolio-carousel__viewport">
                 <div className="ac-portfolio-carousel__track">
-                  {galeria.map((item, i) => (
-                    <figure key={`${item.src}-${i}`} className="ac-portfolio-carousel__item">
-                      <img src={item.src} alt={item.legenda} loading="lazy" width={280} height={210} />
+                  {(galeria.length > 1 ? [...galeria, ...galeria] : galeria).map((item, i) => (
+                    <figure
+                      key={`${item.src}-${i}`}
+                      className="ac-portfolio-carousel__item"
+                      aria-hidden={i >= galeria.length ? true : undefined}
+                    >
+                      <img
+                        src={item.src}
+                        alt={i >= galeria.length ? "" : item.legenda}
+                        loading="lazy"
+                        decoding="async"
+                        width={280}
+                        height={210}
+                      />
                       <figcaption>{item.legenda}</figcaption>
                     </figure>
                   ))}
@@ -362,15 +352,10 @@ export function HomeLanding({ data, painelLoginOpen, onPainelLoginOpenChange, lo
                 </li>
               </ul>
             </div>
-            <div className="ac-contact__map">
-              <iframe
-                src={HOME_SITE.mapsEmbed}
-                title="Localização Alex Calhas, Rua Angelim 137, Tarumã SP"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                allowFullScreen
-              />
-            </div>
+            <AcLazyMap
+              src={HOME_SITE.mapsEmbed}
+              title="Localização Alex Calhas, Rua Angelim 137, Tarumã SP"
+            />
           </div>
         </section>
       </main>
