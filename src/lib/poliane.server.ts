@@ -264,6 +264,19 @@ function deuEmCima(texto: string): boolean {
   );
 }
 
+function reclamacaoServico(texto: string): boolean {
+  return /\b(n[aã]o ficou\s+(bom|boa|legal|bonito|lindo)|ficou\s+(uma\s+)?(bosta|merda|porcaria|lixo|ruim|horr[ií]vel|p[eé]ssim[oa])|n[aã]o gostei|mal\s*feito|servi[cç]o\s+(ruim|p[eé]ssim[oa]|horr[ií]vel)|reclama[cç][aã]o|reclam(ar|o)|ainda (est[aá] )?vazando|voltou a vazar|n[aã]o resolveu|piorou|uma bosta|porcaria)\b/i.test(
+    texto,
+  );
+}
+
+function elogioServico(texto: string): boolean {
+  if (reclamacaoServico(texto)) return false;
+  return /\b(ficou\s+(muito\s+)?(bom|boa|lindo|linda|[oó]timo|show|perfeito|excelente|top|maravilh|massa|bonito)|servi[cç]o\s+(ficou\s+)?(bom|lindo|[oó]timo|show|perfeito)|parab[eé]ns|adorei|amei(\s+o\s+servi[cç]o)?|gostei (muito )?do (servi[cç]o|trabalho)|recomendo|mandaram (muito )?bem|trabalho (ficou )?(lindo|bom|show))\b/i.test(
+    texto,
+  );
+}
+
 function cumprimentoAgora(): string {
   const hora = Number(
     new Date().toLocaleString("en-GB", { hour: "2-digit", hour12: false, timeZone: "America/Sao_Paulo" }).slice(0, 2),
@@ -1104,6 +1117,31 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
       reply: fala(
         "Sou casada com o Alex, viu 😊",
         ficha.aguardandoMaisAjuda ? "Te ajudo em algo mais?" : ficha.servico ? undefined : "Em que posso ajudar?",
+      ),
+      ficha,
+      pills: [],
+    };
+  }
+
+  if (reclamacaoServico(texto)) {
+    return {
+      reply: fala(
+        "Poxa, sinto muito.",
+        ficha.telefone
+          ? "Vamos entrar em contato e ir aí verificar o que aconteceu de errado."
+          : "Vamos entrar em contato e ir aí verificar o que aconteceu de errado. Me passa um telefone com DDD?",
+      ),
+      ficha: { ...ficha, aguardandoMaisAjuda: false },
+      pills: [],
+    };
+  }
+
+  if (elogioServico(texto)) {
+    return {
+      reply: fala(
+        "Que bom saber! 😊",
+        "Obrigada pelo seu feedback.",
+        ficha.aguardandoMaisAjuda ? "Te ajudo em mais alguma coisa?" : undefined,
       ),
       ficha,
       pills: [],
