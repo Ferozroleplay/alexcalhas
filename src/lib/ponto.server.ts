@@ -1,6 +1,11 @@
 import { formatMoeda } from "@/lib/funcionario-pagamento-display";
 import { getPrisma } from "@/lib/db.server";
 import {
+  calcMinutosTrabalhados,
+  ganhoDiaFromPonto,
+  valorHoraFromDiario,
+} from "@/lib/ponto-jornada";
+import {
   formatDataPontoTz,
   formatHoraPontoTz,
   pontoAgoraSql,
@@ -10,8 +15,12 @@ import {
   PONTO_SQL_DT_RE,
 } from "@/lib/ponto-timezone";
 
-/** Carga horária de referência para converter valor diário em hora (8h). */
-export const PONTO_MINUTOS_CARGA_DIA = 8 * 60;
+export {
+  calcMinutosTrabalhados,
+  ganhoDiaFromPonto,
+  PONTO_MINUTOS_CARGA_DIA,
+  valorHoraFromDiario,
+} from "@/lib/ponto-jornada";
 
 const PONTO_DT_SQL = `DATE_FORMAT(registrado_em, '%Y-%m-%d %H:%i:%s') AS registrado_em`;
 
@@ -188,40 +197,6 @@ export function formatMinutosPonto(minutos: number | null): string {
   const m = minutos % 60;
   if (h > 0) return `${h}h ${String(m).padStart(2, "0")}min`;
   return `${m}min`;
-}
-
-function calcMinutosTrabalhados(
-  entrada: string | null,
-  almoco: string | null,
-  retorno: string | null,
-  saida: string | null,
-  fimAlternativo?: string | null,
-): number | null {
-  const fim = saida || fimAlternativo;
-  if (!entrada || !fim) return null;
-  const e = parsePontoDatetime(entrada).getTime();
-  const s = parsePontoDatetime(fim).getTime();
-  if (Number.isNaN(e) || Number.isNaN(s) || s <= e) return null;
-  if (almoco && retorno) {
-    const a = parsePontoDatetime(almoco).getTime();
-    const r = parsePontoDatetime(retorno).getTime();
-    if (!Number.isNaN(a) && !Number.isNaN(r) && a >= e && r >= a && s >= r) {
-      return Math.floor((a - e) / 60000) + Math.floor((s - r) / 60000);
-    }
-  }
-  return Math.floor((s - e) / 60000);
-}
-
-export function valorHoraFromDiario(valorDiario: number): number {
-  if (valorDiario <= 0) return 0;
-  return Math.round((valorDiario / (PONTO_MINUTOS_CARGA_DIA / 60)) * 100) / 100;
-}
-
-export function ganhoDiaFromPonto(valorDiario: number, minutosTrabalhados: number | null): number {
-  if (valorDiario <= 0 || minutosTrabalhados == null || minutosTrabalhados <= 0) return 0;
-  return (
-    Math.round(valorDiario * (minutosTrabalhados / PONTO_MINUTOS_CARGA_DIA) * 100) / 100
-  );
 }
 
 function formatMoedaPonto(valor: number): string {

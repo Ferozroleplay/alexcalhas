@@ -54,6 +54,7 @@ import { Route as ApiAdminFornecedorInicioRouteImport } from './routes/api/admin
 import { Route as ApiAdminFornecedorPortalRouteImport } from './routes/api/admin/fornecedor-portal'
 import { Route as ApiAdminFornecedoresRouteImport } from './routes/api/admin/fornecedores'
 import { Route as ApiAdminFuncionariosPagamentoRouteImport } from './routes/api/admin/funcionarios-pagamento'
+import { Route as ApiAdminHoleriteRouteImport } from './routes/api/admin/holerite'
 import { Route as ApiAdminImpersonarRouteImport } from './routes/api/admin/impersonar'
 import { Route as ApiAdminLoginRouteImport } from './routes/api/admin/login'
 import { Route as ApiAdminLogoutRouteImport } from './routes/api/admin/logout'
@@ -311,6 +312,11 @@ const ApiAdminFuncionariosPagamentoRoute =
     path: '/api/admin/funcionarios-pagamento',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiAdminHoleriteRoute = ApiAdminHoleriteRouteImport.update({
+  id: '/api/admin/holerite',
+  path: '/api/admin/holerite',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminImpersonarRoute = ApiAdminImpersonarRouteImport.update({
   id: '/api/admin/impersonar',
   path: '/api/admin/impersonar',
@@ -493,6 +499,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/fornecedor-portal': typeof ApiAdminFornecedorPortalRoute
   '/api/admin/fornecedores': typeof ApiAdminFornecedoresRoute
   '/api/admin/funcionarios-pagamento': typeof ApiAdminFuncionariosPagamentoRoute
+  '/api/admin/holerite': typeof ApiAdminHoleriteRoute
   '/api/admin/impersonar': typeof ApiAdminImpersonarRoute
   '/api/admin/login': typeof ApiAdminLoginRoute
   '/api/admin/logout': typeof ApiAdminLogoutRoute
@@ -565,6 +572,7 @@ export interface FileRoutesByTo {
   '/api/admin/fornecedor-portal': typeof ApiAdminFornecedorPortalRoute
   '/api/admin/fornecedores': typeof ApiAdminFornecedoresRoute
   '/api/admin/funcionarios-pagamento': typeof ApiAdminFuncionariosPagamentoRoute
+  '/api/admin/holerite': typeof ApiAdminHoleriteRoute
   '/api/admin/impersonar': typeof ApiAdminImpersonarRoute
   '/api/admin/login': typeof ApiAdminLoginRoute
   '/api/admin/logout': typeof ApiAdminLogoutRoute
@@ -639,6 +647,7 @@ export interface FileRoutesById {
   '/api/admin/fornecedor-portal': typeof ApiAdminFornecedorPortalRoute
   '/api/admin/fornecedores': typeof ApiAdminFornecedoresRoute
   '/api/admin/funcionarios-pagamento': typeof ApiAdminFuncionariosPagamentoRoute
+  '/api/admin/holerite': typeof ApiAdminHoleriteRoute
   '/api/admin/impersonar': typeof ApiAdminImpersonarRoute
   '/api/admin/login': typeof ApiAdminLoginRoute
   '/api/admin/logout': typeof ApiAdminLogoutRoute
@@ -714,6 +723,7 @@ export interface FileRouteTypes {
     | '/api/admin/fornecedor-portal'
     | '/api/admin/fornecedores'
     | '/api/admin/funcionarios-pagamento'
+    | '/api/admin/holerite'
     | '/api/admin/impersonar'
     | '/api/admin/login'
     | '/api/admin/logout'
@@ -786,6 +796,7 @@ export interface FileRouteTypes {
     | '/api/admin/fornecedor-portal'
     | '/api/admin/fornecedores'
     | '/api/admin/funcionarios-pagamento'
+    | '/api/admin/holerite'
     | '/api/admin/impersonar'
     | '/api/admin/login'
     | '/api/admin/logout'
@@ -859,6 +870,7 @@ export interface FileRouteTypes {
     | '/api/admin/fornecedor-portal'
     | '/api/admin/fornecedores'
     | '/api/admin/funcionarios-pagamento'
+    | '/api/admin/holerite'
     | '/api/admin/impersonar'
     | '/api/admin/login'
     | '/api/admin/logout'
@@ -909,6 +921,7 @@ export interface RootRouteChildren {
   ApiAdminFornecedorPortalRoute: typeof ApiAdminFornecedorPortalRoute
   ApiAdminFornecedoresRoute: typeof ApiAdminFornecedoresRoute
   ApiAdminFuncionariosPagamentoRoute: typeof ApiAdminFuncionariosPagamentoRoute
+  ApiAdminHoleriteRoute: typeof ApiAdminHoleriteRoute
   ApiAdminImpersonarRoute: typeof ApiAdminImpersonarRoute
   ApiAdminLoginRoute: typeof ApiAdminLoginRoute
   ApiAdminLogoutRoute: typeof ApiAdminLogoutRoute
@@ -1241,6 +1254,13 @@ declare module '@tanstack/react-router' {
       path: '/api/admin/funcionarios-pagamento'
       fullPath: '/api/admin/funcionarios-pagamento'
       preLoaderRoute: typeof ApiAdminFuncionariosPagamentoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/holerite': {
+      id: '/api/admin/holerite'
+      path: '/api/admin/holerite'
+      fullPath: '/api/admin/holerite'
+      preLoaderRoute: typeof ApiAdminHoleriteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/impersonar': {
@@ -1607,6 +1627,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminFornecedorPortalRoute: ApiAdminFornecedorPortalRoute,
   ApiAdminFornecedoresRoute: ApiAdminFornecedoresRoute,
   ApiAdminFuncionariosPagamentoRoute: ApiAdminFuncionariosPagamentoRoute,
+  ApiAdminHoleriteRoute: ApiAdminHoleriteRoute,
   ApiAdminImpersonarRoute: ApiAdminImpersonarRoute,
   ApiAdminLoginRoute: ApiAdminLoginRoute,
   ApiAdminLogoutRoute: ApiAdminLogoutRoute,

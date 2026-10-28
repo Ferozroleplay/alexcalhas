@@ -211,7 +211,7 @@ export async function gerarPdfDoElemento(el: HTMLElement, filename: string): Pro
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait", compress: true },
         pagebreak: {
           mode: ["avoid-all", "css", "legacy"],
-          before: ".os-orc-pix-page--new-page",
+          before: [".os-orc-pix-page--new-page", ".holerite-folha--page"],
           avoid: [
             ".os-orc-pix-page",
             ".os-orc-pix-box",
@@ -219,6 +219,7 @@ export async function gerarPdfDoElemento(el: HTMLElement, filename: string): Pro
             ".os-orc-pix__col--qr",
             ".os-orc-aprovacao",
             ".os-orc-footer",
+            ".holerite-folha",
           ],
         },
       })

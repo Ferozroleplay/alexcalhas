@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useAdminAuth } from "@/components/admin/admin-auth";
 import { DashPageHero, NovaVisitaCta } from "@/components/admin/DashPageHero";
 import { formatDataHoraPonto, pontoClasseBadge, pontoLabelTipo } from "@/lib/ponto-display";
+import { PONTO_CARGA_DIA_LABEL, PONTO_JORNADA } from "@/lib/ponto-jornada";
 import { PONTO_TIMEZONE } from "@/lib/ponto-timezone";
 import { dashConfirm, dashToast } from "@/lib/dash-ui";
 
@@ -143,7 +144,7 @@ export function PontoPage() {
     <div className="dash-form-page dash-form-page--pro dash-ponto-page">
       <DashPageHero
         title="Bate-ponto"
-        subtitle="Registre entrada, almoço, retorno e saída"
+        subtitle={`Jornada ${PONTO_JORNADA.entrada}–${PONTO_JORNADA.almoco} e ${PONTO_JORNADA.retorno}–${PONTO_JORNADA.saida}`}
         iconClass="bi-clock-history"
         layout="form"
         showNovaVisita={false}
@@ -191,6 +192,18 @@ export function PontoPage() {
                 </div>
               </div>
 
+              <p className="dash-ponto-jornada">
+                <span>
+                  Manhã <strong>{PONTO_JORNADA.entrada}–{PONTO_JORNADA.almoco}</strong>
+                </span>
+                <span>
+                  Tarde <strong>{PONTO_JORNADA.retorno}–{PONTO_JORNADA.saida}</strong>
+                </span>
+                <span>
+                  Dia completo <strong>{PONTO_CARGA_DIA_LABEL}</strong>
+                </span>
+              </p>
+
               <div className="dash-ponto-grid" role="group" aria-label="Registrar ponto">
                 <button
                   type="button"
@@ -200,6 +213,7 @@ export function PontoPage() {
                 >
                   <i className="bi bi-box-arrow-in-right" aria-hidden="true" />
                   <span>Entrada</span>
+                  <small>{PONTO_JORNADA.entrada}</small>
                 </button>
                 <button
                   type="button"
@@ -209,6 +223,7 @@ export function PontoPage() {
                 >
                   <i className="bi bi-cup-hot" aria-hidden="true" />
                   <span>Almoço</span>
+                  <small>{PONTO_JORNADA.almoco}</small>
                 </button>
                 <button
                   type="button"
@@ -218,6 +233,7 @@ export function PontoPage() {
                 >
                   <i className="bi bi-arrow-return-left" aria-hidden="true" />
                   <span>Retorno</span>
+                  <small>{PONTO_JORNADA.retorno}</small>
                 </button>
                 <button
                   type="button"
@@ -227,6 +243,7 @@ export function PontoPage() {
                 >
                   <i className="bi bi-box-arrow-right" aria-hidden="true" />
                   <span>Saída</span>
+                  <small>{PONTO_JORNADA.saida}</small>
                 </button>
               </div>
             </section>

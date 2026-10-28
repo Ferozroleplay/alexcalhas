@@ -8588,6 +8588,23 @@ html[data-bs-theme="dark"] .fin-mensal-table__row--atual {
     line-height: 1.1;
 }
 
+.dash-ponto-jornada {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1rem;
+    margin: 0 0 1rem;
+    padding: 0.6rem 0.85rem;
+    border-radius: 10px;
+    background: #f1f5f9;
+    font-size: 0.8rem;
+    color: #475569;
+}
+
+.dash-ponto-jornada strong {
+    color: #0d1117;
+    font-variant-numeric: tabular-nums;
+}
+
 .dash-ponto-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -8620,6 +8637,13 @@ html[data-bs-theme="dark"] .fin-mensal-table__row--atual {
 
 .dash-ponto-card-btn .bi {
     font-size: 1.35rem;
+}
+
+.dash-ponto-card-btn small {
+    font-size: 0.72rem;
+    font-weight: 500;
+    opacity: 0.78;
+    font-variant-numeric: tabular-nums;
 }
 
 .dash-ponto-card-btn:hover:not(:disabled) {
@@ -13588,7 +13612,7 @@ html[data-bs-theme="dark"] .cli-orc-picker-item__meta {
     position: fixed;
     left: -9999px;
     top: 0;
-    width: 740px;
+    width: 794px;
     background: #fff;
     pointer-events: none;
 }

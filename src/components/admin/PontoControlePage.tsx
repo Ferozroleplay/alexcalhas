@@ -1,12 +1,18 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { flushSync } from "react-dom";
 
 import { useAdminAuth } from "@/components/admin/admin-auth";
 import { DashPageHero } from "@/components/admin/DashPageHero";
 import { InvPagination, paginateItems } from "@/components/admin/inventario-ui";
+import { HoleriteDocument } from "@/components/admin/HoleriteDocument";
 import { PontoEditarJornadaModal } from "@/components/admin/PontoEditarJornadaModal";
 import { PontoFolhaDocument } from "@/components/admin/PontoFolhaDocument";
 import { PontoFuncCell, PontoJornadaHoras } from "@/components/admin/PontoFuncCell";
+import { AdminModal } from "@/components/admin/modals/AdminModal";
+import type { HoleriteFuncionario } from "@/lib/holerite";
+import { mesLabel } from "@/lib/holerite";
+import { gerarPdfsHolerite } from "@/lib/holerite-pdf";
 import { gerarPdfNoConteudo } from "@/lib/os-pdf";
 import {
   formatDataHoraPonto,
@@ -15,6 +21,7 @@ import {
 } from "@/lib/ponto-display";
 import { Route as PontoControleRoute } from "@/routes/painel/ponto-controle";
 import { dashConfirm, dashToast } from "@/lib/dash-ui";
+import { PONTO_CARGA_DIA_LABEL, PONTO_JORNADA } from "@/lib/ponto-jornada";
 import { pontoDiaChave, pontoHojeIso } from "@/lib/ponto-timezone";
 
 type PontoJornada = {
@@ -94,6 +101,10 @@ export function PontoControlePage() {
   const [fUsuario, setFUsuario] = useState(String(usuarioFiltro || ""));
   const [fDe, setFDe] = useState(de);
   const [fAte, setFAte] = useState(ate);
+  const [fMes, setFMes] = useState(de.slice(0, 7));
+  const [holerites, setHolerites] = useState<HoleriteFuncionario[]>([]);
+  const [holeriteOpen, setHoleriteOpen] = useState(false);
+  const [holeriteUsuario, setHoleriteUsuario] = useState("");
 
   const detalheTotalPaginas = Math.max(
     1,
@@ -151,6 +162,7 @@ export function PontoControlePage() {
     setFUsuario(String(usuarioFiltro || ""));
     setFDe(de);
     setFAte(ate);
+    setFMes(de.slice(0, 7) || ate.slice(0, 7));
   }, [usuarioFiltro, de, ate]);
 
   useEffect(() => {
@@ -183,6 +195,68 @@ export function PontoControlePage() {
       dashToast("PDF do ponto baixado.", "success");
     } catch (err) {
       dashToast(err instanceof Error ? err.message : "Erro ao gerar o PDF.", "danger");
+    } finally {
+      setGerandoPdf(false);
+    }
+  }
+
+  function abrirHolerite() {
+    const mes = fMes.trim() || de.slice(0, 7);
+    if (!/^\d{4}-\d{2}$/.test(mes)) {
+      dashToast("Escolha o mês do holerite.", "warning");
+      return;
+    }
+    if (funcionarios.length === 0) {
+      dashToast("Nenhum funcionário para gerar o holerite.", "warning");
+      return;
+    }
+    setHoleriteUsuario(fUsuario || String(funcionarios[0]?.id ?? ""));
+    setHoleriteOpen(true);
+  }
+
+  async function baixarHolerite() {
+    if (gerandoPdf) return;
+    const mes = fMes.trim() || de.slice(0, 7);
+    if (!/^\d{4}-\d{2}$/.test(mes)) {
+      dashToast("Escolha o mês do holerite.", "warning");
+      return;
+    }
+    const uid = Number(holeriteUsuario) || 0;
+    if (uid <= 0) {
+      dashToast("Escolha o funcionário do holerite.", "warning");
+      return;
+    }
+    setGerandoPdf(true);
+    try {
+      const qs = new URLSearchParams({ mes, usuario: String(uid) });
+      const res = await fetch(`/api/admin/holerite?${qs}`, { credentials: "include" });
+      const json = (await res.json()) as {
+        ok?: boolean;
+        message?: string;
+        holerites?: HoleriteFuncionario[];
+      };
+      if (!res.ok) throw new Error(json.message ?? "Não foi possível montar o holerite.");
+      const lista = json.holerites ?? [];
+      if (lista.length === 0) {
+        dashToast("Nenhum funcionário para gerar o holerite.", "warning");
+        return;
+      }
+      flushSync(() => {
+        setHolerites(lista);
+      });
+      const folhas = lista.map((h) => {
+        const el = document.getElementById(`holerite-folha-${h.usuario_id}`);
+        if (!el) throw new Error(`Não foi possível montar o holerite de ${h.nome}.`);
+        return { el, nome: h.nome, mes: h.mes };
+      });
+      const qtd = await gerarPdfsHolerite(folhas);
+      setHoleriteOpen(false);
+      dashToast(
+        qtd === 1 ? "Holerite baixado." : `${qtd} holerites baixados (um por funcionário).`,
+        "success",
+      );
+    } catch (err) {
+      dashToast(err instanceof Error ? err.message : "Erro ao gerar o holerite.", "danger");
     } finally {
       setGerandoPdf(false);
     }
@@ -291,8 +365,8 @@ export function PontoControlePage() {
         title={isContador ? "Ponto mensal" : "Controle de ponto"}
         subtitle={
           isContador
-            ? "Histórico dos funcionários para calcular as horas. Baixe o PDF do período."
-            : "Entradas, saídas e horas dos funcionários"
+            ? `Jornada ${PONTO_JORNADA.entrada}–${PONTO_JORNADA.almoco} e ${PONTO_JORNADA.retorno}–${PONTO_JORNADA.saida} (${PONTO_CARGA_DIA_LABEL}). Baixe o PDF do período.`
+            : `Jornada ${PONTO_JORNADA.entrada}–${PONTO_JORNADA.almoco} e ${PONTO_JORNADA.retorno}–${PONTO_JORNADA.saida} · dia completo ${PONTO_CARGA_DIA_LABEL}`
         }
         iconClass="bi-clock-history"
         accent="ponto"
@@ -384,6 +458,29 @@ export function PontoControlePage() {
                         {gerandoPdf ? "Gerando…" : "PDF do período"}
                       </button>
                     </div>
+                    <div className="col-6 col-md-2">
+                      <label className="dash-edit-modal__label" htmlFor="filtro-mes-holerite">
+                        Mês holerite
+                      </label>
+                      <input
+                        type="month"
+                        id="filtro-mes-holerite"
+                        className="form-control dash-edit-modal__input"
+                        value={fMes}
+                        onChange={(e) => setFMes(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-6 col-md-3 d-grid">
+                      <button
+                        type="button"
+                        className="btn visitas-orc-add-btn"
+                        disabled={gerandoPdf || !fMes}
+                        onClick={abrirHolerite}
+                      >
+                        <i className="bi bi-receipt" aria-hidden="true" />{" "}
+                        {gerandoPdf ? "Gerando…" : "Holerite do mês"}
+                      </button>
+                    </div>
                   </div>
                 </form>
               </section>
@@ -434,7 +531,7 @@ export function PontoControlePage() {
                               intervalo={j.intervalo_fmt}
                               total={j.total_fmt}
                             />
-                            <td className="text-center dash-ponto-cel--valor" title={j.valor_diario > 0 ? `Diária cadastrada: ${j.valor_diario.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} (8h)` : "Cadastre o valor diário em Pagamentos"}>
+                            <td className="text-center dash-ponto-cel--valor" title={j.valor_diario > 0 ? `Diária cadastrada: ${j.valor_diario.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} (${PONTO_CARGA_DIA_LABEL})` : "Cadastre o valor diário em Pagamentos"}>
                               <span className="dash-ponto-valor-h">{j.valor_hora_fmt}</span>
                             </td>
                             <td className="text-center dash-ponto-cel--valor">
@@ -444,7 +541,7 @@ export function PontoControlePage() {
                                   j.ganho_parcial
                                     ? "Estimativa até o momento (jornada em aberto)"
                                     : j.ganho_dia_fmt !== "—"
-                                      ? "Proporcional às horas trabalhadas (base 8h/dia)"
+                                      ? `Proporcional às horas trabalhadas (base ${PONTO_CARGA_DIA_LABEL}/dia)`
                                       : undefined
                                 }
                               >
@@ -606,7 +703,77 @@ export function PontoControlePage() {
 
       <div className="ponto-folha-offscreen" aria-hidden="true">
         <PontoFolhaDocument de={de} ate={ate} jornadas={jornadas} />
+        <HoleriteDocument holerites={holerites} />
       </div>
+
+      <AdminModal
+        open={holeriteOpen}
+        onClose={() => {
+          if (!gerandoPdf) setHoleriteOpen(false);
+        }}
+        dialogClass="modal-md"
+        closeOnBackdrop={!gerandoPdf}
+      >
+        <div className="modal-content visitas-orc-modal__content">
+          <div className="modal-header visitas-orc-modal__header flex-shrink-0">
+            <div className="visitas-orc-modal__head">
+              <span className="visitas-orc-modal__head-icon" aria-hidden="true">
+                <i className="bi bi-receipt" />
+              </span>
+              <div>
+                <h4 className="modal-title visitas-orc-modal__title mb-0">Holerite do mês</h4>
+                <p className="visitas-orc-modal__subtitle mb-0">
+                  Referente a {mesLabel(fMes.trim() || de.slice(0, 7))}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="btn-close"
+              aria-label="Fechar"
+              disabled={gerandoPdf}
+              onClick={() => setHoleriteOpen(false)}
+            />
+          </div>
+          <div className="modal-body dash-edit-modal__body">
+            <label className="dash-edit-modal__label" htmlFor="holerite-escolher-func">
+              Funcionário
+            </label>
+            <select
+              id="holerite-escolher-func"
+              className="form-select dash-edit-modal__input"
+              value={holeriteUsuario}
+              disabled={gerandoPdf}
+              onChange={(e) => setHoleriteUsuario(e.target.value)}
+            >
+              {funcionarios.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.nome}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="modal-footer visitas-orc-modal__footer flex-shrink-0">
+            <button
+              type="button"
+              className="btn dash-edit-modal__btn-cancel"
+              disabled={gerandoPdf}
+              onClick={() => setHoleriteOpen(false)}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="btn dash-edit-modal__btn-save"
+              disabled={gerandoPdf || !holeriteUsuario}
+              onClick={() => void baixarHolerite()}
+            >
+              <i className="bi bi-download" aria-hidden="true" />{" "}
+              {gerandoPdf ? "Gerando…" : "Baixar holerite"}
+            </button>
+          </div>
+        </div>
+      </AdminModal>
 
       <PontoEditarJornadaModal
         open={editarOpen}

@@ -1,5 +1,6 @@
 import { OS_ORCAMENTO_EMPRESA } from "@/lib/os-document";
 import { formatMinutosPontoLabel } from "@/lib/ponto-display";
+import { PONTO_CARGA_DIA_LABEL, PONTO_JORNADA } from "@/lib/ponto-jornada";
 
 export type PontoFolhaJornada = {
   usuario_id: number;
@@ -67,7 +68,9 @@ export function PontoFolhaDocument({ de, ate, jornadas }: Props) {
             Período {dataBr(de)} a {dataBr(ate)}
           </p>
           <small>
-            {grupos.length} funcionário{grupos.length === 1 ? "" : "s"} · {jornadas.length} jornada
+            Jornada {PONTO_JORNADA.entrada}–{PONTO_JORNADA.almoco} e {PONTO_JORNADA.retorno}–
+            {PONTO_JORNADA.saida} ({PONTO_CARGA_DIA_LABEL}) · {grupos.length} funcionário
+            {grupos.length === 1 ? "" : "s"} · {jornadas.length} jornada
             {jornadas.length === 1 ? "" : "s"} · total {formatMinutosPontoLabel(totalMin)}
           </small>
         </div>

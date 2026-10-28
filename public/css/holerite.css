@@ -1,0 +1,228 @@
+html,
+body.holerite-embed {
+  margin: 0;
+  padding: 0;
+  background: #fff !important;
+  color: #173528 !important;
+  color-scheme: light !important;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.holerite-folha,
+.holerite-folha * {
+  box-sizing: border-box;
+  color: #173528 !important;
+  font-family: Arial, Helvetica, sans-serif !important;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.holerite-folha {
+  width: 1123px;
+  padding: 18px 20px 14px;
+  background: #fff !important;
+}
+
+.h-sheet {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  border: 1.5px solid #146b38;
+  background: #fff !important;
+}
+
+.h-c1 { width: 80px; }
+.h-c2 { width: 268px; }
+.h-c3 { width: 210px; }
+.h-c4 { width: 148px; }
+.h-c5 { width: 148px; }
+.h-c6 { width: 100px; }
+
+.h-sheet th,
+.h-sheet td {
+  border: 1px solid #b7d4c2;
+  padding: 7px 9px;
+  vertical-align: middle;
+  background: #fff !important;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.h-sheet td.h-emp {
+  background: #f4faf6 !important;
+  vertical-align: top !important;
+}
+
+.h-kicker {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #146b38 !important;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.h-emp__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.h-emp img {
+  height: 38px;
+  width: auto;
+}
+
+.h-emp strong {
+  display: block;
+  font-size: 15px;
+  color: #146b38 !important;
+}
+
+.h-emp p {
+  margin: 1px 0 0;
+  font-size: 11px;
+  color: #3d5c4c !important;
+}
+
+.h-sheet td.h-title {
+  text-align: right;
+  vertical-align: middle !important;
+  background: #146b38 !important;
+}
+
+.h-title h1,
+.h-title p {
+  color: #fff !important;
+  margin: 0;
+}
+
+.h-title h1 {
+  font-size: 18px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.h-title p {
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.h-head th {
+  background: #e7f6ec !important;
+  color: #146b38 !important;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: left;
+  font-weight: 700;
+}
+
+.h-who td {
+  font-size: 13px;
+}
+
+.h-name {
+  font-weight: 700;
+}
+
+.h-num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.h-item td {
+  height: 28px;
+}
+
+.h-item--empty td {
+  height: 26px;
+}
+
+.h-sheet td.h-sign {
+  width: 100px;
+  padding: 0 !important;
+  background: #fff !important;
+  vertical-align: top !important;
+  border-left: 1.5px solid #146b38 !important;
+}
+
+.h-sign__box {
+  position: relative;
+  width: 100px;
+  min-height: 520px;
+  height: 100%;
+  overflow: hidden;
+}
+
+.h-sign__svg {
+  display: block;
+  width: 100px;
+  height: 520px;
+}
+
+.h-foot td {
+  vertical-align: top !important;
+}
+
+.h-sheet td.h-msg {
+  background: #f7fbf8 !important;
+}
+
+.h-msg strong {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #146b38 !important;
+  margin-bottom: 4px;
+}
+
+.h-msg p {
+  margin: 0 0 4px;
+  font-size: 11px;
+  color: #3d5c4c !important;
+}
+
+.h-tot {
+  padding: 0 !important;
+}
+
+.h-tot div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #b7d4c2;
+  font-size: 12px;
+}
+
+.h-tot div:last-child {
+  border-bottom: 0;
+}
+
+.h-tot span {
+  color: #3d5c4c !important;
+}
+
+.h-tot strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.h-liq {
+  background: #e7f6ec !important;
+}
+
+.h-liq span,
+.h-liq strong {
+  color: #146b38 !important;
+  font-size: 13px;
+}
+
+.holerite-vazio {
+  padding: 24px;
+  font-size: 13px;
+}
