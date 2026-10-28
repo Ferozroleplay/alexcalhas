@@ -20,7 +20,7 @@ import {
   type UsuarioItem,
 } from "@/lib/usuarios-client";
 
-type NivelCadastro = "admin" | "funcionário" | "fornecedor";
+type NivelCadastro = "admin" | "funcionário" | "fornecedor" | "contador";
 
 function nivelClass(nivel: string): string {
   return nivel.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -32,6 +32,7 @@ function nivelLabel(u: UsuarioItem): string {
   }
   if (u.nivel === "funcionário" || u.nivel === "funcionario") return "Funcionário";
   if (u.nivel === "admin") return "Admin";
+  if (u.nivel === "contador") return "Contador";
   if (u.nivel === "fornecedor") return "Fornecedor";
   if (u.nivel === "inativo") return "Sem acesso";
   return u.nivel;
@@ -153,7 +154,7 @@ export function UsuariosPage() {
       setEditThumb(detalhe.thumb);
       const nv = detalhe.nivel === "funcionario" ? "funcionário" : detalhe.nivel;
       setEditNivel(
-        nv === "admin" || nv === "fornecedor" || nv === "funcionário"
+        nv === "admin" || nv === "fornecedor" || nv === "funcionário" || nv === "contador"
           ? nv
           : "funcionário",
       );
@@ -243,7 +244,9 @@ export function UsuariosPage() {
       ? "Cadastrar administrador"
       : nivelCadastro === "fornecedor"
         ? "Cadastrar fornecedor"
-        : "Cadastrar funcionário";
+        : nivelCadastro === "contador"
+          ? "Cadastrar contador"
+          : "Cadastrar funcionário";
 
   return (
     <div className="analytics-page dash-form-page--pro dashboard-page--usuarios">
@@ -395,6 +398,17 @@ export function UsuariosPage() {
                 </span>
                 <span className="dash-user-tipo-card__title">Fornecedor</span>
                 <span className="dash-user-tipo-card__desc">Envia entregas e notas de material</span>
+              </button>
+              <button
+                type="button"
+                className="dash-user-tipo-card"
+                onClick={() => abrirCadastro("contador")}
+              >
+                <span className="dash-user-tipo-card__icon dash-user-tipo-card__icon--contador">
+                  <i className="bi bi-calculator" aria-hidden="true" />
+                </span>
+                <span className="dash-user-tipo-card__title">Contador</span>
+                <span className="dash-user-tipo-card__desc">Histórico de ponto mensal em PDF</span>
               </button>
             </div>
           </div>
@@ -608,6 +622,7 @@ export function UsuariosPage() {
                         >
                           <option value="admin">Administrador</option>
                           <option value="funcionário">Funcionário</option>
+                          <option value="contador">Contador</option>
                           <option value="fornecedor">Fornecedor</option>
                         </select>
                       </div>

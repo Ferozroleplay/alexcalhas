@@ -61,6 +61,11 @@ export function podeGerenciarPonto(session: AdminSessionPayload | null | undefin
   return session?.visao === "admin";
 }
 
+/** Histórico de ponto (leitura + PDF). Admin e contador. */
+export function podeVerHistoricoPonto(session: AdminSessionPayload | null | undefined): boolean {
+  return session?.visao === "admin" || session?.visao === "contador";
+}
+
 export function ehAdminReal(session: AdminSessionPayload | null | undefined): boolean {
   return (session?.nivelReal?.toLowerCase() ?? "") === "admin";
 }
@@ -301,13 +306,14 @@ function usuarioSemAcesso(usuario: string): boolean {
 
 function nivelPermiteLogin(nivel: string): boolean {
   const n = normalizarNivelUsuario(nivel);
-  return n === "admin" || n === "funcionário" || n === "fornecedor";
+  return n === "admin" || n === "funcionário" || n === "fornecedor" || n === "contador";
 }
 
 export function visaoPorNivel(nivel: string): AdminVisao {
   const n = normalizarNivelUsuario(nivel);
   if (n === "funcionário") return "funcionário";
   if (n === "fornecedor") return "fornecedor";
+  if (n === "contador") return "contador";
   if (n === "admin") return "admin";
   return "funcionário";
 }

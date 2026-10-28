@@ -52,6 +52,7 @@ function visaoAtiva(user: { visao: AdminVisao } | null): AdminVisao {
 function visaoDemonstracaoLabel(visao: AdminVisao): string {
   if (visao === "funcionário") return "Funcionário";
   if (visao === "fornecedor") return "Fornecedor";
+  if (visao === "contador") return "Contador";
   return "Admin";
 }
 
@@ -106,6 +107,7 @@ export function AdminShell() {
   const isAdminVisao = visao === "admin";
   const isFuncVisao = visao === "funcionário";
   const isFornVisao = visao === "fornecedor";
+  const isContadorVisao = visao === "contador";
   const podeSimular = Boolean(user?.podeSimular);
 
   async function trocar(v: AdminVisao) {
@@ -286,6 +288,20 @@ export function AdminShell() {
                 </>
               );
             })()}
+
+            {isContadorVisao && (
+              <li className={navActive(pathname, "/painel/ponto-controle") ? "activeMenu" : ""}>
+                <Link
+                  to="/painel/ponto-controle"
+                  className="dash-nav-link"
+                  title="Ponto mensal"
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <i className="bi bi-clock-history" aria-hidden="true" />
+                  <span>Ponto mensal</span>
+                </Link>
+              </li>
+            )}
 
             {isFuncVisao && (
               <>
@@ -513,6 +529,16 @@ export function AdminShell() {
                 onClick={() => void trocar("fornecedor")}
               >
                 <i className="bi bi-truck" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className={`dash-sidebar__visao-btn${visao === "contador" ? " is-active" : ""}`}
+                title="Contador"
+                aria-label="Visão contador"
+                aria-pressed={visao === "contador"}
+                onClick={() => void trocar("contador")}
+              >
+                <i className="bi bi-calculator" aria-hidden="true" />
               </button>
             </div>
             {user?.simulando && (

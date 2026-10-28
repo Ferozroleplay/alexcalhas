@@ -8,7 +8,7 @@ import { hashPasswordPhp } from "@/lib/password.server";
 import { thumbPublicUrl } from "@/lib/usuario-thumb.server";
 import { getUsuarioById, updateUsuario } from "@/lib/usuarios.server";
 
-const NIVEIS = ["admin", "funcionário", "funcionario", "fornecedor"] as const;
+const NIVEIS = ["admin", "funcionário", "funcionario", "fornecedor", "contador"] as const;
 
 function lerId(valor: string): number | null {
   const id = Number(valor);

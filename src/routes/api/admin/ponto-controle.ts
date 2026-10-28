@@ -2,7 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { dbErrorMessage } from "@/lib/agendamento.server";
-import { getAdminSessionFromRequest, isAdminRequest, podeGerenciarPonto } from "@/lib/auth.server";
+import {
+  getAdminSessionFromRequest,
+  isAdminRequest,
+  podeGerenciarPonto,
+  podeVerHistoricoPonto,
+} from "@/lib/auth.server";
 import { jsonResponse } from "@/lib/http.server";
 import {
   apagarJornadaPonto,
@@ -43,8 +48,8 @@ export const Route = createFileRoute("/api/admin/ponto-controle")({
       GET: async ({ request }) => {
         if (!isAdminRequest(request)) return jsonResponse({ ok: false }, 401);
         const session = getAdminSessionFromRequest(request);
-        if (!session || !podeGerenciarPonto(session)) {
-          return jsonResponse({ ok: false, message: "Sem permissão para controle de ponto." }, 403);
+        if (!session || !podeVerHistoricoPonto(session)) {
+          return jsonResponse({ ok: false, message: "Sem permissão para o histórico de ponto." }, 403);
         }
 
         const url = new URL(request.url);

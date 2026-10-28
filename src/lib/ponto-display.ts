@@ -43,3 +43,12 @@ export function pontoClasseBadge(tipo: string): string {
 }
 
 export { formatDataHoraPontoTz as formatDataHoraPonto } from "@/lib/ponto-timezone";
+
+export function formatMinutosPontoLabel(minutos: number | null): string {
+  if (minutos === null || minutos < 0) return "—";
+  if (minutos === 0) return "0min";
+  const h = Math.floor(minutos / 60);
+  const m = minutos % 60;
+  if (h > 0) return `${h}h ${String(m).padStart(2, "0")}min`;
+  return `${m}min`;
+}

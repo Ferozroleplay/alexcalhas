@@ -1,6 +1,6 @@
 import { getPrisma } from "@/lib/db.server";
 
-export type AdminVisao = "admin" | "funcionário" | "fornecedor";
+export type AdminVisao = "admin" | "funcionário" | "fornecedor" | "contador";
 
 const LOGINS_SIMULACAO = ["alex", "poliane", "polly"];
 const EMAILS_SIMULACAO = ["alexcalhascrp@outlook.com", "polly_livinha@hotmail.com"];
@@ -11,6 +11,7 @@ export function normalizarVisao(raw: string): AdminVisao | null {
   if (v === "admin") return "admin";
   if (v === "funcionario" || v === "funcionário") return "funcionário";
   if (v === "fornecedor") return "fornecedor";
+  if (v === "contador") return "contador";
   return null;
 }
 
@@ -47,6 +48,7 @@ export async function obterFornecedorPreviewId(): Promise<number> {
 
 export function redirectAposVisao(visao: AdminVisao, fornecedorPreviewId: number): string {
   if (visao === "funcionário") return "/painel/ponto";
+  if (visao === "contador") return "/painel/ponto-controle";
   if (visao === "fornecedor") {
     return fornecedorPreviewId > 0
       ? `/painel/inicio-fornecedor?controle=${fornecedorPreviewId}`

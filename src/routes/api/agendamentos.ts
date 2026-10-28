@@ -60,6 +60,10 @@ export const Route = createFileRoute("/api/agendamentos")({
         if (!isAdminRequest(request)) {
           return jsonResponse({ ok: false, message: "Não autorizado." }, 401);
         }
+        const visaoReq = getAdminSessionFromRequest(request)?.visao;
+        if (visaoReq === "contador" || visaoReq === "fornecedor") {
+          return jsonResponse({ ok: false, message: "Não autorizado." }, 403);
+        }
 
         const url = new URL(request.url);
         const parsedQuery = listQuerySchema.safeParse({

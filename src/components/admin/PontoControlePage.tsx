@@ -5,7 +5,9 @@ import { useAdminAuth } from "@/components/admin/admin-auth";
 import { DashPageHero } from "@/components/admin/DashPageHero";
 import { InvPagination, paginateItems } from "@/components/admin/inventario-ui";
 import { PontoEditarJornadaModal } from "@/components/admin/PontoEditarJornadaModal";
+import { PontoFolhaDocument } from "@/components/admin/PontoFolhaDocument";
 import { PontoFuncCell, PontoJornadaHoras } from "@/components/admin/PontoFuncCell";
+import { gerarPdfNoConteudo } from "@/lib/os-pdf";
 import {
   formatDataHoraPonto,
   pontoClasseBadge,
@@ -84,6 +86,10 @@ export function PontoControlePage() {
     saida_id?: number | null;
   } | null>(null);
   const [editarRegistroId, setEditarRegistroId] = useState<number | null>(null);
+  const [gerandoPdf, setGerandoPdf] = useState(false);
+  const isAdmin = user?.visao === "admin";
+  const isContador = user?.visao === "contador";
+  const podeEditar = isAdmin;
 
   const [fUsuario, setFUsuario] = useState(String(usuarioFiltro || ""));
   const [fDe, setFDe] = useState(de);
@@ -134,7 +140,7 @@ export function PontoControlePage() {
 
   useEffect(() => {
     if (!ready) return;
-    if (user && user.visao !== "admin") {
+    if (user && user.visao !== "admin" && user.visao !== "contador") {
       void navigate({ to: "/painel/ponto" });
       return;
     }
@@ -161,6 +167,25 @@ export function PontoControlePage() {
         ate: fAte || undefined,
       },
     });
+  }
+
+  async function baixarPdf() {
+    if (gerandoPdf) return;
+    const el = document.getElementById("ponto-folha-documento");
+    if (!el) {
+      dashToast("Não foi possível montar o PDF.", "danger");
+      return;
+    }
+    setGerandoPdf(true);
+    try {
+      const slug = `${de}_${ate}`.replace(/[^\d_-]/g, "");
+      await gerarPdfNoConteudo(el, `ponto-${slug}.pdf`);
+      dashToast("PDF do ponto baixado.", "success");
+    } catch (err) {
+      dashToast(err instanceof Error ? err.message : "Erro ao gerar o PDF.", "danger");
+    } finally {
+      setGerandoPdf(false);
+    }
   }
 
   async function excluirJornada(j: PontoJornada) {
@@ -263,8 +288,12 @@ export function PontoControlePage() {
   return (
     <div className="analytics-page dash-form-page--pro">
       <DashPageHero
-        title="Controle de ponto"
-        subtitle="Entradas, saídas e horas dos funcionários"
+        title={isContador ? "Ponto mensal" : "Controle de ponto"}
+        subtitle={
+          isContador
+            ? "Histórico dos funcionários para calcular as horas. Baixe o PDF do período."
+            : "Entradas, saídas e horas dos funcionários"
+        }
         iconClass="bi-clock-history"
         accent="ponto"
         layout="header"
@@ -286,7 +315,8 @@ export function PontoControlePage() {
                   <span className="inv-list-stat">{jornadas.length} jornada(s) no período</span>
                 </div>
                 <span className="inv-list-toolbar__badge inv-list-toolbar__badge--ponto">
-                  <i className="bi bi-shield-lock" aria-hidden="true" /> Administração
+                  <i className={`bi ${isContador ? "bi-calculator" : "bi-shield-lock"}`} aria-hidden="true" />
+                  {isContador ? "Contador" : "Administração"}
                 </span>
               </div>
 
@@ -296,7 +326,7 @@ export function PontoControlePage() {
                 </h2>
                 <form className="dash-form" onSubmit={aplicarFiltros}>
                   <div className="row g-2 align-items-end">
-                    <div className="col-12 col-md-4">
+                    <div className="col-12 col-md-3">
                       <label className="dash-edit-modal__label" htmlFor="filtro-usuario">
                         Funcionário
                       </label>
@@ -314,7 +344,7 @@ export function PontoControlePage() {
                         ))}
                       </select>
                     </div>
-                    <div className="col-6 col-md-3">
+                    <div className="col-6 col-md-2">
                       <label className="dash-edit-modal__label" htmlFor="filtro-de">
                         De
                       </label>
@@ -326,7 +356,7 @@ export function PontoControlePage() {
                         onChange={(e) => setFDe(e.target.value)}
                       />
                     </div>
-                    <div className="col-6 col-md-3">
+                    <div className="col-6 col-md-2">
                       <label className="dash-edit-modal__label" htmlFor="filtro-ate">
                         Até
                       </label>
@@ -341,6 +371,17 @@ export function PontoControlePage() {
                     <div className="col-12 col-md-2 d-grid">
                       <button type="submit" className="btn visitas-orc-add-btn">
                         <i className="bi bi-search" aria-hidden="true" /> Filtrar
+                      </button>
+                    </div>
+                    <div className="col-12 col-md-3 d-grid">
+                      <button
+                        type="button"
+                        className="btn btn-outline-light"
+                        disabled={gerandoPdf || jornadas.length === 0}
+                        onClick={() => void baixarPdf()}
+                      >
+                        <i className="bi bi-file-earmark-pdf" aria-hidden="true" />{" "}
+                        {gerandoPdf ? "Gerando…" : "PDF do período"}
                       </button>
                     </div>
                   </div>
@@ -366,13 +407,15 @@ export function PontoControlePage() {
                         <th className="text-center">R$/h</th>
                         <th className="text-center">Ganho no dia</th>
                         <th className="text-center">Status</th>
-                        <th className="text-end dash-ponto-table__col-acoes">Ações</th>
+                        {podeEditar ? (
+                          <th className="text-end dash-ponto-table__col-acoes">Ações</th>
+                        ) : null}
                       </tr>
                     </thead>
                     <tbody>
                       {jornadas.length === 0 ? (
                         <tr>
-                          <td colSpan={12} className="dash-ponto-table__empty">
+                          <td colSpan={podeEditar ? 12 : 11} className="dash-ponto-table__empty">
                             Nenhum registro encontrado para os filtros selecionados.
                           </td>
                         </tr>
@@ -420,6 +463,7 @@ export function PontoControlePage() {
                                 <span className="dash-ponto-status dash-ponto-status--ok">Encerrado</span>
                               )}
                             </td>
+                            {podeEditar ? (
                             <td className="text-end dash-ponto-table__col-acoes">
                               <div className="dash-pag-func-actions" role="group" aria-label="Ações da jornada">
                                 <button
@@ -442,6 +486,7 @@ export function PontoControlePage() {
                                 </button>
                               </div>
                             </td>
+                            ) : null}
                           </tr>
                         ))
                       )}
@@ -482,7 +527,7 @@ export function PontoControlePage() {
                               <th className="dash-ponto-table__col-func">Funcionário</th>
                               <th className="text-center">Tipo</th>
                               <th className="text-center">Data e hora</th>
-                              <th className="text-end">Ações</th>
+                              {podeEditar ? <th className="text-end">Ações</th> : null}
                             </tr>
                           </thead>
                           <tbody>
@@ -505,6 +550,7 @@ export function PontoControlePage() {
                                       <span className="dash-ponto-datetime__hora">{hora}</span>
                                     </div>
                                   </td>
+                                  {podeEditar ? (
                                   <td className="text-end">
                                     <div className="dash-pag-func-actions" role="group" aria-label="Ações do registro">
                                       <button
@@ -527,6 +573,7 @@ export function PontoControlePage() {
                                       </button>
                                     </div>
                                   </td>
+                                  ) : null}
                                 </tr>
                               );
                             })}
@@ -545,7 +592,9 @@ export function PontoControlePage() {
                     </div>
                   ) : (
                     <p className="dash-ponto-detalhe__hint mb-0">
-                      Clique na seta para ver cada batida, corrigir horários ou excluir registros.
+                      {podeEditar
+                        ? "Clique na seta para ver cada batida, corrigir horários ou excluir registros."
+                        : "Clique na seta para ver cada batida do período."}
                     </p>
                   )}
                 </section>
@@ -553,6 +602,10 @@ export function PontoControlePage() {
             </>
           ) : null}
         </div>
+      </div>
+
+      <div className="ponto-folha-offscreen" aria-hidden="true">
+        <PontoFolhaDocument de={de} ate={ate} jornadas={jornadas} />
       </div>
 
       <PontoEditarJornadaModal

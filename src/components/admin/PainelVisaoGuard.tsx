@@ -20,8 +20,12 @@ const FUNC_ALLOWED_PREFIXES = [
 /** Rotas permitidas ao fornecedor (demais redireciona para o portal). */
 const FORNECEDOR_ALLOWED_PREFIXES = ["/painel/inicio-fornecedor", "/painel/fornecedores"];
 
+/** Contador: só histórico de ponto (PDF das horas). */
+const CONTADOR_ALLOWED_PREFIXES = ["/painel/ponto-controle"];
+
 function destinoPadrao(visao: AdminVisao, fornecedorId: number): string {
   if (visao === "funcionário") return "/painel/ponto";
+  if (visao === "contador") return "/painel/ponto-controle";
   if (visao === "fornecedor") {
     return fornecedorId > 0
       ? `/painel/inicio-fornecedor?controle=${fornecedorId}`
@@ -43,6 +47,12 @@ function pathBloqueado(pathname: string, visao: AdminVisao): boolean {
 
   if (visao === "fornecedor") {
     return !FORNECEDOR_ALLOWED_PREFIXES.some(
+      (prefix) => p === prefix || p.startsWith(`${prefix}/`) || p.startsWith(`${prefix}?`),
+    );
+  }
+
+  if (visao === "contador") {
+    return !CONTADOR_ALLOWED_PREFIXES.some(
       (prefix) => p === prefix || p.startsWith(`${prefix}/`) || p.startsWith(`${prefix}?`),
     );
   }
