@@ -198,7 +198,7 @@ export function SiteChatCard() {
                   required
                 />
                 <small className="empresa-chat__hint">
-                  Use {"{nome}"} para colocar o nome em destaque na mensagem.
+                  Use {"{nome}"} para colocar o nome em destaque. No site ela conversa, consulta a agenda e marca a visita.
                 </small>
               </label>
             </div>

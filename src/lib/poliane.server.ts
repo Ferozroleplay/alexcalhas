@@ -1,0 +1,1274 @@
+import {
+  buildInventarioCreateData,
+  ensureInventarioTextosCliente,
+  horariosLivresVisita,
+  toDataVisitaBr,
+} from "@/lib/agendamento.server";
+import { getPrisma } from "@/lib/db.server";
+import { pontoHojeIso } from "@/lib/ponto-timezone";
+
+export type PolianeFicha = {
+  servico?: string;
+  descricao?: string;
+  nome?: string;
+  telefone?: string;
+  responsavel?: string;
+  rua?: string;
+  numero?: string;
+  bairro?: string;
+  cidade?: string;
+  cep?: string;
+  referencia?: string;
+  dataIso?: string;
+  periodo?: "manha" | "tarde";
+  hora?: string;
+  intencao?: "agendar" | "remarcar" | "cancelar";
+  agendamentoId?: number;
+  protocolo?: number;
+  pendenteConfirmacao?: boolean;
+  enderecoConfirmado?: boolean;
+  aguardandoConfirmaCadastro?: boolean;
+};
+
+export type PolianePill = { label: string; value: string };
+
+export type PolianeResult = {
+  reply: string;
+  ficha: PolianeFicha;
+  pills: PolianePill[];
+  done?: boolean;
+};
+
+const SERVICOS: { id: string; label: string; re: RegExp }[] = [
+  { id: "calhas", label: "Instalação de calhas", re: /\bcalhas?\b/i },
+  { id: "manutencao", label: "Troca ou manutenção de calhas", re: /\b(troca|manuten|reforma)\b/i },
+  { id: "rufos", label: "Instalação de rufos", re: /\brufos?\b/i },
+  { id: "condutores", label: "Instalação de condutores", re: /\bcondutores?\b/i },
+  { id: "vazamento", label: "Reparos em vazamentos", re: /\b(vazamento|goteira|infiltra)/i },
+  { id: "limpeza", label: "Limpeza de calhas", re: /\blimpeza\b/i },
+  { id: "orcamento", label: "Solicitação de orçamento", re: /\b(or[cç]amento|quanto custa|pre[cç]o)\b/i },
+  { id: "visita", label: "Visita técnica", re: /\bvisita\b/i },
+];
+
+const PILLS_SERVICO: PolianePill[] = [
+  { label: "Calhas", value: "Instalação de calhas" },
+  { label: "Rufos", value: "Instalação de rufos" },
+  { label: "Condutores", value: "Instalação de condutores" },
+  { label: "Vazamento", value: "Reparos em vazamentos" },
+  { label: "Limpeza", value: "Limpeza de calhas" },
+  { label: "Orçamento / visita", value: "Visita técnica para orçamento" },
+];
+
+function limparFicha(raw: unknown): PolianeFicha {
+  if (!raw || typeof raw !== "object") return {};
+  const o = raw as Record<string, unknown>;
+  const str = (k: string, max: number) =>
+    typeof o[k] === "string" ? o[k].trim().slice(0, max) : undefined;
+  const num = (k: string) => {
+    const n = Number(o[k]);
+    return Number.isFinite(n) && n > 0 ? Math.trunc(n) : undefined;
+  };
+  const periodo = o.periodo === "manha" || o.periodo === "tarde" ? o.periodo : undefined;
+  const intencao =
+    o.intencao === "agendar" || o.intencao === "remarcar" || o.intencao === "cancelar"
+      ? o.intencao
+      : undefined;
+  return {
+    servico: str("servico", 80),
+    descricao: str("descricao", 400),
+    nome: str("nome", 120),
+    telefone: str("telefone", 20),
+    responsavel: str("responsavel", 80),
+    rua: str("rua", 120),
+    numero: str("numero", 10),
+    bairro: str("bairro", 80),
+    cidade: str("cidade", 80),
+    cep: str("cep", 10),
+    referencia: str("referencia", 120),
+    dataIso: str("dataIso", 10),
+    periodo,
+    hora: str("hora", 5),
+    intencao,
+    agendamentoId: num("agendamentoId"),
+    protocolo: num("protocolo"),
+    pendenteConfirmacao: o.pendenteConfirmacao === true,
+    enderecoConfirmado: o.enderecoConfirmado === true,
+    aguardandoConfirmaCadastro: o.aguardandoConfirmaCadastro === true,
+  };
+}
+
+function chaveTel(raw: string): string {
+  let d = raw.replace(/\D/g, "");
+  if (d.startsWith("55") && d.length >= 12) d = d.slice(2);
+  return d.replace(/^0+/, "");
+}
+
+function telOk(d: string): boolean {
+  return d.length === 10 || d.length === 11;
+}
+
+function formatTel(raw: string): string {
+  const d = chaveTel(raw);
+  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return raw;
+}
+
+function weekdayIso(iso: string): number {
+  return new Date(`${iso}T12:00:00`).getDay();
+}
+
+function ehDiaUtil(iso: string): boolean {
+  const w = weekdayIso(iso);
+  return w >= 1 && w <= 5;
+}
+
+function somarDias(iso: string, n: number): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + n));
+  const p = (x: number) => String(x).padStart(2, "0");
+  return `${dt.getUTCFullYear()}-${p(dt.getUTCMonth() + 1)}-${p(dt.getUTCDate())}`;
+}
+
+function formatarDia(iso: string): string {
+  return new Date(`${iso}T12:00:00`).toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+  });
+}
+
+function slotsDoPeriodo(horas: string[], periodo?: "manha" | "tarde"): string[] {
+  if (periodo === "manha") return horas.filter((h) => h <= "12:00");
+  if (periodo === "tarde") return horas.filter((h) => h >= "14:00");
+  return horas;
+}
+
+function extrairTelefone(texto: string): string | undefined {
+  const m = texto.replace(/\D/g, " ").match(/\b(55)?\s*0?(\d{2}\s*\d{4,5}\s*\d{4})\b/);
+  if (!m) return undefined;
+  const d = chaveTel(m[2]);
+  return telOk(d) ? d : undefined;
+}
+
+function extrairCep(texto: string): string | undefined {
+  const rotulo = texto.match(/\bcep\s*(?:é|:)?\s*(\d{5})-?(\d{3})\b/i);
+  if (rotulo) return `${rotulo[1]}${rotulo[2]}`;
+  const semTel = texto.replace(/\b(?:\+?55\s*)?(?:\(?\d{2}\)?[\s-]*)?\d{4,5}[-\s]?\d{4}\b/g, " ");
+  const m = semTel.match(/\b(\d{5})-?(\d{3})\b/);
+  return m ? `${m[1]}${m[2]}` : undefined;
+}
+
+function extrairHora(texto: string): string | undefined {
+  const m = texto.match(/\b([01]?\d|2[0-3])[:hH]([0-5]\d)\b/);
+  if (!m) return undefined;
+  return `${m[1].padStart(2, "0")}:${m[2]}`;
+}
+
+function extrairNumeroImovel(texto: string): string | undefined {
+  const t = textoEndereco(texto);
+  const m =
+    t.match(/\bn[uú]mero\s*(?:é|:)?\s*(\d+[A-Za-z]?)\b/i) ||
+    t.match(/\bn[ºo°]\s*(\d+[A-Za-z]?)\b/i) ||
+    t.match(/,\s*(\d{1,5}[A-Za-z]?)\s*$/) ||
+    t.match(/\b(?:rua|r\.|av\.?|avenida|travessa|alameda|estrada|rodovia|pra[cç]a)\b.*\s(\d{1,6}[A-Za-z]?)\s*$/i);
+  return numeroImovelOk(m?.[1]) ? m[1] : undefined;
+}
+
+function proximoDiaNome(hoje: string, alvo: number): string | undefined {
+  for (let i = 0; i <= 8; i++) {
+    const iso = somarDias(hoje, i === 0 ? 0 : i);
+    if (weekdayIso(iso) === alvo && iso >= hoje && ehDiaUtil(iso)) return iso;
+  }
+  return undefined;
+}
+
+function extrairData(texto: string, hoje: string): string | undefined {
+  const t = texto.toLowerCase();
+  if (/\bhoje\b/.test(t)) return hoje;
+  if (/\bdepois de amanh[ãa]\b/.test(t)) return somarDias(hoje, 2);
+  if (/\bamanh[ãa]\b/.test(t)) return somarDias(hoje, 1);
+  const nomes: [RegExp, number][] = [
+    [/\bdomingo\b/, 0],
+    [/\bsegunda\b/, 1],
+    [/\bter[cç]a\b/, 2],
+    [/\bquarta\b/, 3],
+    [/\bquinta\b/, 4],
+    [/\bsexta\b/, 5],
+    [/\bs[áa]bado\b/, 6],
+  ];
+  for (const [re, w] of nomes) {
+    if (re.test(t)) return proximoDiaNome(hoje, w);
+  }
+  const br = t.match(/\b(\d{1,2})[\/\-.](\d{1,2})(?:[\/\-.](\d{2,4}))?\b/);
+  if (br) {
+    const d = br[1].padStart(2, "0");
+    const m = br[2].padStart(2, "0");
+    const y = br[3] ? (br[3].length === 2 ? `20${br[3]}` : br[3]) : hoje.slice(0, 4);
+    return `${y}-${m}-${d}`;
+  }
+  return undefined;
+}
+
+function extrairPeriodo(texto: string): "manha" | "tarde" | undefined {
+  const t = texto.toLowerCase();
+  if (/\bmanh[ãa]\b/.test(t)) return "manha";
+  if (/\btarde\b/.test(t)) return "tarde";
+  return undefined;
+}
+
+function extrairServico(texto: string): string | undefined {
+  for (const s of SERVICOS) {
+    if (s.re.test(texto)) return s.label;
+  }
+  return undefined;
+}
+
+function sim(texto: string): boolean {
+  return /^(sim|isso|confirmo|ok|fechado|certo|pode ser|confirma|sim,? esse endere[cç]o|sim,? mesmo endere[cç]o)[\s!.]*$/i.test(
+    texto.trim(),
+  );
+}
+
+function nao(texto: string): boolean {
+  return /^(n[aã]o|agora n[aã]o|cancela isso)[\s!.]*$/i.test(texto.trim());
+}
+
+function querOutroEndereco(texto: string): boolean {
+  return /\b(outro endere[cç]o|endere[cç]o (errado|diferente)|trocar (o )?endere[cç]o|mudar (o )?endere[cç]o|n[aã]o [eé] (esse|o mesmo))\b/i.test(
+    texto,
+  );
+}
+
+function ehSaudacao(texto: string): boolean {
+  return /^(boa\s*(noite|tarde|dia)|bom\s*dia|ol[aá]|oie+|eae+|e\s*a[ií]|blz|beleza|tudo\s*(bem|bom)|obrigad[oa]|valeu|tchau)[\s,!.😅😊💜🙏]*$/i.test(
+    texto.trim(),
+  );
+}
+
+function cumprimentoDe(texto: string): string {
+  const t = texto.toLowerCase();
+  if (/noite/.test(t)) return "Boa noite! 😊 ";
+  if (/tarde/.test(t)) return "Boa tarde! 😊 ";
+  if (/dia/.test(t)) return "Bom dia! 😊 ";
+  return "Olá! 😊 ";
+}
+
+function textoEndereco(texto: string): string {
+  return texto
+    .trim()
+    .replace(/^(boa\s*(noite|tarde|dia)|bom\s*dia|ol[aá]|oie+|eae+|e\s*a[ií]|blz|beleza)[\s,!.😅😊💜🙏]*/i, "")
+    .replace(
+      /^(n[aã]o)[\s,!.]+(?=.*(rua|r\.|av\.?|avenida|travessa|alameda|estrada|rodovia|pra[cç]a|\d))/i,
+      "",
+    )
+    .replace(/^cep\s*(?:é|:)?\s*/i, "")
+    .trim();
+}
+
+function pareceRua(texto: string): boolean {
+  const t = textoEndereco(texto);
+  if (t.length < 5) return false;
+  if (ehSaudacao(t)) return false;
+  if (/^(sim|n[aã]o|isso|ok|eu|o mesmo|a mesma|sou eu|prefiro|manh[ãa]|tarde|cep)\b/i.test(t)) return false;
+  if (/^\d{5}-?\d{3}$/.test(t.replace(/\s/g, ""))) return false;
+  if (/^\d{4}-\d{2}-\d{2}/.test(t)) return false;
+  if (!/[a-zA-ZÀ-ÿ]{3,}/.test(t)) return false;
+  return true;
+}
+
+function numeroImovelOk(n: string | undefined): n is string {
+  if (!n) return false;
+  const d = n.replace(/\D/g, "");
+  return d.length >= 1 && d.length <= 6;
+}
+
+function capNome(s: string): string {
+  const small = new Set(["de", "da", "do", "das", "dos", "e", "em"]);
+  return s
+    .trim()
+    .replace(/\s+/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((w, i) => {
+      const l = w.toLowerCase();
+      if (i > 0 && small.has(l)) return l;
+      return l.charAt(0).toUpperCase() + l.slice(1);
+    })
+    .join(" ");
+}
+
+function comTipoLogradouro(rua: string): string {
+  const t = rua.trim().replace(/\s+/g, " ");
+  if (!t) return t;
+  if (/^(rua|r\.|av\.?|avenida|travessa|alameda|estrada|rodovia|pra[cç]a)\b/i.test(t)) {
+    return capNome(t.replace(/^r\.\s*/i, "Rua ").replace(/^av\.?\s*/i, "Avenida "));
+  }
+  return `Rua ${capNome(t)}`;
+}
+
+function acharNumeroNoTexto(t: string): { numero: string; antes: string; depois: string } | null {
+  const labeled = t.match(/^(.*?)\b(?:n[uú]mero|n[ºo°])\s+(\d{1,6}[A-Za-z]?)\b(.*)$/i);
+  if (labeled && numeroImovelOk(labeled[2])) {
+    return { antes: labeled[1].trim(), numero: labeled[2], depois: labeled[3].trim() };
+  }
+  for (const m of t.matchAll(/\b(\d{1,6}[A-Za-z]?)\b/g)) {
+    const idx = m.index ?? 0;
+    const depois = t.slice(idx + m[0].length).trim();
+    const antes = t.slice(0, idx).trim();
+    if (/^d[aeo]s?\b/i.test(depois)) continue;
+    if (!antes || antes.length < 3) continue;
+    if (!numeroImovelOk(m[1])) continue;
+    return { numero: m[1], antes, depois };
+  }
+  return null;
+}
+
+function semFraseRepetida(s: string): string {
+  const w = s.split(/\s+/).filter(Boolean);
+  const half = Math.floor(w.length / 2);
+  if (half >= 1 && w.slice(0, half).join(" ").toLowerCase() === w.slice(half).join(" ").toLowerCase()) {
+    return w.slice(0, half).join(" ");
+  }
+  return s;
+}
+
+function partirBairroCidade(depois: string): { bairro?: string; cidade?: string } {
+  const t = semFraseRepetida(
+    depois
+      .replace(/[-–—]/g, " ")
+      .replace(/\b(bairro|cidade)\s*:?\s*/gi, "")
+      .replace(/\b\d{1,6}[A-Za-z]?\b/g, " ")
+      .replace(/\s+/g, " ")
+      .trim(),
+  );
+  if (!t) return {};
+  const pref = t.match(/^(vila|vl\.?|jardim|jd\.?|parque|pq\.?|conjunto|cj\.?|residencial|centro)\b(.*)$/i);
+  if (pref) {
+    const rest = pref[2].trim().split(/\s+/).filter(Boolean);
+    if (rest.length >= 2) {
+      return {
+        bairro: capNome(`${pref[1]} ${rest.slice(0, -1).join(" ")}`),
+        cidade: capNome(rest[rest.length - 1]),
+      };
+    }
+    if (rest.length === 1) return { bairro: capNome(`${pref[1]} ${rest[0]}`) };
+    return { bairro: capNome(pref[1]) };
+  }
+  const words = t.split(/\s+/).filter(Boolean);
+  if (words.length === 1) return { cidade: capNome(words[0]) };
+  if (words.length === 2) return { bairro: capNome(words[0]), cidade: capNome(words[1]) };
+  return { bairro: capNome(words.slice(0, -1).join(" ")), cidade: capNome(words[words.length - 1]) };
+}
+
+function parseEnderecoLivre(texto: string): Partial<PolianeFicha> {
+  let t = textoEndereco(texto);
+  if (!t) return {};
+  const out: Partial<PolianeFicha> = {};
+  const cep = extrairCep(t);
+  if (cep) {
+    out.cep = cep;
+    t = t.replace(/\bcep\s*:?\s*/gi, "").replace(/\b\d{5}-?\d{3}\b/, "").trim();
+  }
+  t = t.replace(/[;,]/g, " ").replace(/\s+/g, " ").trim();
+  if (!t) return out;
+  const achado = acharNumeroNoTexto(t);
+  if (achado) {
+    if (pareceRua(achado.antes) || /[a-zA-ZÀ-ÿ]{3,}/.test(achado.antes)) {
+      out.rua = comTipoLogradouro(achado.antes);
+    }
+    out.numero = achado.numero;
+    const resto = partirBairroCidade(achado.depois);
+    if (resto.bairro) out.bairro = resto.bairro;
+    if (resto.cidade) out.cidade = resto.cidade;
+    return out;
+  }
+  const partes = textoEndereco(texto).split(/[,;\n]/).map((s) => s.trim()).filter(Boolean);
+  if (partes.length >= 2 && pareceRua(partes[0])) {
+    out.rua = comTipoLogradouro(partes[0]);
+    let i = 1;
+    if (numeroImovelOk(partes[i])) {
+      out.numero = partes[i];
+      i += 1;
+    }
+    if (partes[i] && !/^cep\b/i.test(partes[i])) {
+      out.bairro = capNome(partes[i]);
+      i += 1;
+    }
+    if (partes[i] && !/^cep\b/i.test(partes[i])) out.cidade = capNome(partes[i]);
+    return out;
+  }
+  if (pareceRua(t)) out.rua = comTipoLogradouro(t);
+  return out;
+}
+
+function escapeRe(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function limparDuplicatasRua(f: PolianeFicha): PolianeFicha {
+  let rua = (f.rua ?? "").trim();
+  if (!rua) return f;
+  if (f.numero) {
+    rua = rua
+      .replace(new RegExp(`\\b(?:n[uú]mero|n[ºo°])\\s*${escapeRe(f.numero)}\\b`, "ig"), " ")
+      .replace(new RegExp(`[,\\s]+${escapeRe(f.numero)}\\s*$`, "i"), " ");
+  }
+  if (f.bairro) rua = rua.replace(new RegExp(`[,\\s]+${escapeRe(f.bairro)}\\s*$`, "i"), " ");
+  if (f.cidade) rua = rua.replace(new RegExp(`[,\\s]+${escapeRe(f.cidade)}\\s*$`, "i"), " ");
+  rua = rua.replace(/\s+/g, " ").trim().replace(/[,-]$/, "").trim();
+  if (rua && (pareceRua(rua) || /[a-zA-ZÀ-ÿ]{3,}/.test(rua))) {
+    return { ...f, rua: comTipoLogradouro(rua) };
+  }
+  return { ...f, rua: rua || undefined };
+}
+
+function enderecoPronto(f: PolianeFicha): boolean {
+  return Boolean(
+    f.rua &&
+      pareceRua(f.rua) &&
+      !ehSaudacao(f.rua) &&
+      numeroImovelOk(f.numero) &&
+      f.bairro &&
+      f.bairro.trim().length >= 2 &&
+      !/^cep\b/i.test(f.bairro.trim()) &&
+      f.cidade &&
+      f.cidade.trim().length >= 2,
+  );
+}
+
+function sanitizarEnderecoFicha(f: PolianeFicha): PolianeFicha {
+  let next = { ...f };
+  const rua = (next.rua ?? "").trim();
+  const ruaBaguncada =
+    rua.length > 0 &&
+    (/\b(n[uú]mero|vila|jardim|parque|bairro)\b/i.test(rua) ||
+      (/\b\d{1,6}\b/.test(rua) && rua.split(/\s+/).length >= 4));
+  if (ruaBaguncada) {
+    const parsed = parseEnderecoLivre(rua);
+    const ruaNova = parsed.rua || next.rua;
+    if (ruaNova !== rua || parsed.numero || parsed.bairro) {
+      next.enderecoConfirmado = false;
+      next.pendenteConfirmacao = false;
+    }
+    next = {
+      ...next,
+      rua: ruaNova,
+      numero: parsed.numero || next.numero,
+      bairro: parsed.bairro || next.bairro,
+      cidade: parsed.cidade || next.cidade,
+      cep: parsed.cep || next.cep,
+    };
+  }
+  next = limparDuplicatasRua(next);
+  if (next.rua && (ehSaudacao(next.rua) || !/[a-zA-ZÀ-ÿ]{3,}/.test(next.rua))) {
+    next.rua = undefined;
+    next.enderecoConfirmado = false;
+  }
+  if (next.bairro && /^cep\b/i.test(next.bairro.trim())) {
+    next.bairro = undefined;
+    next.enderecoConfirmado = false;
+  }
+  if (next.numero && !numeroImovelOk(next.numero)) {
+    next.numero = undefined;
+    next.enderecoConfirmado = false;
+  }
+  if (next.rua) next.rua = comTipoLogradouro(next.rua);
+  if (next.bairro) next.bairro = capNome(next.bairro);
+  if (next.cidade) next.cidade = capNome(next.cidade);
+  return next;
+}
+
+function pedirEndereco(f: PolianeFicha, prefixo = ""): PolianeResult | null {
+  if (!f.rua && !f.cep) {
+    return {
+      reply:
+        prefixo +
+        "Agora preciso do endereço completo da visita: rua, número, bairro e cidade. Sem o local correto eu não agendo. Pode mandar o CEP ou escrever o endereço.",
+      ficha: f,
+      pills: [],
+    };
+  }
+  if (!f.rua || ehSaudacao(f.rua) || !pareceRua(f.rua)) {
+    return {
+      reply: prefixo + "Qual a rua ou avenida da visita?",
+      ficha: { ...f, rua: undefined, enderecoConfirmado: false },
+      pills: [],
+    };
+  }
+  if (!numeroImovelOk(f.numero)) {
+    return {
+      reply: prefixo + "Qual o número do imóvel?",
+      ficha: { ...f, enderecoConfirmado: false },
+      pills: [],
+    };
+  }
+  if (!f.bairro || /^cep\b/i.test(f.bairro)) {
+    return {
+      reply: prefixo + "Qual o bairro?",
+      ficha: { ...f, bairro: undefined, enderecoConfirmado: false },
+      pills: [],
+    };
+  }
+  if (!f.cidade) {
+    return {
+      reply: prefixo + "Qual a cidade?",
+      ficha: { ...f, enderecoConfirmado: false },
+      pills: [],
+    };
+  }
+  if (!enderecoPronto(f)) {
+    return {
+      reply: prefixo + "Ainda falta completar o endereço. Me passa rua, número, bairro e cidade da visita.",
+      ficha: { ...f, enderecoConfirmado: false },
+      pills: [],
+    };
+  }
+  return null;
+}
+
+function confirmarEnderecoMsg(f: PolianeFicha): PolianeResult {
+  return {
+    reply: `Confere se o endereço da visita está certo? Eu só agendo com o local correto.\n\n📍 ${enderecoCompleto(f)}\n\nÉ esse?`,
+    ficha: { ...f, enderecoConfirmado: false, pendenteConfirmacao: false },
+    pills: [
+      { label: "Sim, esse endereço", value: "sim" },
+      { label: "Não, outro endereço", value: "não, é outro endereço" },
+    ],
+  };
+}
+
+function limparEndereco(f: PolianeFicha, opts?: { manterCep?: boolean }): PolianeFicha {
+  return {
+    ...f,
+    rua: undefined,
+    numero: undefined,
+    bairro: undefined,
+    cidade: undefined,
+    cep: opts?.manterCep ? f.cep : undefined,
+    referencia: undefined,
+    enderecoConfirmado: false,
+    aguardandoConfirmaCadastro: false,
+    pendenteConfirmacao: false,
+  };
+}
+
+function enderecoLinha(f: PolianeFicha): string {
+  const ruaNum = [f.rua, f.numero].filter(Boolean).join(", ");
+  return [ruaNum, f.bairro, f.cidade].filter(Boolean).join(" - ");
+}
+
+function enderecoCompleto(f: PolianeFicha): string {
+  const ruaNum = [f.rua, f.numero].filter(Boolean).join(", ");
+  const local = [f.bairro, f.cidade].filter(Boolean).join(", ");
+  return [ruaNum, local, f.cep ? `CEP ${f.cep}` : "", f.referencia].filter(Boolean).join(" — ");
+}
+
+function cadastroTemEndereco(cli: { endereco: string | null; numero: string | null; bairro: string | null }): boolean {
+  return (
+    (cli.endereco ?? "").trim().length >= 5 &&
+    (cli.numero ?? "").trim().length >= 1 &&
+    (cli.bairro ?? "").trim().length >= 2
+  );
+}
+
+function fichaDeCadastro(cli: {
+  endereco: string | null;
+  numero: string | null;
+  bairro: string | null;
+  cep: string | null;
+}): PolianeFicha {
+  const numero = (cli.numero ?? "").trim() || undefined;
+  const bairro = (cli.bairro ?? "").trim() || undefined;
+  const partes = (cli.endereco ?? "").split(" - ").map((p) => p.trim()).filter(Boolean);
+  let rua = partes[0] || (cli.endereco ?? "").trim();
+  const cidadeDash = partes.length >= 2 ? partes[partes.length - 1] : undefined;
+  if (numero) {
+    rua = rua
+      .replace(new RegExp(`,\\s*${escapeRe(numero)}$`, "i"), "")
+      .replace(new RegExp(`\\b(?:n[uú]mero\\s*)?${escapeRe(numero)}\\b`, "ig"), " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+  if (bairro) rua = rua.replace(new RegExp(escapeRe(bairro), "ig"), " ").replace(/\s+/g, " ").trim();
+  const parsed = parseEnderecoLivre([rua, numero, bairro, cidadeDash].filter(Boolean).join(" "));
+  return sanitizarEnderecoFicha({
+    rua: parsed.rua || rua || undefined,
+    numero: numero || parsed.numero,
+    bairro: bairro && !/^cep\b/i.test(bairro) ? capNome(bairro) : parsed.bairro,
+    cidade: parsed.cidade || (cidadeDash ? capNome(cidadeDash) : undefined),
+    cep: cli.cep?.replace(/\D/g, "").slice(0, 8) || parsed.cep,
+  });
+}
+
+function formatarCadastro(cli: {
+  nome: string;
+  endereco: string | null;
+  numero: string | null;
+  bairro: string | null;
+  cep: string | null;
+}): string {
+  const limpo = enderecoCompleto(fichaDeCadastro(cli));
+  if (limpo) return limpo;
+  return [cli.endereco, cli.numero, cli.bairro, cli.cep ? `CEP ${cli.cep}` : ""].filter(Boolean).join(", ");
+}
+
+function aplicarEnderecoColado(f: PolianeFicha, texto: string): PolianeFicha {
+  const p = parseEnderecoLivre(texto);
+  if (!p.rua && !p.numero && !p.bairro && !p.cidade && !p.cep) return f;
+  return sanitizarEnderecoFicha({
+    ...f,
+    rua: p.rua || f.rua,
+    numero: p.numero || f.numero,
+    bairro: p.bairro || f.bairro,
+    cidade: p.cidade || f.cidade,
+    cep: p.cep || f.cep,
+    enderecoConfirmado: false,
+  });
+}
+
+function aplicarCadastro(
+  ficha: PolianeFicha,
+  cli: { nome: string; endereco: string | null; numero: string | null; bairro: string | null; cep: string | null },
+): PolianeFicha {
+  const limpo = fichaDeCadastro(cli);
+  return {
+    ...ficha,
+    rua: limpo.rua || ficha.rua,
+    numero: limpo.numero || ficha.numero,
+    bairro: limpo.bairro || ficha.bairro,
+    cidade: limpo.cidade || ficha.cidade,
+    cep: limpo.cep || ficha.cep,
+    enderecoConfirmado: false,
+    aguardandoConfirmaCadastro: false,
+  };
+}
+
+async function viaCep(cep: string): Promise<{ rua?: string; bairro?: string; cidade?: string } | null> {
+  try {
+    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const data = (await res.json()) as {
+      erro?: boolean;
+      logradouro?: string;
+      bairro?: string;
+      localidade?: string;
+      uf?: string;
+    };
+    if (!data || data.erro) return null;
+    const cidade = [data.localidade, data.uf].filter(Boolean).join("/");
+    return {
+      rua: data.logradouro?.trim(),
+      bairro: data.bairro?.trim(),
+      cidade: cidade || undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function proximosLivres(
+  periodo?: "manha" | "tarde",
+  dataAlvo?: string,
+): Promise<{ iso: string; horas: string[] }[]> {
+  const prisma = await getPrisma();
+  const hoje = pontoHojeIso();
+  const saida: { iso: string; horas: string[] }[] = [];
+  if (dataAlvo) {
+    if (!ehDiaUtil(dataAlvo) || dataAlvo < hoje) return [];
+    const horas = slotsDoPeriodo(await horariosLivresVisita(prisma, dataAlvo), periodo);
+    return horas.length ? [{ iso: dataAlvo, horas }] : [];
+  }
+  for (let i = 0; i < 16 && saida.length < 4; i++) {
+    const iso = somarDias(hoje, i);
+    if (!ehDiaUtil(iso)) continue;
+    const horas = slotsDoPeriodo(await horariosLivresVisita(prisma, iso), periodo);
+    if (horas.length) saida.push({ iso, horas });
+  }
+  return saida;
+}
+
+function textoOpcoes(dias: { iso: string; horas: string[] }[]): { text: string; pills: PolianePill[] } {
+  const linhas = dias.map((d) => `• ${formatarDia(d.iso)} — ${d.horas.join(", ")}`);
+  const pills: PolianePill[] = [];
+  for (const d of dias) {
+    for (const h of d.horas.slice(0, 4)) {
+      pills.push({ label: `${formatarDia(d.iso).replace("-feira", "")} ${h}`, value: `${d.iso} ${h}` });
+    }
+  }
+  return {
+    text: `Consultei a agenda. Estes horários estão livres (segunda a sexta, 8h às 18h, com 2h entre visitas):\n\n${linhas.join("\n")}\n\nQual fica melhor pra você?`,
+    pills: pills.slice(0, 8),
+  };
+}
+
+async function consultarCliente(telefone: string) {
+  const chave = chaveTel(telefone);
+  if (!telOk(chave)) return null;
+  const prisma = await getPrisma();
+  const rows = await prisma.inventario.findMany({
+    where: { telefone: { not: "" } },
+    orderBy: { id: "desc" },
+    take: 400,
+    select: {
+      id: true,
+      nome: true,
+      telefone: true,
+      endereco: true,
+      bairro: true,
+      numero: true,
+      cep: true,
+      status: true,
+      dataVisita: true,
+      horaVisita: true,
+    },
+  });
+  return rows.find((r) => chaveTel(r.telefone) === chave) ?? null;
+}
+
+async function agendadoAberto(telefone: string) {
+  const chave = chaveTel(telefone);
+  if (!telOk(chave)) return null;
+  const prisma = await getPrisma();
+  const rows = await prisma.inventario.findMany({
+    where: { status: "agendado" },
+    orderBy: { id: "desc" },
+    take: 200,
+    select: {
+      id: true,
+      nome: true,
+      telefone: true,
+      endereco: true,
+      bairro: true,
+      numero: true,
+      dataVisita: true,
+      horaVisita: true,
+    },
+  });
+  return rows.find((r) => chaveTel(r.telefone) === chave) ?? null;
+}
+
+function resumo(f: PolianeFicha): string {
+  return [
+    `👤 Cliente: ${f.nome}`,
+    `📞 Telefone: ${formatTel(f.telefone ?? "")}`,
+    `📍 Endereço: ${enderecoCompleto(f)}`,
+    `🔧 Serviço: ${f.servico}`,
+    `📅 Data: ${f.dataIso ? formatarDia(f.dataIso) : "—"}`,
+    `🕒 Horário: ${f.hora ?? "—"}`,
+  ].join("\n");
+}
+
+function confirmacao(f: PolianeFicha, id: number): string {
+  return `Perfeito! 😊 Seu agendamento na Alex Calhas foi realizado com sucesso! 💜
+
+📋 **Dados do agendamento**
+
+${resumo(f)}
+📌 Protocolo: ${id}
+
+Agradecemos pela preferência! Nossa equipe estará preparada para atender você. 🙏
+
+A visita é para orçamento e medição — o serviço em si só acontece depois da aprovação.`;
+}
+
+async function criarVisita(f: PolianeFicha): Promise<{ id: number; hora: string } | { erro: string; horas?: string[] }> {
+  if (!f.nome || !f.telefone || !enderecoPronto(f) || !f.enderecoConfirmado || !f.dataIso || !f.hora) {
+    return { erro: "Não posso salvar sem o endereço completo e confirmado: rua, número, bairro e cidade." };
+  }
+  const prisma = await getPrisma();
+  const livres = await horariosLivresVisita(prisma, f.dataIso);
+  if (!livres.includes(f.hora)) {
+    return {
+      erro: "Esse horário não está mais disponível. Escolha outro.",
+      horas: livres,
+    };
+  }
+  await ensureInventarioTextosCliente();
+  const dup = await prisma.inventario.findFirst({
+    where: {
+      status: "agendado",
+      numero: f.numero.slice(0, 50),
+      bairro: f.bairro.slice(0, 80),
+    },
+  });
+  if (dup) {
+    return { erro: "Já existe uma visita agendada para esse endereço. Se quiser, posso remarcar." };
+  }
+  const obs = [
+    f.servico ? `Serviço: ${f.servico}` : "",
+    f.descricao ? `Detalhe: ${f.descricao}` : "",
+    f.responsavel ? `Recebe a equipe: ${f.responsavel}` : "",
+    f.referencia ? `Referência: ${f.referencia}` : "",
+    "Agendado pela Poliane (chat do site).",
+  ]
+    .filter(Boolean)
+    .join("\n");
+  const row = await prisma.inventario.create({
+    data: buildInventarioCreateData(
+      {
+        nome: f.nome,
+        telefone: formatTel(f.telefone),
+        endereco: enderecoLinha(f).slice(0, 180),
+        bairro: f.bairro,
+        numero: f.numero,
+        cep: f.cep ?? "",
+        data: f.dataIso,
+        hora: f.hora,
+        observacao: obs,
+        origem: "site",
+      },
+      null,
+    ),
+  });
+  return { id: row.id, hora: f.hora };
+}
+
+function aplicarTexto(ficha: PolianeFicha, texto: string, hoje: string): PolianeFicha {
+  const f = { ...ficha };
+  const tel = extrairTelefone(texto);
+  if (tel) f.telefone = tel;
+  const cep = extrairCep(texto);
+  if (cep) f.cep = cep;
+  const data = extrairData(texto, hoje);
+  if (data) f.dataIso = data;
+  const periodo = extrairPeriodo(texto);
+  if (periodo) f.periodo = periodo;
+  const hora = extrairHora(texto);
+  if (hora) f.hora = hora;
+  const servico = extrairServico(texto);
+  if (servico && !f.servico) f.servico = servico;
+  const num = extrairNumeroImovel(texto);
+  if (num && !f.numero) f.numero = num;
+
+  const isoHora = texto.match(/\b(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})\b/);
+  if (isoHora) {
+    f.dataIso = isoHora[1];
+    f.hora = isoHora[2];
+  }
+
+  const t = texto.trim();
+  if (/\b(remarcar|reagendar|mudar (a )?data|trocar (o )?dia)\b/i.test(t)) f.intencao = "remarcar";
+  if (/\b(cancelar|desmarcar)\b/i.test(t)) f.intencao = "cancelar";
+
+  return f;
+}
+
+function campoPendente(f: PolianeFicha): string | null {
+  if (!f.servico) return "servico";
+  if (!f.nome) return "nome";
+  if (!f.telefone) return "telefone";
+  if (!f.responsavel) return "responsavel";
+  if (!f.rua) return "endereco";
+  if (!f.numero) return "numero";
+  if (!f.bairro) return "bairro";
+  if (!f.cidade) return "cidade";
+  if (!f.enderecoConfirmado) return "confirmaEndereco";
+  if (!f.dataIso || !f.hora) return "agenda";
+  if (!f.pendenteConfirmacao) return "confirma";
+  return null;
+}
+
+export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promise<PolianeResult> {
+  const hoje = pontoHojeIso();
+  const antes = sanitizarEnderecoFicha(limparFicha(fichaRaw));
+  const faltava = campoPendente(antes);
+  let ficha = sanitizarEnderecoFicha(aplicarTexto(antes, mensagem, hoje));
+  const texto = mensagem.trim();
+  const soTexto = texto.replace(/[^a-zA-ZÀ-ÿ0-9\s/-]/g, "").trim();
+  const prefixo = ehSaudacao(texto) ? cumprimentoDe(texto) : "";
+
+  if (/\b(whatsapp|atendente humano|falar com (uma )?pessoa|operador)\b/i.test(texto)) {
+    return {
+      reply:
+        "Sem problema! Você pode falar direto com a equipe no WhatsApp. Eu continuo aqui se quiser agendar pelo chat.",
+      ficha,
+      pills: [{ label: "Abrir WhatsApp", value: "__whatsapp__" }],
+    };
+  }
+
+  if (/\b(pre[cç]o|valor|quanto custa|desconto)\b/i.test(texto) && !ficha.pendenteConfirmacao) {
+    return {
+      reply:
+        "Valor e prazo a gente só passa depois da visita, com a medida no local. Posso agendar essa visita técnica pra vocês — sem compromisso de execução no mesmo dia. Qual serviço você precisa?",
+      ficha,
+      pills: PILLS_SERVICO,
+    };
+  }
+
+  if (nao(texto) && ficha.pendenteConfirmacao) {
+    ficha = { ...ficha, pendenteConfirmacao: false, dataIso: undefined, hora: undefined };
+    return {
+      reply: "Tudo bem, não salvei. Me diz o que quer ajustar: data, horário ou endereço?",
+      ficha,
+      pills: [
+        { label: "Trocar data", value: "quero outra data" },
+        { label: "Trocar endereço", value: "quero mudar o endereço" },
+      ],
+    };
+  }
+
+  if (ficha.intencao === "cancelar") {
+    if (!ficha.telefone) {
+      return {
+        reply: "Para cancelar, me passa o telefone com DDD que usou no agendamento?",
+        ficha,
+        pills: [],
+      };
+    }
+    const atual = await agendadoAberto(ficha.telefone);
+    if (!atual) {
+      return {
+        reply: "Não achei uma visita em aberto nesse telefone. Se quiser, posso marcar uma nova.",
+        ficha: { ...ficha, intencao: "agendar" },
+        pills: PILLS_SERVICO,
+      };
+    }
+    if (!sim(texto) && !/cancelar/.test(texto.toLowerCase())) {
+      return {
+        reply: `Encontrei a visita nº ${atual.id} de ${atual.nome} em ${atual.dataVisita}${atual.horaVisita ? ` às ${atual.horaVisita}` : ""}. Confirma o cancelamento?`,
+        ficha: { ...ficha, agendamentoId: atual.id },
+        pills: [
+          { label: "Sim, cancelar", value: "sim" },
+          { label: "Não", value: "não" },
+        ],
+      };
+    }
+    if (nao(texto)) {
+      return { reply: "Ok, mantive o agendamento.", ficha: { ...ficha, intencao: undefined }, pills: [] };
+    }
+    const prisma = await getPrisma();
+    await prisma.inventario.delete({ where: { id: atual.id } });
+    return {
+      reply: `Pronto, cancelei a visita nº ${atual.id}. Se precisar de novo, é só chamar.`,
+      ficha: { intencao: undefined },
+      pills: [{ label: "Agendar outra visita", value: "quero agendar uma visita" }],
+      done: true,
+    };
+  }
+
+  if (ficha.intencao === "remarcar") {
+    if (!ficha.telefone) {
+      return {
+        reply: "Para remarcar, me passa o telefone com DDD do agendamento?",
+        ficha,
+        pills: [],
+      };
+    }
+    const atual = await agendadoAberto(ficha.telefone);
+    if (!atual) {
+      return {
+        reply: "Não achei visita em aberto nesse telefone. Posso marcar uma nova, se quiser.",
+        ficha: { ...ficha, intencao: "agendar" },
+        pills: PILLS_SERVICO,
+      };
+    }
+    ficha.agendamentoId = atual.id;
+    ficha.nome = ficha.nome || atual.nome;
+    if (!ficha.dataIso || !ficha.hora) {
+      const dias = await proximosLivres(ficha.periodo);
+      if (!dias.length) {
+        return {
+          reply: "A agenda próxima está cheia nos dias úteis. Me diga outro dia (segunda a sexta) que eu confiro.",
+          ficha,
+          pills: [],
+        };
+      }
+      const op = textoOpcoes(dias);
+      return { reply: `Vou remarcar a visita nº ${atual.id}. ${op.text}`, ficha, pills: op.pills };
+    }
+    const prisma = await getPrisma();
+    const livres = await horariosLivresVisita(prisma, ficha.dataIso);
+    if (!ehDiaUtil(ficha.dataIso) || !livres.includes(ficha.hora)) {
+      const dias = await proximosLivres(ficha.periodo);
+      const op = textoOpcoes(dias);
+      return {
+        reply: `Esse horário não está livre. ${op.text}`,
+        ficha: { ...ficha, dataIso: undefined, hora: undefined },
+        pills: op.pills,
+      };
+    }
+    await prisma.inventario.update({
+      where: { id: atual.id },
+      data: { dataVisita: toDataVisitaBr(ficha.dataIso), horaVisita: ficha.hora },
+    });
+    return {
+      reply: `Remarcado! 💜 Visita nº ${atual.id} agora em ${formatarDia(ficha.dataIso)} às ${ficha.hora}.`,
+      ficha: { ...ficha, intencao: undefined, protocolo: atual.id, pendenteConfirmacao: false },
+      pills: [],
+      done: true,
+    };
+  }
+
+  const enderecoNovoNoTexto = parseEnderecoLivre(texto);
+  const mandouEnderecoNovo = Boolean(enderecoNovoNoTexto.rua || enderecoNovoNoTexto.numero);
+
+  if ((querOutroEndereco(texto) || (nao(texto) && mandouEnderecoNovo)) && mandouEnderecoNovo) {
+    ficha = aplicarEnderecoColado(limparEndereco(ficha, { manterCep: true }), texto);
+  } else if (querOutroEndereco(texto)) {
+    ficha = limparEndereco(ficha, { manterCep: true });
+    return {
+      reply: "Certo. Me passa o endereço completo da visita: rua, número, bairro e cidade. Sem o local correto eu não agendo.",
+      ficha,
+      pills: [],
+    };
+  }
+
+  if (ficha.aguardandoConfirmaCadastro) {
+    if ((nao(texto) || querOutroEndereco(texto)) && mandouEnderecoNovo) {
+      ficha = aplicarEnderecoColado(limparEndereco(ficha, { manterCep: true }), texto);
+    } else if (nao(texto) || querOutroEndereco(texto)) {
+      ficha = limparEndereco(ficha, { manterCep: true });
+      return {
+        reply: "Beleza, vou anotar o endereço correto. Qual a rua, o número, o bairro e a cidade da visita?",
+        ficha,
+        pills: [],
+      };
+    } else if (sim(texto) || /mesmo endere[cç]o/i.test(texto)) {
+      const cli = ficha.telefone ? await consultarCliente(ficha.telefone) : null;
+      if (!cli || !cadastroTemEndereco(cli)) {
+        ficha = limparEndereco(ficha, { manterCep: true });
+        return {
+          reply: "Não consegui reaproveitar o cadastro. Me passa o endereço completo: rua, número, bairro e cidade.",
+          ficha,
+          pills: [],
+        };
+      }
+      ficha = sanitizarEnderecoFicha(aplicarCadastro(ficha, cli));
+    } else if (mandouEnderecoNovo) {
+      ficha = aplicarEnderecoColado(limparEndereco(ficha, { manterCep: true }), texto);
+    } else {
+      return {
+        reply: "A visita é no endereço que já temos no cadastro, ou é outro local?",
+        ficha,
+        pills: [
+          { label: "Mesmo endereço", value: "sim, mesmo endereço" },
+          { label: "Outro endereço", value: "não, é outro endereço" },
+        ],
+      };
+    }
+  }
+
+  if (!ehSaudacao(texto)) {
+    if (faltava === "servico" && !ficha.servico && soTexto.length > 2 && !extrairCep(texto) && !mandouEnderecoNovo) {
+      ficha.servico = texto.slice(0, 80);
+    }
+    if (faltava === "nome" && !ficha.nome && soTexto.length >= 2 && !extrairTelefone(texto) && !mandouEnderecoNovo) {
+      ficha.nome = capNome(texto.replace(/meu nome [eé]\s*/i, "").trim()).slice(0, 120);
+    }
+    if (faltava === "responsavel" && !ficha.responsavel) {
+      if (/^(eu|o mesmo|a mesma|sou eu|pode ser eu)\b/i.test(texto) && ficha.nome) ficha.responsavel = ficha.nome;
+      else if (soTexto.length >= 2 && !mandouEnderecoNovo) ficha.responsavel = capNome(texto).slice(0, 80);
+    }
+    const pedindoEndereco =
+      faltava === "endereco" ||
+      faltava === "rua" ||
+      faltava === "numero" ||
+      faltava === "bairro" ||
+      faltava === "cidade" ||
+      faltava === "confirmaEndereco";
+    if (pedindoEndereco && mandouEnderecoNovo) {
+      ficha = aplicarEnderecoColado(ficha, texto);
+    } else if ((faltava === "endereco" || faltava === "rua") && !ficha.rua && pareceRua(textoEndereco(texto))) {
+      ficha = aplicarEnderecoColado(ficha, texto);
+    }
+    if (faltava === "numero" && !numeroImovelOk(ficha.numero)) {
+      const soNumero = textoEndereco(texto);
+      const n = extrairNumeroImovel(texto) || (/^\d{1,6}[A-Za-z]?$/.test(soNumero) ? soNumero : undefined);
+      if (numeroImovelOk(n)) ficha.numero = n;
+    }
+    if (faltava === "bairro" && !ficha.bairro && soTexto.length >= 2 && !sim(texto) && !nao(texto) && !ehSaudacao(texto)) {
+      ficha.bairro = capNome(textoEndereco(texto)).slice(0, 80);
+    }
+    if (faltava === "cidade" && !ficha.cidade && soTexto.length >= 2 && !sim(texto) && !nao(texto) && !ehSaudacao(texto)) {
+      ficha.cidade = capNome(textoEndereco(texto)).slice(0, 80);
+    }
+  }
+
+  ficha = sanitizarEnderecoFicha(ficha);
+
+  if (ficha.cep && ficha.cep.length === 8 && (!ficha.rua || ehSaudacao(ficha.rua) || !ficha.bairro || !ficha.cidade)) {
+    const end = await viaCep(ficha.cep);
+    if (end) {
+      if (!ficha.rua || ehSaudacao(ficha.rua) || !pareceRua(ficha.rua)) ficha.rua = end.rua ? comTipoLogradouro(end.rua) : ficha.rua;
+      if (!ficha.bairro || /^cep\b/i.test(ficha.bairro)) ficha.bairro = end.bairro ? capNome(end.bairro) : ficha.bairro;
+      ficha.cidade = ficha.cidade || (end.cidade ? capNome(end.cidade) : undefined);
+      ficha.enderecoConfirmado = false;
+    }
+  }
+
+  if (!ficha.servico) {
+    return {
+      reply:
+        prefixo +
+        "Como posso ajudar hoje? Me diz o serviço: calha, rufo, condutor, vazamento, limpeza ou uma visita para orçamento.",
+      ficha,
+      pills: PILLS_SERVICO,
+    };
+  }
+  if (!ficha.nome) {
+    return {
+      reply: prefixo + `Combinado: ${ficha.servico}. Qual o seu nome completo?`,
+      ficha,
+      pills: [],
+    };
+  }
+  if (!ficha.telefone) {
+    const primeiro = ficha.nome.split(/\s+/)[0];
+    return {
+      reply: prefixo + `Prazer, ${primeiro}! Qual o telefone com DDD para a equipe falar com você?`,
+      ficha,
+      pills: [],
+    };
+  }
+  if (!ficha.responsavel) {
+    return {
+      reply: prefixo + "Quem recebe a equipe no local? Se for você, pode responder “eu”.",
+      ficha,
+      pills: [{ label: "Eu mesmo(a)", value: "eu" }],
+    };
+  }
+
+  if (
+    !ficha.rua &&
+    !ficha.enderecoConfirmado &&
+    !ficha.aguardandoConfirmaCadastro
+  ) {
+    const cli = await consultarCliente(ficha.telefone);
+    if (cli && cadastroTemEndereco(cli)) {
+      return {
+        reply: `${prefixo}Achei um cadastro neste telefone:\n\n👤 ${cli.nome}\n📍 ${formatarCadastro(cli)}\n\nA visita é nesse mesmo endereço? Se for outro local, me fala que eu anoto o correto — não posso agendar no endereço de outra pessoa.`,
+        ficha: { ...ficha, aguardandoConfirmaCadastro: true },
+        pills: [
+          { label: "Mesmo endereço", value: "sim, mesmo endereço" },
+          { label: "Outro endereço", value: "não, é outro endereço" },
+        ],
+      };
+    }
+  }
+
+  const faltaEnd = pedirEndereco(ficha, prefixo);
+  if (faltaEnd) return faltaEnd;
+
+  if (!ficha.enderecoConfirmado) {
+    if (faltava === "confirmaEndereco" && nao(texto) && !mandouEnderecoNovo) {
+      ficha = limparEndereco(ficha, { manterCep: true });
+      return {
+        reply: "Beleza. Me passa o endereço correto da visita: rua, número, bairro e cidade.",
+        ficha,
+        pills: [],
+      };
+    }
+    const confirmandoEndereco =
+      faltava === "confirmaEndereco" &&
+      !antes.pendenteConfirmacao &&
+      !mandouEnderecoNovo &&
+      (sim(texto) || /esse endere[cç]o|endere[cç]o certo/i.test(texto));
+    if (confirmandoEndereco) {
+      ficha.enderecoConfirmado = true;
+      ficha.pendenteConfirmacao = false;
+    } else if (mandouEnderecoNovo && (faltava === "confirmaEndereco" || faltava === "confirma")) {
+      ficha = aplicarEnderecoColado(limparEndereco(ficha, { manterCep: true }), texto);
+      const ainda = pedirEndereco(ficha, prefixo);
+      if (ainda) return ainda;
+      return confirmarEnderecoMsg(ficha);
+    } else {
+      return confirmarEnderecoMsg(ficha);
+    }
+  }
+
+  if (!ficha.descricao && /\b(goteira|telhado|muro|port[aã]o|cozinha|quarto)\b/i.test(texto) && texto.length > 12) {
+    ficha.descricao = texto.slice(0, 400);
+  }
+
+  if (!ficha.dataIso || !ficha.hora) {
+    if (ficha.dataIso && !ehDiaUtil(ficha.dataIso)) {
+      ficha.dataIso = undefined;
+      return {
+        reply: "A gente atende de segunda a sexta, das 8h às 18h. Escolhe um dia útil pra mim?",
+        ficha,
+        pills: [],
+      };
+    }
+    const dias = await proximosLivres(ficha.periodo, ficha.dataIso && !ficha.hora ? ficha.dataIso : undefined);
+    if (!dias.length) {
+      return {
+        reply: ficha.dataIso
+          ? "Esse dia já está cheio. Me passa outro dia útil que eu olho na agenda."
+          : "Não achei horário livre nos próximos dias. Me diz uma data (segunda a sexta) que eu confiro.",
+        ficha: { ...ficha, dataIso: undefined, hora: undefined },
+        pills: [
+          { label: "Manhã", value: "prefiro de manhã" },
+          { label: "Tarde", value: "prefiro de tarde" },
+        ],
+      };
+    }
+    const op = textoOpcoes(dias);
+    return { reply: op.text, ficha, pills: op.pills };
+  }
+
+  if (!ehDiaUtil(ficha.dataIso)) {
+    return {
+      reply: "Esse dia não é útil. Segunda a sexta, das 8h às 18h — me passa outra data?",
+      ficha: { ...ficha, dataIso: undefined, hora: undefined },
+      pills: [],
+    };
+  }
+
+  if (!ficha.pendenteConfirmacao) {
+    ficha.pendenteConfirmacao = true;
+    return {
+      reply: `Antes de salvar, confere se está certo?\n\n${resumo(ficha)}\n\nA visita é para orçamento e medição. Posso confirmar no sistema?`,
+      ficha,
+      pills: [
+        { label: "Confirmar agendamento", value: "sim" },
+        { label: "Alterar", value: "não" },
+      ],
+    };
+  }
+
+  if (!sim(texto) && !/confirm/i.test(texto)) {
+    return {
+      reply: "Quando estiver certo, é só confirmar que eu registro no sistema.",
+      ficha,
+      pills: [
+        { label: "Confirmar agendamento", value: "sim" },
+        { label: "Alterar", value: "não" },
+      ],
+    };
+  }
+
+  if (!enderecoPronto(ficha) || !ficha.enderecoConfirmado) {
+    ficha.pendenteConfirmacao = false;
+    ficha.enderecoConfirmado = false;
+    return {
+      reply: "Não posso salvar sem o endereço completo e confirmado. Me passa rua, número, bairro e cidade da visita.",
+      ficha,
+      pills: [],
+    };
+  }
+
+  try {
+    const criado = await criarVisita(ficha);
+    if ("erro" in criado) {
+      ficha.pendenteConfirmacao = false;
+      ficha.hora = undefined;
+      const extra = criado.horas?.length ? `\nLivres nesse dia: ${criado.horas.join(", ")}` : "";
+      return { reply: `${criado.erro}${extra}`, ficha, pills: [] };
+    }
+    ficha.protocolo = criado.id;
+    return {
+      reply: confirmacao(ficha, criado.id),
+      ficha,
+      pills: [{ label: "Falar no WhatsApp", value: "__whatsapp__" }],
+      done: true,
+    };
+  } catch (err) {
+    console.error("[poliane criar]", err);
+    return {
+      reply:
+        "Não consegui gravar no sistema agora. Vou te encaminhar para o WhatsApp da equipe para não perder o atendimento.",
+      ficha,
+      pills: [{ label: "Abrir WhatsApp", value: "__whatsapp__" }],
+    };
+  }
+}

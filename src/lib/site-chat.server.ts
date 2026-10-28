@@ -26,6 +26,8 @@ function escSql(valor: string): string {
   return valor.replace(/\\/g, "\\\\").replace(/'/g, "''");
 }
 
+const MSG_ANTIGA = "Oi! 😊 Sou a {nome}, da Alex Calhas. Em que posso te ajudar hoje?";
+
 export const SITE_CHAT_DEFAULTS: SiteChatPublico = {
   nome: HOME_SITE.chat.nome,
   cargo: HOME_SITE.chat.cargo,
@@ -67,10 +69,11 @@ async function ensureSiteChatTable(): Promise<void> {
 
 function mapPublico(row: DbRow | null): SiteChatPublico {
   if (!row) return { ...SITE_CHAT_DEFAULTS };
+  const mensagemBruta = row.mensagem.trim();
   return {
     nome: row.nome.trim() || SITE_CHAT_DEFAULTS.nome,
     cargo: row.cargo.trim() || SITE_CHAT_DEFAULTS.cargo,
-    mensagem: row.mensagem.trim() || SITE_CHAT_DEFAULTS.mensagem,
+    mensagem: !mensagemBruta || mensagemBruta === MSG_ANTIGA ? SITE_CHAT_DEFAULTS.mensagem : mensagemBruta,
     foto_url: fotoChatPublicUrl(row.foto),
   };
 }

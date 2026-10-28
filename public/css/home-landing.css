@@ -2237,6 +2237,8 @@ body.ac-landing > main {
     font-size: 0.88rem;
     line-height: 1.5;
     color: #334155;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .ac-chat__bubble-text strong {
@@ -2261,9 +2263,10 @@ body.ac-landing > main {
 
 .ac-chat__pills {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.55rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.45rem;
 }
 
 .ac-chat__pill {

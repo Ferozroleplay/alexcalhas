@@ -9,6 +9,38 @@ async function parseJson<T>(res: Response): Promise<T> {
   return (await res.json()) as T;
 }
 
+export type PolianeFicha = Record<string, string | number | boolean | undefined>;
+
+export type PolianePill = { label: string; value: string };
+
+export type PolianeResposta = {
+  reply: string;
+  ficha: PolianeFicha;
+  pills: PolianePill[];
+  done?: boolean;
+};
+
+export async function enviarMensagemPoliane(
+  mensagem: string,
+  ficha: PolianeFicha,
+): Promise<PolianeResposta> {
+  const res = await fetch("/api/site-chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mensagem, ficha }),
+  });
+  const data = await parseJson<PolianeResposta & { ok?: boolean; message?: string }>(res);
+  if (!res.ok || !data.reply) {
+    throw new Error(data.message ?? data.reply ?? "Não foi possível falar com a atendente.");
+  }
+  return {
+    reply: data.reply,
+    ficha: data.ficha ?? ficha,
+    pills: Array.isArray(data.pills) ? data.pills : [],
+    done: data.done,
+  };
+}
+
 export async function fetchSiteChatPublico(): Promise<SiteChatPublico | null> {
   const res = await fetch("/api/site-chat", { cache: "no-store" });
   const data = await parseJson<{ ok?: boolean; chat?: SiteChatPublico }>(res);
