@@ -8,6 +8,7 @@ type Props = {
   onClose: () => void;
   nome?: string;
   dataVisita?: string;
+  horaVisita?: string;
 };
 
 function formatDataVisita(iso: string): string {
@@ -29,7 +30,7 @@ function getAgendarPortalRoot(): HTMLElement {
   return root;
 }
 
-export function AcAgendarSucessoModal({ open, onClose, nome, dataVisita }: Props) {
+export function AcAgendarSucessoModal({ open, onClose, nome, dataVisita, horaVisita }: Props) {
   useEffect(() => {
     if (!open) return;
 
@@ -60,6 +61,7 @@ export function AcAgendarSucessoModal({ open, onClose, nome, dataVisita }: Props
 
   const primeiroNome = nome?.trim().split(/\s+/)[0];
   const dataFmt = dataVisita ? formatDataVisita(dataVisita) : "";
+  const horaFmt = horaVisita?.trim() ?? "";
 
   return createPortal(
     <div
@@ -92,6 +94,12 @@ export function AcAgendarSucessoModal({ open, onClose, nome, dataVisita }: Props
               <>
                 {" "}
                 da visita em <strong>{dataFmt}</strong>
+                {horaFmt ? (
+                  <>
+                    {" "}
+                    às <strong>{horaFmt}</strong>
+                  </>
+                ) : null}
               </>
             ) : null}
             .

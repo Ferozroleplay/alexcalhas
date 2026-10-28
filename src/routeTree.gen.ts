@@ -18,6 +18,7 @@ import { Route as ReciboRouteImport } from './routes/recibo'
 import { Route as ApiAgendamentosRouteImport } from './routes/api/agendamentos'
 import { Route as ApiConsultaDocumentoRouteImport } from './routes/api/consulta-documento'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as ApiHorariosVisitaRouteImport } from './routes/api/horarios-visita'
 import { Route as ApiOsRouteImport } from './routes/api/os'
 import { Route as PainelIndexRouteImport } from './routes/painel/index'
 import { Route as PainelAgendarRouteImport } from './routes/painel/agendar'
@@ -125,6 +126,11 @@ const ApiConsultaDocumentoRoute = ApiConsultaDocumentoRouteImport.update({
 const ApiHealthRoute = ApiHealthRouteImport.update({
   id: '/api/health',
   path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHorariosVisitaRoute = ApiHorariosVisitaRouteImport.update({
+  id: '/api/horarios-visita',
+  path: '/api/horarios-visita',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiOsRoute = ApiOsRouteImport.update({
@@ -463,6 +469,7 @@ export interface FileRoutesByFullPath {
   '/api/agendamentos': typeof ApiAgendamentosRouteWithChildren
   '/api/consulta-documento': typeof ApiConsultaDocumentoRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/horarios-visita': typeof ApiHorariosVisitaRoute
   '/api/os': typeof ApiOsRoute
   '/painel/agendar': typeof PainelAgendarRoute
   '/painel/calculadora-bobina': typeof PainelCalculadoraBobinaRoute
@@ -536,6 +543,7 @@ export interface FileRoutesByTo {
   '/api/agendamentos': typeof ApiAgendamentosRouteWithChildren
   '/api/consulta-documento': typeof ApiConsultaDocumentoRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/horarios-visita': typeof ApiHorariosVisitaRoute
   '/api/os': typeof ApiOsRoute
   '/painel/agendar': typeof PainelAgendarRoute
   '/painel/calculadora-bobina': typeof PainelCalculadoraBobinaRoute
@@ -611,6 +619,7 @@ export interface FileRoutesById {
   '/api/agendamentos': typeof ApiAgendamentosRouteWithChildren
   '/api/consulta-documento': typeof ApiConsultaDocumentoRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/horarios-visita': typeof ApiHorariosVisitaRoute
   '/api/os': typeof ApiOsRoute
   '/painel/agendar': typeof PainelAgendarRoute
   '/painel/calculadora-bobina': typeof PainelCalculadoraBobinaRoute
@@ -687,6 +696,7 @@ export interface FileRouteTypes {
     | '/api/agendamentos'
     | '/api/consulta-documento'
     | '/api/health'
+    | '/api/horarios-visita'
     | '/api/os'
     | '/painel/agendar'
     | '/painel/calculadora-bobina'
@@ -760,6 +770,7 @@ export interface FileRouteTypes {
     | '/api/agendamentos'
     | '/api/consulta-documento'
     | '/api/health'
+    | '/api/horarios-visita'
     | '/api/os'
     | '/painel/agendar'
     | '/painel/calculadora-bobina'
@@ -834,6 +845,7 @@ export interface FileRouteTypes {
     | '/api/agendamentos'
     | '/api/consulta-documento'
     | '/api/health'
+    | '/api/horarios-visita'
     | '/api/os'
     | '/painel/agendar'
     | '/painel/calculadora-bobina'
@@ -909,6 +921,7 @@ export interface RootRouteChildren {
   ApiAgendamentosRoute: typeof ApiAgendamentosRouteWithChildren
   ApiConsultaDocumentoRoute: typeof ApiConsultaDocumentoRoute
   ApiHealthRoute: typeof ApiHealthRoute
+  ApiHorariosVisitaRoute: typeof ApiHorariosVisitaRoute
   ApiOsRoute: typeof ApiOsRoute
   ApiAdminCaixaRoute: typeof ApiAdminCaixaRoute
   ApiAdminClientesRoute: typeof ApiAdminClientesRoute
@@ -1002,6 +1015,13 @@ declare module '@tanstack/react-router' {
       path: '/api/health'
       fullPath: '/api/health'
       preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/horarios-visita': {
+      id: '/api/horarios-visita'
+      path: '/api/horarios-visita'
+      fullPath: '/api/horarios-visita'
+      preLoaderRoute: typeof ApiHorariosVisitaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/os': {
@@ -1615,6 +1635,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAgendamentosRoute: ApiAgendamentosRouteWithChildren,
   ApiConsultaDocumentoRoute: ApiConsultaDocumentoRoute,
   ApiHealthRoute: ApiHealthRoute,
+  ApiHorariosVisitaRoute: ApiHorariosVisitaRoute,
   ApiOsRoute: ApiOsRoute,
   ApiAdminCaixaRoute: ApiAdminCaixaRoute,
   ApiAdminClientesRoute: ApiAdminClientesRoute,

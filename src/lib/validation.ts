@@ -13,9 +13,9 @@ const agendamentoBase = z.object({
   origem: z.literal("site"),
 });
 
-/** Site: hora opcional no payload (se vazio, o servidor grava a hora do envio). */
+/** Site: horário escolhido na grade (08:00–18:00, 2h de intervalo). */
 export const agendamentoSiteSchema = agendamentoBase.extend({
-  hora: z.string().trim().max(50).optional().or(z.literal("")),
+  hora: z.string().trim().min(1, "Selecione o horário").max(50),
 });
 
 /** Painel e outros fluxos que exigem hora. */

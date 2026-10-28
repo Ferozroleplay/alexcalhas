@@ -1203,6 +1203,61 @@ body.ac-landing > main {
     line-height: 1.45;
 }
 
+.ac-agendar-hora-hint {
+    font-size: 0.8rem;
+    color: var(--ac-text);
+    margin: 0.35rem 0 0;
+    line-height: 1.35;
+}
+
+.ac-agendar-hora-hint--warn {
+    color: #b45309;
+}
+
+.ac-agendar-hora-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ac-navy);
+    margin-bottom: 0.45rem;
+}
+
+.ac-hora-slots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.ac-hora-slot {
+    min-width: 4.6rem;
+    border: 1px solid var(--ac-border);
+    background: #fff;
+    border-radius: 10px;
+    padding: 0.55rem 0.7rem;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--ac-navy);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.ac-hora-slot:hover {
+    border-color: var(--ac-green);
+    color: var(--ac-green);
+}
+
+.ac-hora-slot.is-selected {
+    background: var(--ac-green);
+    border-color: var(--ac-green);
+    color: #fff;
+    box-shadow: 0 4px 12px var(--ac-green-glow);
+}
+
+.ac-hora-slot:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
 .ac-form-alert {
     display: flex;
     align-items: flex-start;

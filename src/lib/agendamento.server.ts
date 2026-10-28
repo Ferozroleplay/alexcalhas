@@ -1,11 +1,17 @@
 import type { PrismaClient } from "@prisma/client";
 
+import {
+  filtrarHorariosLivres,
+  minutosDeHora,
+  VISITA_PRIMEIRO_MIN,
+} from "@/lib/agendamento-horarios";
 import { getPrisma } from "@/lib/db.server";
 import {
   formatHoraVisitaExibicao,
   resolveHoraVisitaInventario,
 } from "@/lib/inventario-format";
 import { parseOrcamentoJson, valorOrcamentoParaExibicao } from "@/lib/orcamento.server";
+import { pontoHojeIso } from "@/lib/ponto-timezone";
 import type { AgendamentoInput, AgendamentoSiteInput } from "@/lib/validation";
 
 export { INVENTARIO_STATUS, type InventarioStatus } from "@/lib/agendamento-constants";
@@ -30,7 +36,7 @@ export function dataInputParaDb(isoDate: string): string {
   return toDataVisitaBr(isoDate);
 }
 
-/** Hora atual (America/Sao_Paulo) — quando o cliente agenda pelo site sem informar horário. */
+/** Hora atual (America/Sao_Paulo) — fallback de hora-visita e piso do encaixe no dia. */
 export function agendamentoHoraAtualBr(): string {
   return new Date().toLocaleTimeString("pt-BR", {
     timeZone: "America/Sao_Paulo",
@@ -38,6 +44,60 @@ export function agendamentoHoraAtualBr(): string {
     minute: "2-digit",
     hour12: false,
   });
+}
+
+async function minutosOcupadosNoDia(prisma: PrismaClient, dataBr: string): Promise<number[]> {
+  const rows = await prisma.inventario.findMany({
+    where: {
+      AND: [
+        {
+          OR: [{ dataVisita: dataBr }, { dataVisita: { startsWith: `${dataBr} ` } }],
+        },
+        {
+          status: { in: ["agendado", "orcamentado", "orçamentado", "confirmado"] },
+        },
+      ],
+    },
+    select: { horaVisita: true, dataVisita: true },
+  });
+
+  const ocupados: number[] = [];
+  for (const row of rows) {
+    const min =
+      minutosDeHora(String(row.horaVisita ?? "")) ??
+      minutosDeHora(String(row.dataVisita ?? ""));
+    if (min != null) ocupados.push(min);
+  }
+  return ocupados;
+}
+
+/**
+ * Horários livres no dia (08:00–18:00), sempre 2h depois de qualquer visita já marcada.
+ * Hoje ignora horários que já passaram.
+ */
+export async function horariosLivresVisita(
+  prisma: PrismaClient,
+  dataIso: string,
+): Promise<string[]> {
+  const dataBr = toDataVisitaBr(dataIso);
+  if (!/^\d{2}-\d{2}-\d{4}$/.test(dataBr)) return [];
+  if (dataIso < pontoHojeIso()) return [];
+
+  const ocupados = await minutosOcupadosNoDia(prisma, dataBr);
+  let piso = VISITA_PRIMEIRO_MIN;
+  if (dataIso === pontoHojeIso()) {
+    const agora = minutosDeHora(agendamentoHoraAtualBr()) ?? piso;
+    piso = Math.max(piso, agora);
+  }
+  return filtrarHorariosLivres(ocupados, piso);
+}
+
+export async function proximoHorarioLivreVisita(
+  prisma: PrismaClient,
+  dataIso: string,
+): Promise<string | null> {
+  const livres = await horariosLivresVisita(prisma, dataIso);
+  return livres[0] ?? null;
 }
 
 /** Normaliza hora do formulário (input time) para gravar em hora-visita (HH:MM). */

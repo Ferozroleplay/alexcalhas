@@ -3,8 +3,20 @@ import type { AgendamentoPayload } from "@/types/site";
 export type AgendamentoResponse = {
   ok: boolean;
   id?: string | number;
+  hora?: string;
   message?: string;
 };
+
+export async function fetchHorariosVisita(
+  data: string,
+  signal?: AbortSignal,
+): Promise<string[]> {
+  const qs = new URLSearchParams({ data });
+  const res = await fetch(`/api/horarios-visita?${qs}`, { signal });
+  const json = (await res.json()) as { ok?: boolean; horarios?: string[] };
+  if (!res.ok || !json.ok) return [];
+  return Array.isArray(json.horarios) ? json.horarios : [];
+}
 
 /**
  * Envia um agendamento para a API REST.

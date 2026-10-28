@@ -56,7 +56,7 @@ export type AgendamentoPayload = {
   cep?: string;
   numero: string;
   data: string;
-  hora?: string;
+  hora: string;
   observacao?: string;
   origem: "site";
 };

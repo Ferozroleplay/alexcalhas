@@ -5,9 +5,11 @@ import {
   buildInventarioCreateData,
   dbErrorMessage,
   ensureInventarioTextosCliente,
+  horariosLivresVisita,
   inventarioWhereStatus,
   serializeInventario,
 } from "@/lib/agendamento.server";
+import { formatHoraVisitaExibicao } from "@/lib/inventario-format";
 import { getAdminSessionFromRequest, isAdminRequest } from "@/lib/auth.server";
 import { getPrisma } from "@/lib/db.server";
 import { jsonResponse, PUBLIC_CORS } from "@/lib/http.server";
@@ -208,10 +210,45 @@ export const Route = createFileRoute("/api/agendamentos")({
           const session = getAdminSessionFromRequest(request);
           const funcionarioId =
             session?.visao === "funcionário" ? session.userId : null;
+          const horaPedido = formatHoraVisitaExibicao(String(data.hora ?? "").trim());
+          let hora = horaPedido;
+          if (!session) {
+            const livres = await horariosLivresVisita(prisma, data.data);
+            if (horaPedido && livres.includes(horaPedido)) {
+              hora = horaPedido;
+            } else if (!horaPedido && livres[0]) {
+              hora = livres[0];
+            } else if (livres.length === 0) {
+              return corsJson(
+                {
+                  ok: false,
+                  message:
+                    "Esse dia já está cheio (mínimo 2 horas entre cada visita, das 8h às 18h). Escolha outra data.",
+                },
+                409,
+              );
+            } else {
+              return corsJson(
+                {
+                  ok: false,
+                  message: "Esse horário não está mais disponível. Escolha outro.",
+                  horarios: livres,
+                },
+                409,
+              );
+            }
+          } else if (!hora) {
+            return corsJson({ ok: false, message: "Selecione o horário." }, 422);
+          }
           const row = await prisma.inventario.create({
-            data: buildInventarioCreateData(data, funcionarioId),
+            data: buildInventarioCreateData({ ...data, hora }, funcionarioId),
           });
-          return corsJson({ ok: true, id: row.id, message: "Agendamento recebido." });
+          return corsJson({
+            ok: true,
+            id: row.id,
+            hora,
+            message: "Agendamento recebido.",
+          });
         } catch (err) {
           console.error("[POST /api/agendamentos]", err);
           return corsJson({ ok: false, message: dbErrorMessage(err) }, 503);
