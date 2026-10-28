@@ -252,6 +252,18 @@ function ehSaudacao(texto: string): boolean {
   );
 }
 
+function deuEmCima(texto: string): boolean {
+  const t = texto.trim();
+  if (
+    /^(linda|gata|gostosa|amor|beb[eê]|princesa|rainha|del[ií]cia|safada)[\s!.😍😘💜💋]*$/i.test(t)
+  ) {
+    return true;
+  }
+  return /\b((voc[eê] )?[eé] (solteira|casada)|tem namorad[oa]|seu marido|fica comigo|casar comigo|te amo|meu amor|gatinha|gostos[ao]|del[ií]cia|safad[ao]|quero te|me beija|beijo|manda (nudes?|foto)|sua foto|n[uú]mero (pessoal|particular)|sair comigo|voc[eê] [eé] (linda|gata|gostosa|bonita)|que linda|q linda|oi linda|oi gata)\b/i.test(
+    t,
+  );
+}
+
 function cumprimentoAgora(): string {
   const hora = Number(
     new Date().toLocaleString("en-GB", { hour: "2-digit", hour12: false, timeZone: "America/Sao_Paulo" }).slice(0, 2),
@@ -1086,6 +1098,17 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
   const texto = mensagem.trim();
   const soTexto = texto.replace(/[^a-zA-ZÀ-ÿ0-9\s/-]/g, "").trim();
   const prefixo = ehSaudacao(texto) ? cumprimentoDe(texto) : "";
+
+  if (deuEmCima(texto)) {
+    return {
+      reply: fala(
+        "Sou casada com o Alex, viu 😊",
+        ficha.aguardandoMaisAjuda ? "Te ajudo em algo mais?" : ficha.servico ? undefined : "Em que posso ajudar?",
+      ),
+      ficha,
+      pills: [],
+    };
+  }
 
   if (ficha.aguardandoMaisAjuda) {
     if (encerraAtendimento(texto)) {
