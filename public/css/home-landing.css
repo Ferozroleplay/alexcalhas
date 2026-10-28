@@ -2256,6 +2256,13 @@ body.ac-landing > main {
     font-weight: 600;
 }
 
+.ac-chat__bubble-text a {
+    color: #15803d;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
 .ac-chat__bubble-time {
     display: block;
     margin-top: 0.35rem;

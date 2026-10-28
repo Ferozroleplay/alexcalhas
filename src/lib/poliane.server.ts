@@ -6,6 +6,7 @@ import {
   toDataVisitaBr,
 } from "@/lib/agendamento.server";
 import { getPrisma } from "@/lib/db.server";
+import { parseOrcamentoJson } from "@/lib/orcamento.server";
 import { pontoHojeIso } from "@/lib/ponto-timezone";
 
 export type PolianeFicha = {
@@ -30,6 +31,7 @@ export type PolianeFicha = {
   enderecoConfirmado?: boolean;
   aguardandoConfirmaCadastro?: boolean;
   aguardandoMaisAjuda?: boolean;
+  aguardandoNomeOrcamento?: boolean;
 };
 
 export type PolianePill = { label: string; value: string };
@@ -88,6 +90,7 @@ function limparFicha(raw: unknown): PolianeFicha {
     enderecoConfirmado: o.enderecoConfirmado === true,
     aguardandoConfirmaCadastro: o.aguardandoConfirmaCadastro === true,
     aguardandoMaisAjuda: o.aguardandoMaisAjuda === true,
+    aguardandoNomeOrcamento: o.aguardandoNomeOrcamento === true,
   };
 }
 
@@ -230,6 +233,65 @@ function nao(texto: string): boolean {
 
 function querMaisAjuda(texto: string): boolean {
   return /^(sim|isso|quero|pode|claro|pode sim|sim,? por favor)[\s!.]*$/i.test(texto.trim());
+}
+
+function pedeOrcamentoPdf(texto: string): boolean {
+  const t = texto.toLowerCase();
+  if (!/\b(or[cç]amento|pdf)\b/.test(t)) return false;
+  if (
+    /\b(fazer|marcar|agendar|visita)\b/.test(t) &&
+    !/\b(pdf|manda|mande|envia|envie|enviar|meu or[cç]amento)\b/.test(t)
+  ) {
+    return false;
+  }
+  return /\b(pdf|manda|mande|envia|envie|enviar|mandar|c[oó]pia|link|meu or[cç]amento)\b/.test(t);
+}
+
+function nomeCompletoOk(nome: string): boolean {
+  const parts = nome.trim().split(/\s+/).filter((w) => w.replace(/[^a-zA-ZÀ-ÿ]/g, "").length >= 2);
+  return parts.length >= 2;
+}
+
+function tokensNome(s: string): string[] {
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((w) => w.length >= 2);
+}
+
+function nomeBateCadastro(cadastro: string, pedido: string): boolean {
+  const a = tokensNome(cadastro);
+  const b = tokensNome(pedido);
+  if (b.length < 2 || a.length < 1) return false;
+  if (a.join(" ") === b.join(" ")) return true;
+  return b.every((t) => a.includes(t));
+}
+
+function urlOrcamentoPdf(id: number): string {
+  return `https://www.alexcalhas.com/os?id=${id}&download=1`;
+}
+
+async function acharOrcamentoPorNomeETelefone(
+  nome: string,
+  telefone: string,
+): Promise<{ id: number; nome: string } | null> {
+  const chave = chaveTel(telefone);
+  if (!telOk(chave)) return null;
+  const prisma = await getPrisma();
+  const rows = await prisma.inventario.findMany({
+    orderBy: { id: "desc" },
+    take: 500,
+    select: { id: true, nome: true, telefone: true, orcamento: true },
+  });
+  const hit = rows.find(
+    (r) =>
+      chaveTel(r.telefone) === chave &&
+      nomeBateCadastro(r.nome, nome) &&
+      parseOrcamentoJson(r.orcamento).length > 0,
+  );
+  return hit ? { id: hit.id, nome: hit.nome } : null;
 }
 
 function encerraAtendimento(texto: string): boolean {
@@ -1146,6 +1208,72 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
       ),
       ficha,
       pills: [],
+    };
+  }
+
+  if (pedeOrcamentoPdf(texto) && !ficha.aguardandoNomeOrcamento) {
+    return {
+      reply: fala("Ok, me informa seu nome completo."),
+      ficha: {
+        ...ficha,
+        aguardandoNomeOrcamento: true,
+        aguardandoMaisAjuda: false,
+        nome: undefined,
+        telefone: undefined,
+      },
+      pills: [],
+    };
+  }
+
+  if (ficha.aguardandoNomeOrcamento) {
+    if (encerraAtendimento(texto)) {
+      return {
+        reply: fala("Ok! Qualquer dúvida, estou aqui."),
+        ficha: { ...ficha, aguardandoNomeOrcamento: false },
+        pills: [],
+      };
+    }
+    const telPdf = extrairTelefone(texto);
+    if (telPdf) ficha.telefone = telPdf;
+    if (!nomeCompletoOk(ficha.nome ?? "")) {
+      const soNome = texto.replace(/\b(?:\+?55\s*)?(?:\(?\d{2}\)?[\s-]*)?\d{4,5}[-\s]?\d{4}\b/g, " ").trim();
+      const nomePdf = capNome(soNome.replace(/meu nome [eé]\s*/i, "").trim()).slice(0, 120);
+      if (nomeCompletoOk(nomePdf)) ficha.nome = nomePdf;
+    }
+    if (!nomeCompletoOk(ficha.nome ?? "")) {
+      return {
+        reply: fala("Me passa o nome completo, nome e sobrenome."),
+        ficha: { ...ficha, aguardandoNomeOrcamento: true },
+        pills: [],
+      };
+    }
+    if (!ficha.telefone || !telOk(chaveTel(ficha.telefone))) {
+      return {
+        reply: fala("Me passa um telefone com DDD."),
+        ficha: { ...ficha, aguardandoNomeOrcamento: true },
+        pills: [],
+      };
+    }
+    const achado = await acharOrcamentoPorNomeETelefone(ficha.nome, ficha.telefone);
+    if (!achado) {
+      return {
+        reply: fala(
+          "Não achei um orçamento pronto com esse nome e telefone.",
+          "Confere os dois pra mim?",
+        ),
+        ficha: { ...ficha, aguardandoNomeOrcamento: true, telefone: undefined },
+        pills: [],
+      };
+    }
+    return {
+      reply: fala(`Pronto, ${achado.nome.split(/\s+/)[0]}! Segue seu orçamento em PDF.`, urlOrcamentoPdf(achado.id)),
+      ficha: {
+        ...ficha,
+        nome: achado.nome,
+        aguardandoNomeOrcamento: false,
+        aguardandoMaisAjuda: true,
+      },
+      pills: [{ label: "Baixar PDF", value: `__os_pdf__${achado.id}` }],
     };
   }
 

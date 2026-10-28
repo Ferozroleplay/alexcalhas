@@ -30,11 +30,19 @@ function renderMensagem(msg: string, nome: string): ReactNode {
 }
 
 function formatNegrito(msg: string): ReactNode {
-  const parts = msg.split(/(\*\*[^*]+\*\*)/g);
+  const parts = msg.split(/(\*\*[^*]+\*\*|https?:\/\/[^\s]+)/g);
   if (parts.length === 1) return msg;
   return parts.map((p, i) => {
     const m = p.match(/^\*\*([^*]+)\*\*$/);
-    return m ? <strong key={i}>{m[1]}</strong> : <span key={i}>{p}</span>;
+    if (m) return <strong key={i}>{m[1]}</strong>;
+    if (/^https?:\/\//.test(p)) {
+      return (
+        <a key={i} href={p} target="_blank" rel="noopener noreferrer">
+          {p}
+        </a>
+      );
+    }
+    return <span key={i}>{p}</span>;
   });
 }
 
@@ -118,6 +126,11 @@ export function AcSiteChat() {
     if (!mensagem || enviando) return;
     if (mensagem === "__whatsapp__") {
       abrirWa();
+      return;
+    }
+    const osPdf = /^__os_pdf__(\d+)$/.exec(mensagem);
+    if (osPdf) {
+      window.open(`/os?id=${osPdf[1]}&download=1`, "_blank", "noopener,noreferrer");
       return;
     }
     const idOut = seq.current++;
