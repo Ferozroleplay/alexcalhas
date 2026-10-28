@@ -462,7 +462,11 @@ function normalizarClienteConsulta(
   };
 }
 
-export async function consultarDocumento(documentoRaw: string): Promise<ConsultaDocumentoResult> {
+export async function consultarDocumento(
+  documentoRaw: string,
+  opts?: { incluirCadastro?: boolean },
+): Promise<ConsultaDocumentoResult> {
+  const incluirCadastro = opts?.incluirCadastro !== false;
   const doc = apenasDigitos(documentoRaw);
   const len = doc.length;
 
@@ -481,11 +485,13 @@ export async function consultarDocumento(documentoRaw: string): Promise<Consulta
     /* tabela opcional */
   }
 
-  const inv = await buscaInventarioCliente(doc).catch(() => null);
-  if (inv) {
-    const payload = normalizarClienteConsulta(inv, tipo, "cadastro");
-    void salvarCacheCliente(doc, inv).catch(() => {});
-    return payload;
+  if (incluirCadastro) {
+    const inv = await buscaInventarioCliente(doc).catch(() => null);
+    if (inv) {
+      const payload = normalizarClienteConsulta(inv, tipo, "cadastro");
+      void salvarCacheCliente(doc, inv).catch(() => {});
+      return payload;
+    }
   }
 
   if (len === 14) {
@@ -510,13 +516,22 @@ export async function consultarDocumento(documentoRaw: string): Promise<Consulta
     }
   }
 
-  const cache = await buscaCacheCliente(doc).catch(() => null);
-  if (cache) {
-    return normalizarClienteConsulta(cache, tipo, "cache");
+  if (incluirCadastro || len === 14) {
+    const cache = await buscaCacheCliente(doc).catch(() => null);
+    if (cache) {
+      return normalizarClienteConsulta(cache, tipo, "cache");
+    }
   }
 
   if (len === 14) {
     return { status: "erro", mensagem: "CNPJ não encontrado na Receita Federal." };
+  }
+
+  if (!incluirCadastro) {
+    return {
+      status: "erro",
+      mensagem: "Informe os dados manualmente.",
+    };
   }
 
   return {

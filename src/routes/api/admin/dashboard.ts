@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { dbErrorMessage } from "@/lib/agendamento.server";
-import { isAdminRequest } from "@/lib/auth.server";
+import { isAdminVisaoRequest } from "@/lib/auth.server";
 import { getDashboardStats } from "@/lib/inventario-stats.server";
 import { jsonResponse } from "@/lib/http.server";
 
@@ -9,7 +9,7 @@ export const Route = createFileRoute("/api/admin/dashboard")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        if (!isAdminRequest(request)) {
+        if (!isAdminVisaoRequest(request)) {
           return jsonResponse({ ok: false, message: "Não autorizado." }, 401);
         }
 

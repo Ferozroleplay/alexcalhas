@@ -30,11 +30,11 @@ export async function listarIdsPendenciaCobranca(opts?: {
 }): Promise<number[]> {
   await ensureCobrarPendenciaColumn();
   const prisma = await getPrisma();
-  const limit = Math.min(Math.max(Number(opts?.limit) || 200, 1), 500);
+  const limit = Math.min(Math.max(Number(opts?.limit) || 1000, 1), 2000);
   const funcionarioId = opts?.funcionarioId;
   const filtroFunc =
     funcionarioId != null && Number.isInteger(funcionarioId)
-      ? `AND (funcionario = ${funcionarioId} OR funcionario IS NULL)`
+      ? `AND funcionario = ${funcionarioId}`
       : "";
   const rows = await prisma.$queryRawUnsafe<{ id: number }[]>(
     `SELECT id FROM inventario

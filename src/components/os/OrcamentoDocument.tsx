@@ -200,7 +200,7 @@ export function OrcamentoDocument({ item, itens }: Props) {
             </svg>
           </SecHead>
           <Kv label="Nome / Razão social" value={item.nome} />
-          <Kv label="CPF / CNPJ" value={formatOsDocumento(item.cpfCnpj)} />
+          {item.cpfCnpj ? <Kv label="CPF / CNPJ" value={formatOsDocumento(item.cpfCnpj)} /> : null}
           <Kv label="RG / IE" value="—" />
           <Kv label="Endereço" value={formatOsEndereco(item)} />
           <Kv label="Telefone" value={formatOsTelefone(item.telefone)} />

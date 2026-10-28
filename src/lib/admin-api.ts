@@ -27,6 +27,7 @@ export type AgendamentoItem = {
   saldoPendente?: number;
   quitado?: boolean;
   qtdPagamentos?: number;
+  osToken?: string;
 };
 
 export type InventarioRecebimentoItem = {
@@ -196,9 +197,16 @@ export async function trocarVisao(visao: AdminVisao): Promise<{ user: AdminUser;
   return { user: data.user, redirect: data.redirect ?? "/painel" };
 }
 
-export async function fetchAgendamentos(status?: string): Promise<AgendamentoItem[]> {
-  const qs = status ? `?status=${encodeURIComponent(status)}` : "";
-  const res = await fetch(`/api/agendamentos${qs}`, { credentials: "include" });
+export async function fetchAgendamentos(
+  status?: string,
+  opts?: { q?: string; limit?: number },
+): Promise<AgendamentoItem[]> {
+  const qs = new URLSearchParams();
+  if (status) qs.set("status", status);
+  const q = opts?.q?.trim();
+  if (q) qs.set("q", q);
+  qs.set("limit", String(opts?.limit && opts.limit > 0 ? opts.limit : 1000));
+  const res = await fetch(`/api/agendamentos?${qs}`, { credentials: "include" });
   const data = await parseJson<{ ok?: boolean; items?: AgendamentoItem[]; message?: string }>(res);
   if (!res.ok) throw new Error(data.message ?? "Não foi possível carregar agendamentos.");
   return data.items ?? [];

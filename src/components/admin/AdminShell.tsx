@@ -300,6 +300,28 @@ export function AdminShell() {
                     <span>Visitas</span>
                   </Link>
                 </li>
+                <li className={navActive(pathname, "/painel/orcamentado") ? "activeMenu" : ""}>
+                  <Link
+                    to="/painel/orcamentado"
+                    className="dash-nav-link"
+                    title="Orçamentado"
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <i className="bi bi-clipboard2-pulse" aria-hidden="true" />
+                    <span>Orçamentado</span>
+                  </Link>
+                </li>
+                <li className={navActive(pathname, "/painel/confirmado") ? "activeMenu" : ""}>
+                  <Link
+                    to="/painel/confirmado"
+                    className="dash-nav-link"
+                    title="Confirmado"
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <i className="bi bi-journal-bookmark" aria-hidden="true" />
+                    <span>Confirmado</span>
+                  </Link>
+                </li>
                 <li className={navActive(pathname, "/painel/ponto") ? "activeMenu" : ""}>
                   <Link
                     to="/painel/ponto"

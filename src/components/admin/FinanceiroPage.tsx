@@ -20,6 +20,10 @@ type FinData = {
     margem_faturado: number;
     margem: number;
     margem_mes_label: string;
+    recebido_mes?: number;
+    despesas_mes?: number;
+    folha_mes?: number;
+    liquido_mes?: number;
   };
   por_status: {
     confirmado: { qtd: number; valor: number };
@@ -110,7 +114,7 @@ export function FinanceiroPage() {
     <div className="analytics-page dash-form-page--pro">
       <DashPageHero
         title="Financeiro"
-        subtitle="Confirmado entra no faturamento; ao finalizar o serviço, o valor passa para faturado."
+        subtitle="Caixa do mês usa o que entrou de verdade. Confirmado e finalizado continuam como contratado."
         iconClass="bi-cash-coin"
         accent="financeiro"
         layout="header"
@@ -140,10 +144,55 @@ export function FinanceiroPage() {
               </div>
 
               <p className="fin-intro text-secondary small mb-3">
-                Cada mês começa no <strong>dia 1</strong> e vai até o último dia do mês. O faturado
-                entra no mês da data do serviço (montagem ou visita).{" "}
+                Cada mês começa no <strong>dia 1</strong> e vai até o último dia do mês. O caixa do mês
+                soma pagamentos lançados, menos despesas e folha. O faturado contratado entra no mês da
+                data do serviço (montagem ou visita).{" "}
                 <strong>Confirmado</strong> = em faturamento · <strong>Finalizado</strong> = faturado.
               </p>
+
+              <section className="dash-form-card mb-3" aria-labelledby="fin-caixa-mes-title">
+                <h2 id="fin-caixa-mes-title" className="dash-form-block__title mb-3">
+                  <i className="bi bi-wallet2" aria-hidden="true" /> Caixa de {res.margem_mes_label}
+                </h2>
+                <div className="row g-3 forn-finance-summary">
+                  <div className="col-6 col-lg-3">
+                    <div className="forn-stat-card forn-stat-card--venda">
+                      <span className="forn-stat-card__label">Recebido</span>
+                      <strong className="forn-stat-card__value">
+                        R$ {formatMoeda(res.recebido_mes ?? 0)}
+                      </strong>
+                      <span className="forn-stat-card__sub">Pagamentos lançados no mês</span>
+                    </div>
+                  </div>
+                  <div className="col-6 col-lg-3">
+                    <div className="forn-stat-card forn-stat-card--custo">
+                      <span className="forn-stat-card__label">Despesas</span>
+                      <strong className="forn-stat-card__value">
+                        R$ {formatMoeda(res.despesas_mes ?? 0)}
+                      </strong>
+                      <span className="forn-stat-card__sub">Combustível, material e demais</span>
+                    </div>
+                  </div>
+                  <div className="col-6 col-lg-3">
+                    <div className="forn-stat-card forn-stat-card--custo">
+                      <span className="forn-stat-card__label">Folha</span>
+                      <strong className="forn-stat-card__value">
+                        R$ {formatMoeda(res.folha_mes ?? 0)}
+                      </strong>
+                      <span className="forn-stat-card__sub">Pagamentos de funcionários</span>
+                    </div>
+                  </div>
+                  <div className="col-6 col-lg-3">
+                    <div className="forn-stat-card forn-stat-card--margem">
+                      <span className="forn-stat-card__label">Líquido</span>
+                      <strong className="forn-stat-card__value">
+                        R$ {formatMoeda(res.liquido_mes ?? 0)}
+                      </strong>
+                      <span className="forn-stat-card__sub">Recebido − despesas − folha</span>
+                    </div>
+                  </div>
+                </div>
+              </section>
 
               <section className="dash-form-card mb-3 fin-mensal" aria-labelledby="fin-mensal-title">
                 <div className="fin-mensal__header">

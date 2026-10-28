@@ -1,9 +1,12 @@
 import { getPrisma } from "@/lib/db.server";
+import { listDespesas } from "@/lib/despesas.server";
 import { formatYmLocal, parseDataInventarioRow } from "@/lib/financeiro-dates";
 import { analisarFornecedorFinanceiro } from "@/lib/fornecedor-controle.server";
 import { listarFornecedores } from "@/lib/fornecedores.server";
 import { finYmLabel } from "@/lib/financeiro-display";
 import { fornecedorRotulo } from "@/lib/fornecedores-display";
+import { listarPagamentosHistorico } from "@/lib/funcionario-pagamento.server";
+import { somaRecebimentosEntre } from "@/lib/inventario-recebimento.server";
 
 export { finYmLabel };
 
@@ -236,6 +239,22 @@ export async function resumoFinanceiroGlobal() {
 
   const movimentos = await listarMovimentosFinanceiros(60);
 
+  const agora = new Date();
+  const anoMes = agora.getFullYear();
+  const mesNum = agora.getMonth() + 1;
+  const deMes = `${anoMes}-${String(mesNum).padStart(2, "0")}-01`;
+  const ultimoDia = new Date(anoMes, mesNum, 0).getDate();
+  const ateMes = `${anoMes}-${String(mesNum).padStart(2, "0")}-${String(ultimoDia).padStart(2, "0")}`;
+
+  const [recebidoMes, despesasMesLista, folhaMesLista] = await Promise.all([
+    somaRecebimentosEntre(deMes, ateMes),
+    listDespesas({ ano: anoMes, mes: mesNum }),
+    listarPagamentosHistorico(deMes, ateMes),
+  ]);
+  const despesasMes = despesasMesLista.reduce((s, d) => s + d.valor, 0);
+  const folhaMes = folhaMesLista.reduce((s, p) => s + p.valor, 0);
+  const liquidoMes = recebidoMes - despesasMes - folhaMes;
+
   return {
     resumo: {
       receita_confirmado: porStatus.confirmado.valor,
@@ -248,6 +267,10 @@ export async function resumoFinanceiroGlobal() {
       margem_faturado: margemFaturado,
       margem: margemConfirmado + margemFaturado,
       margem_mes_label: finYmLabel(mesAtualYm),
+      recebido_mes: recebidoMes,
+      despesas_mes: despesasMes,
+      folha_mes: folhaMes,
+      liquido_mes: liquidoMes,
     },
     por_status: porStatus,
     por_fornecedor: porFornecedor,

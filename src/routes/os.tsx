@@ -19,6 +19,7 @@ import type { OrcamentoLinha } from "@/lib/orcamento.server";
 export const Route = createFileRoute("/os")({
   validateSearch: (s: Record<string, unknown>) => ({
     id: Number(s.id) || 0,
+    t: typeof s.t === "string" ? s.t : "",
     embed: s.embed === "1" || s.embed === 1,
     print: s.print === "1" || s.print === 1,
     download: s.download === "1" || s.download === 1,
@@ -33,7 +34,7 @@ export const Route = createFileRoute("/os")({
 });
 
 function OsPage() {
-  const { id, embed, print, download, downloadPng, nome } = Route.useSearch();
+  const { id, t, embed, print, download, downloadPng, nome } = Route.useSearch();
   const [item, setItem] = useState<AgendamentoItem | null>(null);
   const [itens, setItens] = useState<OrcamentoLinha[]>([]);
   const [error, setError] = useState("");
@@ -50,7 +51,7 @@ function OsPage() {
       setError("ID do orçamento não informado.");
       return;
     }
-    fetch(`/api/os?id=${id}`)
+    fetch(`/api/os?id=${id}${t ? `&t=${encodeURIComponent(t)}` : ""}`)
       .then((r) => r.json())
       .then((d: { ok?: boolean; item?: AgendamentoItem; itens?: OrcamentoLinha[]; message?: string }) => {
         if (!d.ok || !d.item) throw new Error(d.message ?? "Erro");
@@ -58,7 +59,7 @@ function OsPage() {
         setItens(d.itens ?? []);
       })
       .catch((e) => setError(e instanceof Error ? e.message : "Orçamento não encontrado."));
-  }, [id]);
+  }, [id, t]);
 
   useEffect(() => {
     if (!item) return;

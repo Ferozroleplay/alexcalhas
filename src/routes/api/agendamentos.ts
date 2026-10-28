@@ -20,6 +20,7 @@ import {
   mapaTotalRecebidoPorInventario,
   statusPermiteRecebimento,
 } from "@/lib/inventario-recebimento.server";
+import { criarOsToken } from "@/lib/os-token.server";
 import { agendamentoSiteSchema } from "@/lib/validation";
 
 const corsJson = (data: unknown, status = 200) =>
@@ -27,8 +28,29 @@ const corsJson = (data: unknown, status = 200) =>
 
 const listQuerySchema = z.object({
   status: z.string().optional(),
-  limit: z.coerce.number().int().min(1).max(500).optional(),
+  q: z.string().trim().max(80).optional(),
+  limit: z.coerce.number().int().min(1).max(2000).optional(),
 });
+
+function inventarioBuscaWhere(q: string | undefined) {
+  const t = (q ?? "").trim().replace(/^#/, "");
+  if (!t) return undefined;
+  const digits = t.replace(/\D/g, "");
+  const or: Record<string, unknown>[] = [
+    { nome: { contains: t } },
+    { telefone: { contains: t } },
+    { endereco: { contains: t } },
+  ];
+  const idNum = Number.parseInt(t, 10);
+  if (Number.isInteger(idNum) && idNum > 0 && String(idNum) === t) {
+    or.push({ id: idNum });
+  }
+  if (digits.length >= 3) {
+    or.push({ telefone: { contains: digits } });
+    or.push({ cpfCnpj: { contains: digits } });
+  }
+  return { OR: or };
+}
 
 export const Route = createFileRoute("/api/agendamentos")({
   server: {
@@ -43,19 +65,21 @@ export const Route = createFileRoute("/api/agendamentos")({
         const url = new URL(request.url);
         const parsedQuery = listQuerySchema.safeParse({
           status: url.searchParams.get("status") ?? undefined,
-          limit: url.searchParams.get("limit") ?? 200,
+          q: url.searchParams.get("q") ?? undefined,
+          limit: url.searchParams.get("limit") ?? 1000,
         });
         if (!parsedQuery.success) {
           return jsonResponse({ ok: false, message: "Parâmetros inválidos." }, 400);
         }
 
-        const { status, limit = 200 } = parsedQuery.data;
+        const { status, q, limit = 1000 } = parsedQuery.data;
 
         try {
           const prisma = await getPrisma();
           const session = getAdminSessionFromRequest(request);
           const visaoFuncionario = session?.visao === "funcionário";
           const funcionarioId = visaoFuncionario ? session.userId : null;
+          const buscaWhere = inventarioBuscaWhere(q);
 
           let rows;
           if (status === "pendencias") {
@@ -67,24 +91,29 @@ export const Route = createFileRoute("/api/agendamentos")({
               idsPendencia.length === 0
                 ? []
                 : await prisma.inventario.findMany({
-                    where: { id: { in: idsPendencia } },
+                    where: {
+                      AND: [
+                        { id: { in: idsPendencia } },
+                        ...(buscaWhere ? [buscaWhere] : []),
+                      ],
+                    },
                     orderBy: { id: "desc" },
                   });
           } else {
             const statusWhere = inventarioWhereStatus(status);
-            const whereBase = { ...statusWhere };
-            const where = visaoFuncionario
-              ? {
-                  AND: [
-                    whereBase,
-                    {
-                      OR: [{ funcionario: session.userId }, { funcionario: null }],
-                    },
-                  ],
-                }
-              : whereBase;
+            const visaoWhere = visaoFuncionario
+              ? status === "agendado" || !status
+                ? { OR: [{ funcionario: funcionarioId }, { funcionario: null }] }
+                : { funcionario: funcionarioId }
+              : undefined;
+            const parts = [statusWhere, visaoWhere, buscaWhere].filter(
+              (p): p is NonNullable<typeof p> =>
+                p != null && typeof p === "object" && Object.keys(p).length > 0,
+            );
+            const where =
+              parts.length === 0 ? undefined : parts.length === 1 ? parts[0] : { AND: parts };
             rows = await prisma.inventario.findMany({
-              where: Object.keys(where).length ? (where as never) : undefined,
+              where: where as never,
               orderBy: { id: "desc" },
               take: limit,
             });
@@ -98,7 +127,10 @@ export const Route = createFileRoute("/api/agendamentos")({
           const cobrar = status === "finalizado" ? await mapaCobrarPendencia(idsRecebimento) : null;
 
           const items = rows.map((row) => {
-              const item = serializeInventario(row);
+              const item = {
+                ...serializeInventario(row),
+                osToken: criarOsToken(row.id),
+              };
               if (!statusPermiteRecebimento(row.status)) return item;
               const agg = mapaRecebido[row.id];
               const resumo = calcularResumoRecebimento(Number(item.valor), agg?.total ?? 0);
@@ -124,6 +156,7 @@ export const Route = createFileRoute("/api/agendamentos")({
           return jsonResponse({
             ok: true,
             items: listados,
+            truncated: rows.length >= limit,
           });
         } catch (err) {
           console.error("[GET /api/agendamentos]", err);

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { dbErrorMessage } from "@/lib/agendamento.server";
-import { isAdminRequest } from "@/lib/auth.server";
+import { isAdminRequest, isAdminVisaoRequest } from "@/lib/auth.server";
 import { baixarEstoquesConfirmadosPendentes } from "@/lib/estoque-baixa.server";
 import { jsonResponse } from "@/lib/http.server";
 import {
@@ -156,7 +156,7 @@ export const Route = createFileRoute("/api/admin/materiais")({
       },
 
       POST: async ({ request }) => {
-        if (!isAdminRequest(request)) return jsonResponse({ ok: false }, 401);
+        if (!isAdminVisaoRequest(request)) return jsonResponse({ ok: false }, 401);
         const raw = await request.json().catch(() => null);
         if (
           raw &&
@@ -213,7 +213,7 @@ export const Route = createFileRoute("/api/admin/materiais")({
       },
 
       PATCH: async ({ request }) => {
-        if (!isAdminRequest(request)) return jsonResponse({ ok: false }, 401);
+        if (!isAdminVisaoRequest(request)) return jsonResponse({ ok: false }, 401);
         const parsed = patchSchema.safeParse(await request.json().catch(() => null));
         if (!parsed.success) {
           return jsonResponse({ ok: false, message: "Dados inválidos." }, 422);
@@ -238,7 +238,7 @@ export const Route = createFileRoute("/api/admin/materiais")({
       },
 
       DELETE: async ({ request }) => {
-        if (!isAdminRequest(request)) return jsonResponse({ ok: false }, 401);
+        if (!isAdminVisaoRequest(request)) return jsonResponse({ ok: false }, 401);
         const url = new URL(request.url);
         const id = Number.parseInt(url.searchParams.get("id") ?? "", 10);
         if (!Number.isFinite(id) || id <= 0) {

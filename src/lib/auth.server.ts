@@ -206,6 +206,22 @@ export function isAdminRequest(request: Request): boolean {
   return getAdminSessionFromRequest(request) !== null;
 }
 
+/** Sessão logada na visão administrador (caixa, financeiro, estoque). */
+export function isAdminVisaoRequest(request: Request): boolean {
+  return getAdminSessionFromRequest(request)?.visao === "admin";
+}
+
+/** Funcionário só acessa serviço atribuído a ele (ou visita ainda sem dono). */
+export function funcionarioPodeVerInventario(
+  session: AdminSessionPayload | null,
+  funcionarioId: number | null | undefined,
+): boolean {
+  if (!session) return false;
+  if (session.visao !== "funcionário") return true;
+  if (funcionarioId == null) return true;
+  return Number(funcionarioId) === session.userId;
+}
+
 /** Visão efetiva (admin / funcionário / fornecedor) para filtros e UI. */
 export function getVisaoFromRequest(request: Request): AdminVisao {
   return getAdminSessionFromRequest(request)?.visao ?? "admin";

@@ -1,5 +1,6 @@
 import { telefoneWhatsappLink } from "@/lib/format-br";
 import { dashAlert } from "@/lib/dash-ui";
+import { OS_ORCAMENTO_EMPRESA } from "@/lib/os-document";
 
 function primeiroNome(nome: string): string {
   return nome.trim().split(/\s+/)[0] || "";
@@ -46,17 +47,34 @@ export function abrirWhatsappVisita(item: { nome: string; telefone: string }): v
   abrirWhatsappComTexto(item.telefone, mensagemWhatsappVisita(item.nome));
 }
 
+export function osPublicPath(id: number, token?: string | null): string {
+  const qs = new URLSearchParams({ id: String(id) });
+  const t = token?.trim();
+  if (t) qs.set("t", t);
+  return `/os?${qs.toString()}`;
+}
+
+function osPublicUrl(id: number, token?: string | null): string {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return `${origin}${osPublicPath(id, token)}`;
+}
+
+function dataBrAmigavel(data: string | null | undefined): string {
+  const t = String(data ?? "").trim();
+  const br = /^(\d{1,2})-(\d{1,2})-(\d{4})$/.exec(t);
+  if (br) return `${br[1].padStart(2, "0")}/${br[2].padStart(2, "0")}/${br[3]}`;
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(t);
+  if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+  return t;
+}
+
 export function mensagemWhatsappOrcamento(nome: string, valor: number, comLink = true): string {
-  const primeiro = nome.trim().split(/\s+/)[0] || "";
+  const primeiro = primeiroNome(nome);
   const saudacao = primeiro ? `Olá, ${primeiro}!` : "Olá!";
   const v = valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   const base = `${saudacao} Segue o orçamento da *Alex Calhas* no valor de *${v}*.`;
   if (!comLink) return base;
-  const link =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/os?id=${encodeURIComponent(String(""))}`
-      : "";
-  return `${base}\n${link}`;
+  return base;
 }
 
 export function abrirWhatsappOrcamento(item: {
@@ -64,17 +82,41 @@ export function abrirWhatsappOrcamento(item: {
   nome: string;
   telefone: string;
   valor: number;
+  osToken?: string | null;
 }): void {
   const primeiro = primeiroNome(item.nome);
   const saudacao = primeiro ? `Olá, ${primeiro}!` : "Olá!";
   const v = item.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  const link = `${window.location.origin}/os?id=${item.id}`;
+  const link = osPublicUrl(item.id, item.osToken);
   const text = `${saudacao} Segue o orçamento da *Alex Calhas* no valor de *${v}*:\n${link}`;
   abrirWhatsappComTexto(item.telefone, text);
 }
 
-export function gerarOS(id: number): void {
-  window.open(`/os?id=${id}`, "_blank", "noopener,noreferrer");
+export function mensagemWhatsappMontagem(nome: string, dataMontagem?: string | null): string {
+  const primeiro = primeiroNome(nome);
+  const saudacao = saudacaoPeriodoDia();
+  const oi = primeiro ? `${saudacao}, ${primeiro}!` : `${saudacao}!`;
+  const quando = dataBrAmigavel(dataMontagem);
+  const dataLinha = quando
+    ? `Confirmamos a montagem para *${quando}*.`
+    : "Confirmamos a data da montagem.";
+  return (
+    `${oi} Tudo bem?\n\n` +
+    `Aqui é da *Alex Calhas*. ${dataLinha}\n\n` +
+    `Qualquer coisa é só chamar. Até já!`
+  );
+}
+
+export function abrirWhatsappMontagem(item: {
+  nome: string;
+  telefone: string;
+  dataMontagem?: string | null;
+}): void {
+  abrirWhatsappComTexto(item.telefone, mensagemWhatsappMontagem(item.nome, item.dataMontagem));
+}
+
+export function gerarOS(id: number, token?: string | null): void {
+  window.open(osPublicPath(id, token), "_blank", "noopener,noreferrer");
 }
 
 export function mensagemWhatsappCobranca(opts: {
@@ -94,6 +136,7 @@ export function mensagemWhatsappCobranca(opts: {
   return (
     `${saudacao}\n\n` +
     `Aqui é da *Alex Calhas*. O serviço já foi finalizado e ficou um saldo de *${v}* em aberto (${atraso}).\n\n` +
+    `PIX: ${OS_ORCAMENTO_EMPRESA.chavePix}\n\n` +
     `Quando puder, nos avise para combinarmos o pagamento. Qualquer dúvida estamos à disposição.\n\n` +
     `Obrigado!`
   );

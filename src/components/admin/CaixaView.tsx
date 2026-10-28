@@ -440,12 +440,16 @@ export function CaixaView() {
           </div>
           <div className="modal-body">
             <p className="caixa-lucro-modal__formula">
-              Lucro real = vendas − custo dos materiais − despesas do dia
+              Lucro real = recebimentos − custo dos materiais − despesas do dia
             </p>
 
             <div className="caixa-lucro-kpis">
               <div className="caixa-lucro-kpi">
-                <span>Vendas</span>
+                <span>Recebimentos</span>
+                <strong>{money(resumo?.recebimentos ?? 0)}</strong>
+              </div>
+              <div className="caixa-lucro-kpi">
+                <span>Vendas (contratado)</span>
                 <strong>{money(resumo?.vendas ?? 0)}</strong>
               </div>
               <div className="caixa-lucro-kpi">
@@ -465,9 +469,9 @@ export function CaixaView() {
               </div>
             </div>
 
-            <h3 className="caixa-lucro-modal__list-title">Vendas do dia</h3>
+            <h3 className="caixa-lucro-modal__list-title">Entradas do dia</h3>
             {(resumo?.vendasDetalhe?.length ?? 0) === 0 ? (
-              <p className="caixa-lucro-modal__empty">Nenhuma venda confirmada/finalizada neste dia.</p>
+              <p className="caixa-lucro-modal__empty">Nenhum pagamento nem venda legado neste dia.</p>
             ) : (
               <div className="caixa-lucro-table-wrap">
                 <table className="caixa-lucro-table">

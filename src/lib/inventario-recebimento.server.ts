@@ -284,3 +284,72 @@ export function agoraPagoEmLocal(): string {
   const s = new Date().toLocaleString("sv-SE", { timeZone: "America/Sao_Paulo" });
   return s.slice(0, 16).replace(" ", "T");
 }
+
+export type RecebimentoDoDia = {
+  id: number;
+  inventarioId: number;
+  valor: number;
+  tipo: RecebimentoTipo;
+  pagoEm: string;
+  nome: string;
+  formaPagamento: string | null;
+  status: string;
+};
+
+/** Pagamentos com DATE(pago_em) no dia (horário gravado no lançamento). */
+export async function listarRecebimentosDoDia(ymd: string): Promise<RecebimentoDoDia[]> {
+  const dia = /^\d{4}-\d{2}-\d{2}$/.test(ymd) ? ymd : "";
+  if (!dia) return [];
+
+  await ensureInventarioRecebimentoTable();
+  const prisma = await getPrisma();
+  const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+    `SELECT r.id, r.inventario_id, r.valor, r.tipo, r.pago_em,
+            i.nome, i.forma_pagamento AS forma_pagamento, i.status
+     FROM inventario_recebimento r
+     INNER JOIN inventario i ON i.id = r.inventario_id
+     WHERE DATE(r.pago_em) = '${esc(dia)}'
+     ORDER BY r.pago_em ASC, r.id ASC`,
+  );
+
+  return rows.map((r) => ({
+    id: int(r.id),
+    inventarioId: int(r.inventario_id),
+    valor: num(r.valor),
+    tipo: normalizarRecebimentoTipo(String(r.tipo ?? "sinal")),
+    pagoEm: pagoEmTexto(r.pago_em),
+    nome: String(r.nome ?? ""),
+    formaPagamento: r.forma_pagamento != null ? String(r.forma_pagamento) : null,
+    status: String(r.status ?? ""),
+  }));
+}
+
+export async function somaRecebimentosEntre(deYmd: string, ateYmd: string): Promise<number> {
+  const de = /^\d{4}-\d{2}-\d{2}$/.test(deYmd) ? deYmd : "";
+  const ate = /^\d{4}-\d{2}-\d{2}$/.test(ateYmd) ? ateYmd : "";
+  if (!de || !ate) return 0;
+
+  await ensureInventarioRecebimentoTable();
+  const prisma = await getPrisma();
+  const rows = await prisma.$queryRawUnsafe<{ total: unknown }[]>(
+    `SELECT COALESCE(SUM(valor), 0) AS total
+     FROM inventario_recebimento
+     WHERE DATE(pago_em) >= '${esc(de)}' AND DATE(pago_em) <= '${esc(ate)}'`,
+  );
+  return num(rows[0]?.total);
+}
+
+/** IDs de serviços que já têm pelo menos um pagamento lançado. */
+export async function idsComAlgumRecebimento(inventarioIds: number[]): Promise<Set<number>> {
+  const ids = inventarioIds.filter((id) => Number.isInteger(id) && id > 0);
+  if (ids.length === 0) return new Set();
+
+  await ensureInventarioRecebimentoTable();
+  const prisma = await getPrisma();
+  const rows = await prisma.$queryRawUnsafe<{ inventario_id: unknown }[]>(
+    `SELECT DISTINCT inventario_id
+     FROM inventario_recebimento
+     WHERE inventario_id IN (${ids.join(",")})`,
+  );
+  return new Set(rows.map((r) => int(r.inventario_id)).filter((id) => id > 0));
+}

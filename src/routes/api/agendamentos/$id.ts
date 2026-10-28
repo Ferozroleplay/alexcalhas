@@ -3,7 +3,11 @@ import { z } from "zod";
 
 import { INVENTARIO_STATUS } from "@/lib/agendamento-constants";
 import { dbErrorMessage, serializeInventario } from "@/lib/agendamento.server";
-import { getAdminSessionFromRequest, isAdminRequest } from "@/lib/auth.server";
+import {
+  funcionarioPodeVerInventario,
+  getAdminSessionFromRequest,
+  isAdminRequest,
+} from "@/lib/auth.server";
 import { getPrisma } from "@/lib/db.server";
 import { baixarEstoqueDoInventario } from "@/lib/estoque-baixa.server";
 import { jsonResponse } from "@/lib/http.server";
@@ -90,6 +94,9 @@ export const Route = createFileRoute("/api/agendamentos/$id")({
           const row = await prisma.inventario.findUnique({ where: { id } });
           if (!row) {
             return jsonResponse({ ok: false, message: "Agendamento não encontrado." }, 404);
+          }
+          if (!funcionarioPodeVerInventario(session, row.funcionario)) {
+            return jsonResponse({ ok: false, message: "Não autorizado." }, 403);
           }
           const st = row.status;
           const next = parsed.data.status;

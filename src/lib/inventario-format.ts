@@ -132,6 +132,20 @@ export function ordenarInventarioPorMontagem<T extends { id: number; dataMontage
   });
 }
 
+/** Visitas: data + hora crescente. Sem data vai para o topo. */
+export function ordenarInventarioPorVisita<
+  T extends { id: number; dataVisita?: string | null; horaVisita?: string | null },
+>(items: T[]): T[] {
+  return [...items].sort((a, b) => {
+    const diff = timestampDataMontagemBr(a.dataVisita) - timestampDataMontagemBr(b.dataVisita);
+    if (diff !== 0) return diff;
+    const ha = String(a.horaVisita ?? "");
+    const hb = String(b.horaVisita ?? "");
+    if (ha !== hb) return ha.localeCompare(hb);
+    return a.id - b.id;
+  });
+}
+
 export function dataReferenciaAtraso(item: {
   dataMontagem?: string | null;
   dataVisita?: string | null;

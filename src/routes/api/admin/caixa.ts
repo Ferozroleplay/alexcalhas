@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { dbErrorMessage } from "@/lib/agendamento.server";
-import { getAdminSessionFromRequest, isAdminRequest } from "@/lib/auth.server";
+import { getAdminSessionFromRequest, isAdminVisaoRequest } from "@/lib/auth.server";
 import {
   getCaixaDia,
   listCaixaStatusMes,
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/api/admin/caixa")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        if (!isAdminRequest(request)) {
+        if (!isAdminVisaoRequest(request)) {
           return jsonResponse({ ok: false, message: "Não autorizado." }, 401);
         }
 
@@ -45,7 +45,7 @@ export const Route = createFileRoute("/api/admin/caixa")({
       },
 
       POST: async ({ request }) => {
-        if (!isAdminRequest(request)) {
+        if (!isAdminVisaoRequest(request)) {
           return jsonResponse({ ok: false, message: "Não autorizado." }, 401);
         }
 

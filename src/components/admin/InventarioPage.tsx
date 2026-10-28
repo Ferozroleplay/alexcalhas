@@ -26,6 +26,7 @@ import {
   labelDiasAtraso,
   ordenarInventarioPorAtraso,
   ordenarInventarioPorMontagem,
+  ordenarInventarioPorVisita,
 } from "@/lib/inventario-format";
 import { ModalConfirmarMontagem } from "@/components/admin/modals/ModalConfirmarMontagem";
 import { ModalFinalizarServico } from "@/components/admin/modals/ModalFinalizarServico";
@@ -42,6 +43,7 @@ import {
 import { INVENTARIO_LISTING_META } from "@/lib/inventario-listing-meta";
 import {
   abrirWhatsappCobranca,
+  abrirWhatsappMontagem,
   abrirWhatsappOrcamento,
   abrirWhatsappVisita,
   gerarOS,
@@ -103,6 +105,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const [busca, setBusca] = useState("");
+  const [buscaDebounced, setBuscaDebounced] = useState("");
 
   const [orcamentoOpen, setOrcamentoOpen] = useState(false);
   const [orcamentoMode, setOrcamentoMode] = useState<"novo" | "editar">("novo");
@@ -125,20 +128,31 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
     setLoading(true);
     setError("");
     try {
-      setItems(await fetchAgendamentos(statusFilter));
+      setItems(
+        await fetchAgendamentos(statusFilter, {
+          q: buscaDebounced,
+          limit: 1000,
+        }),
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao carregar.");
       setItems([]);
     } finally {
       setLoading(false);
     }
-  }, [statusFilter]);
+  }, [statusFilter, buscaDebounced]);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setBuscaDebounced(busca.trim()), 350);
+    return () => window.clearTimeout(t);
+  }, [busca]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
   const sortedItems = useMemo(() => {
+    if (variant === "visitas") return ordenarInventarioPorVisita(items);
     if (variant === "confirmado") return ordenarInventarioPorMontagem(items);
     if (variant === "pendencias") return ordenarInventarioPorAtraso(items);
     return items;
@@ -262,8 +276,44 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
         nome: item.nome,
         telefone: item.telefone,
         valor: Number(item.valor),
+        osToken: item.osToken,
       });
     }
+  }
+
+  function abrirOS(item: AgendamentoItem) {
+    gerarOS(item.id, item.osToken);
+  }
+
+  function abrirZapOrcamento(item: AgendamentoItem) {
+    abrirWhatsappOrcamento({
+      id: item.id,
+      nome: item.nome,
+      telefone: item.telefone,
+      valor: Number(item.valor),
+      osToken: item.osToken,
+    });
+  }
+
+  function abrirZapEtapa(item: AgendamentoItem) {
+    if (variant === "visitas") {
+      abrirWhatsappVisita(item);
+      return;
+    }
+    if (variant === "confirmado") {
+      abrirWhatsappMontagem(item);
+      return;
+    }
+    if (variant === "pendencias") {
+      abrirWhatsappCobranca({
+        nome: item.nome,
+        telefone: item.telefone,
+        saldo: Number(item.saldoPendente ?? 0),
+        diasAtraso: diasAtrasoPagamento(dataReferenciaAtraso(item)),
+      });
+      return;
+    }
+    abrirZapOrcamento(item);
   }
 
   function renderActions(item: AgendamentoItem) {
@@ -323,19 +373,12 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
               setMontagemOpen(true);
             }}
           />
-          <InvActionBtn icon="bi-file-text" title="Ver orçamento (OS)" variant="secondary" onClick={() => gerarOS(item.id)} />
+          <InvActionBtn icon="bi-file-text" title="Ver orçamento (OS)" variant="secondary" onClick={() => abrirOS(item)} />
           <InvActionBtn
             icon="bi-whatsapp"
             title="Enviar orçamento no WhatsApp"
             variant="whatsapp"
-            onClick={() =>
-              abrirWhatsappOrcamento({
-                id: item.id,
-                nome: item.nome,
-                telefone: item.telefone,
-                valor: Number(item.valor),
-              })
-            }
+            onClick={() => abrirZapOrcamento(item)}
           />
         </>
       );
@@ -343,7 +386,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
         {
           label: "Ver orçamento",
           icon: "bi-file-text",
-          onClick: () => gerarOS(item.id),
+          onClick: () => abrirOS(item),
         },
         {
           label: "Pagamentos",
@@ -389,19 +432,12 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
             title="Finalizar"
             onClick={() => handleFinalizar(item)}
           />
-          <InvActionBtn icon="bi-file-text" title="Ver orçamento (OS)" variant="secondary" onClick={() => gerarOS(item.id)} />
+          <InvActionBtn icon="bi-file-text" title="Ver orçamento (OS)" variant="secondary" onClick={() => abrirOS(item)} />
           <InvActionBtn
             icon="bi-whatsapp"
-            title="WhatsApp"
+            title="Avisar data da montagem"
             variant="whatsapp"
-            onClick={() =>
-              abrirWhatsappOrcamento({
-                id: item.id,
-                nome: item.nome,
-                telefone: item.telefone,
-                valor: Number(item.valor),
-              })
-            }
+            onClick={() => abrirWhatsappMontagem(item)}
           />
         </>
       );
@@ -413,7 +449,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
             {
               label: "Ver orçamento",
               icon: "bi-file-text",
-              onClick: () => gerarOS(item.id),
+              onClick: () => abrirOS(item),
             },
             {
               label: "Pagamentos",
@@ -470,7 +506,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
             variant="secondary"
             onClick={() => openRecebimentos(item)}
           />
-          <InvActionBtn icon="bi-file-text" title="Ver orçamento (OS)" variant="secondary" onClick={() => gerarOS(item.id)} />
+          <InvActionBtn icon="bi-file-text" title="Ver orçamento (OS)" variant="secondary" onClick={() => abrirOS(item)} />
         </>
       );
       return (
@@ -497,7 +533,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
             {
               label: "Ver orçamento",
               icon: "bi-file-text",
-              onClick: () => gerarOS(item.id),
+              onClick: () => abrirOS(item),
             },
             {
               label: "Ficha do cliente",
@@ -520,19 +556,12 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
 
     const primary = (
       <>
-        <InvActionBtn icon="bi-file-text" title="Ver orçamento (OS)" variant="secondary" onClick={() => gerarOS(item.id)} />
+        <InvActionBtn icon="bi-file-text" title="Ver orçamento (OS)" variant="secondary" onClick={() => abrirOS(item)} />
         <InvActionBtn
           icon="bi-whatsapp"
-          title="WhatsApp"
+          title="Enviar OS no WhatsApp"
           variant="whatsapp"
-          onClick={() =>
-            abrirWhatsappOrcamento({
-              id: item.id,
-              nome: item.nome,
-              telefone: item.telefone,
-              valor: Number(item.valor),
-            })
-          }
+          onClick={() => abrirZapOrcamento(item)}
         />
       </>
     );
@@ -544,7 +573,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
           {
             label: "Ver orçamento",
             icon: "bi-file-text",
-            onClick: () => gerarOS(item.id),
+            onClick: () => abrirOS(item),
           },
           {
             label: "Ficha do cliente",
@@ -732,11 +761,13 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
                               title={
                                 variant === "visitas"
                                   ? "Avisar que estamos a caminho"
-                                  : "Chamar no WhatsApp"
+                                  : variant === "confirmado"
+                                    ? "Avisar data da montagem"
+                                    : variant === "pendencias"
+                                      ? "Cobrar no WhatsApp"
+                                      : "Chamar no WhatsApp"
                               }
-                              onWhatsApp={
-                                variant === "visitas" ? () => abrirWhatsappVisita(item) : undefined
-                              }
+                              onWhatsApp={() => abrirZapEtapa(item)}
                             />
                           </td>
                           <td className="inv-col-endereco inv-col-endereco--compact">
@@ -831,11 +862,13 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
                             title={
                               variant === "visitas"
                                 ? "Avisar que estamos a caminho"
-                                : "Chamar no WhatsApp"
+                                : variant === "confirmado"
+                                  ? "Avisar data da montagem"
+                                  : variant === "pendencias"
+                                    ? "Cobrar no WhatsApp"
+                                    : "Chamar no WhatsApp"
                             }
-                            onWhatsApp={
-                              variant === "visitas" ? () => abrirWhatsappVisita(item) : undefined
-                            }
+                            onWhatsApp={() => abrirZapEtapa(item)}
                           />
                         }
                       />

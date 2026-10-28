@@ -10,7 +10,7 @@ export const Route = createFileRoute("/api/consulta-documento")({
       GET: async ({ request }) => {
         const url = new URL(request.url);
         const documento = url.searchParams.get("documento") ?? url.searchParams.get("doc") ?? "";
-        const payload = await consultarDocumento(documento);
+        const payload = await consultarDocumento(documento, { incluirCadastro: false });
         const code = payload.status === "sucesso" ? 200 : 400;
         return jsonResponse(payload, code);
       },

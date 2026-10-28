@@ -1,5 +1,10 @@
 import { getPrisma } from "@/lib/db.server";
 import { listDespesas } from "@/lib/despesas.server";
+import {
+  idsComAlgumRecebimento,
+  labelRecebimentoTipo,
+  listarRecebimentosDoDia,
+} from "@/lib/inventario-recebimento.server";
 import { parseDataInventario } from "@/lib/inventario-stats.server";
 import { parseFormaPagamento } from "@/lib/orcamento.server";
 
@@ -33,7 +38,7 @@ export type CaixaDiaResumo = {
   custoMateriais: number;
   /** Despesas cadastradas no dia. */
   despesas: number;
-  /** Lucro real = vendas − custo − despesas. */
+  /** Lucro real = recebimentos − custo − despesas. */
   lucroReal: number;
   margemPct: number;
   vendasDetalhe: CaixaVendaItem[];
@@ -213,15 +218,10 @@ export async function getCaixaDia(dataYmd: string): Promise<CaixaDiaResumo> {
     },
   });
 
-  let dinheiro = 0;
-  let cartoes = 0;
-  let cheques = 0;
-  let pix = 0;
-  let financeira = 0;
   let qtdVendas = 0;
   let vendas = 0;
   let custoMateriais = 0;
-  const vendasDetalhe: CaixaVendaItem[] = [];
+  const jobsDia: Array<CaixaVendaItem & { formaRaw: string | null }> = [];
 
   for (const row of rows) {
     const status = row.status.trim().toLowerCase().replace("ç", "c");
@@ -241,19 +241,61 @@ export async function getCaixaDia(dataYmd: string): Promise<CaixaDiaResumo> {
     vendas += venda;
     custoMateriais += custo;
 
-    const forma = parseFormaPagamento(row.formaPagamento).forma;
-    if (forma === "pix") pix += venda;
-    else if (forma === "debito" || forma === "credito") cartoes += venda;
-    else dinheiro += venda;
-
-    vendasDetalhe.push({
+    jobsDia.push({
       id: row.id,
       nome: row.nome,
       status: status === "finalizado" ? "Finalizado" : "Confirmado",
       forma: formaLabel(row.formaPagamento),
+      formaRaw: row.formaPagamento,
       venda,
       custo,
       lucro: round2(venda - custo),
+    });
+  }
+
+  const [pagamentos, idsComPagamento] = await Promise.all([
+    listarRecebimentosDoDia(ymd),
+    idsComAlgumRecebimento(jobsDia.map((j) => j.id)),
+  ]);
+
+  let dinheiro = 0;
+  let cartoes = 0;
+  let cheques = 0;
+  let pix = 0;
+  let financeira = 0;
+  const vendasDetalhe: CaixaVendaItem[] = [];
+
+  const somarForma = (formaRaw: string | null | undefined, valor: number) => {
+    const forma = parseFormaPagamento(formaRaw).forma;
+    if (forma === "pix") pix += valor;
+    else if (forma === "debito" || forma === "credito") cartoes += valor;
+    else dinheiro += valor;
+  };
+
+  for (const p of pagamentos) {
+    somarForma(p.formaPagamento, p.valor);
+    vendasDetalhe.push({
+      id: p.inventarioId,
+      nome: p.nome,
+      status: labelRecebimentoTipo(p.tipo),
+      forma: formaLabel(p.formaPagamento),
+      venda: p.valor,
+      custo: 0,
+      lucro: p.valor,
+    });
+  }
+
+  for (const job of jobsDia) {
+    if (idsComPagamento.has(job.id)) continue;
+    somarForma(job.formaRaw, job.venda);
+    vendasDetalhe.push({
+      id: job.id,
+      nome: job.nome,
+      status: job.status,
+      forma: job.forma,
+      venda: job.venda,
+      custo: job.custo,
+      lucro: job.lucro,
     });
   }
 
@@ -264,14 +306,12 @@ export async function getCaixaDia(dataYmd: string): Promise<CaixaDiaResumo> {
     despesasLista.filter((x) => x.data === ymd).reduce((s, x) => s + x.valor, 0),
   );
 
-  const recebimentos = vendas;
+  const recebimentos = round2(dinheiro + cartoes + cheques + pix + financeira);
   const sangriasSuprimentos = 0;
   const devolucoes = 0;
-  const saldoFinal = round2(
-    dinheiro + cartoes + cheques + pix + financeira - sangriasSuprimentos - devolucoes,
-  );
-  const lucroReal = round2(vendas - custoMateriais - despesas);
-  const margemPct = vendas > 0 ? round2((lucroReal / vendas) * 100) : 0;
+  const saldoFinal = round2(recebimentos - sangriasSuprimentos - devolucoes);
+  const lucroReal = round2(recebimentos - custoMateriais - despesas);
+  const margemPct = recebimentos > 0 ? round2((lucroReal / recebimentos) * 100) : 0;
 
   return {
     data: ymd,

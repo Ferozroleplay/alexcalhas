@@ -4,7 +4,11 @@ import { z } from "zod";
 import { dbErrorMessage, serializeInventario } from "@/lib/agendamento.server";
 import { quantidadeLinhaOrcamento, totalLinhaOrcamento } from "@/lib/os-document";
 import { splitMaterialOrcamentoLabel } from "@/lib/orcamento.server";
-import { getAdminSessionFromRequest, isAdminRequest } from "@/lib/auth.server";
+import {
+  funcionarioPodeVerInventario,
+  getAdminSessionFromRequest,
+  isAdminRequest,
+} from "@/lib/auth.server";
 import { getPrisma } from "@/lib/db.server";
 import { formatMoeda } from "@/lib/financeiro-display";
 import { jsonResponse } from "@/lib/http.server";
@@ -49,6 +53,9 @@ export const Route = createFileRoute("/api/agendamentos/$id/recebimentos")({
           const prisma = await getPrisma();
           const row = await prisma.inventario.findUnique({ where: { id } });
           if (!row) return jsonResponse({ ok: false, message: "Registro não encontrado." }, 404);
+          if (!funcionarioPodeVerInventario(session, row.funcionario)) {
+            return jsonResponse({ ok: false, message: "Não autorizado." }, 403);
+          }
           if (!statusPermiteRecebimento(row.status)) {
             return jsonResponse({ ok: false, message: "Recebimentos só em orçamentado, confirmado ou finalizado." }, 400);
           }
@@ -123,6 +130,9 @@ export const Route = createFileRoute("/api/agendamentos/$id/recebimentos")({
           const prisma = await getPrisma();
           const row = await prisma.inventario.findUnique({ where: { id } });
           if (!row) return jsonResponse({ ok: false, message: "Registro não encontrado." }, 404);
+          if (!funcionarioPodeVerInventario(session, row.funcionario)) {
+            return jsonResponse({ ok: false, message: "Não autorizado." }, 403);
+          }
           if (!statusPermiteRecebimento(row.status)) {
             return jsonResponse({ ok: false, message: "Recebimentos só em orçamentado, confirmado ou finalizado." }, 400);
           }
@@ -197,6 +207,9 @@ export const Route = createFileRoute("/api/agendamentos/$id/recebimentos")({
           const prisma = await getPrisma();
           const row = await prisma.inventario.findUnique({ where: { id } });
           if (!row) return jsonResponse({ ok: false, message: "Registro não encontrado." }, 404);
+          if (!funcionarioPodeVerInventario(session, row.funcionario)) {
+            return jsonResponse({ ok: false, message: "Não autorizado." }, 403);
+          }
           if (!statusPermiteRecebimento(row.status)) {
             return jsonResponse({ ok: false, message: "Recebimentos só em orçamentado, confirmado ou finalizado." }, 400);
           }
@@ -262,6 +275,9 @@ export const Route = createFileRoute("/api/agendamentos/$id/recebimentos")({
           const prisma = await getPrisma();
           const row = await prisma.inventario.findUnique({ where: { id } });
           if (!row) return jsonResponse({ ok: false, message: "Registro não encontrado." }, 404);
+          if (!funcionarioPodeVerInventario(session, row.funcionario)) {
+            return jsonResponse({ ok: false, message: "Não autorizado." }, 403);
+          }
 
           const res = await excluirRecebimentoInventario(recId, id);
           if (!res.ok) return jsonResponse({ ok: false, message: res.message }, 400);

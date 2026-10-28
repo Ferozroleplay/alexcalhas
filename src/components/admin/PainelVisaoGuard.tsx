@@ -4,28 +4,12 @@ import { useEffect } from "react";
 import { useAdminAuth } from "@/components/admin/admin-auth";
 import type { AdminVisao } from "@/lib/visao.server";
 
-/** Rotas que só o admin (visão admin) pode acessar. */
-const ADMIN_ONLY = [
-  "/painel",
-  "/painel/orcamentado",
-  "/painel/confirmado",
-  "/painel/finalizado",
-  "/painel/pendencias",
-  "/painel/material",
-  "/painel/empresa",
-  "/painel/clientes",
-  "/painel/usuarios",
-  "/painel/financeiro",
-  "/painel/logs",
-  "/painel/ponto-controle",
-  "/painel/produtos",
-  "/painel/agendar",
-];
-
 /** Rotas permitidas ao funcionário. */
 const FUNC_ALLOWED_PREFIXES = [
   "/painel/ponto",
   "/painel/visitas",
+  "/painel/orcamentado",
+  "/painel/confirmado",
   "/painel/despesas",
   "/painel/funcionarios",
   "/painel/calculadora-bobina",

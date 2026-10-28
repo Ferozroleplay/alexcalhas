@@ -2,7 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { dataInputParaDb, dbErrorMessage, serializeInventario } from "@/lib/agendamento.server";
-import { isAdminRequest } from "@/lib/auth.server";
+import {
+  funcionarioPodeVerInventario,
+  getAdminSessionFromRequest,
+  isAdminRequest,
+} from "@/lib/auth.server";
 import { getPrisma } from "@/lib/db.server";
 import { baixarEstoqueDoInventario } from "@/lib/estoque-baixa.server";
 import { jsonResponse } from "@/lib/http.server";
@@ -52,6 +56,10 @@ export const Route = createFileRoute("/api/agendamentos/$id/confirmar-montagem")
           });
           if (!row) {
             return jsonResponse({ ok: false, message: "Serviço não encontrado." }, 404);
+          }
+          const session = getAdminSessionFromRequest(request);
+          if (!funcionarioPodeVerInventario(session, row.funcionario)) {
+            return jsonResponse({ ok: false, message: "Não autorizado." }, 403);
           }
 
           const updated = await prisma.inventario.update({
