@@ -1,6 +1,7 @@
 import {
   buildInventarioCreateData,
   ensureInventarioTextosCliente,
+  excluirInventario,
   horariosLivresVisita,
   toDataVisitaBr,
 } from "@/lib/agendamento.server";
@@ -1247,7 +1248,7 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
       return { reply: "Ok, mantive o agendamento.", ficha: { ...ficha, intencao: undefined }, pills: [] };
     }
     const prisma = await getPrisma();
-    await prisma.inventario.delete({ where: { id: atual.id } });
+    await excluirInventario(prisma, atual.id);
     return {
       reply: `Pronto, cancelei a visita nº ${atual.id}. Se precisar de novo, é só chamar.`,
       ficha: { intencao: undefined },

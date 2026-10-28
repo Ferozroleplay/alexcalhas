@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { INVENTARIO_STATUS } from "@/lib/agendamento-constants";
-import { dbErrorMessage, serializeInventario } from "@/lib/agendamento.server";
+import { dbErrorMessage, excluirInventario, serializeInventario } from "@/lib/agendamento.server";
 import {
   funcionarioPodeVerInventario,
   getAdminSessionFromRequest,
@@ -44,7 +44,7 @@ export const Route = createFileRoute("/api/agendamentos/$id")({
 
         try {
           const prisma = await getPrisma();
-          await prisma.inventario.delete({ where: { id } });
+          await excluirInventario(prisma, id);
           return jsonResponse({ ok: true });
         } catch (err) {
           console.error("[DELETE /api/agendamentos/$id]", err);

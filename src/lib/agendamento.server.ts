@@ -57,6 +57,9 @@ export function agendamentoHoraAtualBr(): string {
   });
 }
 
+/** Só visita em aberto trava a grade. Orçamento, obra e exclusão liberam o horário. */
+const STATUS_OCUPA_GRADE = ["agendado"] as const;
+
 async function minutosOcupadosNoDia(prisma: PrismaClient, dataBr: string): Promise<number[]> {
   const rows = await prisma.inventario.findMany({
     where: {
@@ -65,7 +68,7 @@ async function minutosOcupadosNoDia(prisma: PrismaClient, dataBr: string): Promi
           OR: [{ dataVisita: dataBr }, { dataVisita: { startsWith: `${dataBr} ` } }],
         },
         {
-          status: { in: ["agendado", "orcamentado", "orçamentado", "confirmado"] },
+          status: { in: [...STATUS_OCUPA_GRADE] },
         },
       ],
     },
@@ -143,7 +146,7 @@ export async function horariosLivresNoMes(
           ],
         },
         {
-          status: { in: ["agendado", "orcamentado", "orçamentado", "confirmado"] },
+          status: { in: [...STATUS_OCUPA_GRADE] },
         },
       ],
     },
@@ -321,6 +324,17 @@ export function buildInventarioCreateData(
     dataMontagem: null,
     orcamento: null,
   };
+}
+
+export async function excluirInventario(prisma: PrismaClient, id: number): Promise<void> {
+  const invId = Math.trunc(id);
+  if (!Number.isFinite(invId) || invId < 1) return;
+  try {
+    await prisma.$executeRawUnsafe(`DELETE FROM inventario_recebimento WHERE inventario_id = ${invId}`);
+  } catch {
+    /* tabela pode não existir */
+  }
+  await prisma.inventario.delete({ where: { id: invId } });
 }
 
 export function dbErrorMessage(err: unknown): string {

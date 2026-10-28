@@ -12,7 +12,7 @@ export async function fetchHorariosVisita(
   signal?: AbortSignal,
 ): Promise<string[]> {
   const qs = new URLSearchParams({ data });
-  const res = await fetch(`/api/horarios-visita?${qs}`, { signal });
+  const res = await fetch(`/api/horarios-visita?${qs}`, { signal, cache: "no-store" });
   const json = (await res.json()) as { ok?: boolean; horarios?: string[] };
   if (!res.ok || !json.ok) {
     throw new Error("Não foi possível carregar os horários.");
@@ -25,7 +25,7 @@ export async function fetchHorariosMes(
   signal?: AbortSignal,
 ): Promise<Record<string, string[]>> {
   const qs = new URLSearchParams({ mes });
-  const res = await fetch(`/api/horarios-visita?${qs}`, { signal });
+  const res = await fetch(`/api/horarios-visita?${qs}`, { signal, cache: "no-store" });
   const json = (await res.json()) as { ok?: boolean; dias?: Record<string, string[]> };
   if (!res.ok || !json.ok) {
     throw new Error("Não foi possível carregar os horários.");
