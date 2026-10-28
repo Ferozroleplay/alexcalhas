@@ -47,6 +47,9 @@ export const PECA_2 = {
 } as const;
 
 const EPS = 0.001;
+const SPAN_D = PECA_1.deslocamento - PECA_2.deslocamento;
+const SPAN_I = PECA_1.inclinacao - PECA_2.inclinacao;
+const SPAN_Q = PECA_1.queda - PECA_2.queda;
 
 export function fmtCm(n: number): string {
   return n.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
@@ -54,6 +57,22 @@ export function fmtCm(n: number): string {
 
 function quaseIgual(a: number, b: number): boolean {
   return Math.abs(a - b) < EPS;
+}
+
+function tDeslocamento(d: number): number {
+  return (d - PECA_2.deslocamento) / SPAN_D;
+}
+
+function estimarQueda(d: number): number {
+  return Math.max(0, PECA_2.queda + SPAN_Q * tDeslocamento(d));
+}
+
+function estimarInclinacao(d: number, queda: number): number {
+  const noIntervaloCalibrado = d > PECA_2.deslocamento && d < PECA_1.deslocamento;
+  if (noIntervaloCalibrado) {
+    return PECA_2.inclinacao + SPAN_I * tDeslocamento(d);
+  }
+  return Math.hypot(d, queda);
 }
 
 export function calcularCondutores(entrada: CondutoresEntrada): CondutoresResultado {
@@ -69,14 +88,12 @@ export function calcularCondutores(entrada: CondutoresEntrada): CondutoresResult
   let status = "";
   let statusKind: CondutoresStatusKind = "warning";
   let pecaReferencia: 1 | 2 | null = null;
+  const mesmaSecao = valido && quaseIgual(w, 6) && quaseIgual(m, 4.5);
 
   if (!valido) {
     status = "Preencha medidas válidas, com altura total maior que a primeira descida.";
     statusKind = "error";
-  } else if (!quaseIgual(w, 6) || !quaseIgual(m, 4.5)) {
-    status =
-      "Largura ou marcação diferente das peças de referência. Sem calibração: não é possível calcular inclinação e descida final com segurança.";
-  } else if (quaseIgual(d, PECA_1.deslocamento)) {
+  } else if (mesmaSecao && quaseIgual(d, PECA_1.deslocamento)) {
     inclinacao = PECA_1.inclinacao;
     queda = PECA_1.queda;
     alturaFinal = h - p - queda;
@@ -84,7 +101,7 @@ export function calcularCondutores(entrada: CondutoresEntrada): CondutoresResult
     status =
       "Inclinação e queda de referência da peça 1. A altura final foi calculada com a queda de referência de 20 cm; valide se alterar a primeira descida.";
     statusKind = "ok";
-  } else if (quaseIgual(d, PECA_2.deslocamento)) {
+  } else if (mesmaSecao && quaseIgual(d, PECA_2.deslocamento)) {
     inclinacao = PECA_2.inclinacao;
     queda = PECA_2.queda;
     alturaFinal = h - p - queda;
@@ -92,16 +109,14 @@ export function calcularCondutores(entrada: CondutoresEntrada): CondutoresResult
     status =
       "Inclinação e queda de referência da peça 2. A altura final foi calculada com a queda de referência de 18 cm; valide se alterar a primeira descida.";
     statusKind = "ok";
-  } else if (d > PECA_2.deslocamento && d < PECA_1.deslocamento) {
-    const t = (d - PECA_2.deslocamento) / 2.5;
-    inclinacao = PECA_2.inclinacao + 5.5 * t;
-    queda = PECA_2.queda + 2 * t;
-    alturaFinal = h - p - queda;
-    status =
-      "ESTIMATIVA por interpolação entre duas peças reais, não uma fórmula de dobra validada. Não utilizar para cortar material.";
   } else {
-    status =
-      "Fora do intervalo de deslocamentos calibrados (51 a 53,5 cm). É necessário medir outra peça ou validar a geometria antes de calcular.";
+    queda = estimarQueda(d);
+    inclinacao = estimarInclinacao(d, queda);
+    alturaFinal = h - p - queda;
+    const noIntervalo = d > PECA_2.deslocamento && d < PECA_1.deslocamento;
+    status = noIntervalo
+      ? "ESTIMATIVA por interpolação entre duas peças reais. Confira na obra antes de cortar."
+      : "ESTIMATIVA pela geometria (horizontal e queda). Qualquer medida entra; confira na peça antes de cortar.";
   }
 
   if (alturaFinal !== null && alturaFinal < 0) {
@@ -150,7 +165,7 @@ export function calcularCondutores(entrada: CondutoresEntrada): CondutoresResult
     subtotal,
     formula:
       subtotal === null || inclinacao === null || alturaFinal === null
-        ? "Inclinação e descida final precisam estar calibradas"
+        ? "Preencha as medidas da obra para somar a referência"
         : `${fmtCm(p)} + ${fmtCm(inclinacao)} + ${fmtCm(alturaFinal)} cm`,
     diferenca: hasReal && subtotal !== null && corteReal !== null ? corteReal - subtotal : null,
     corteTotalLabel,

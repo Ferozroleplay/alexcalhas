@@ -283,7 +283,7 @@ export function CalculadoraCondutoresPage() {
             <Campo
               id="condutor-d"
               label="Deslocamento nivelado"
-              hint="Horizontal na borda — 53,5 não é 0,535."
+              hint="Horizontal na borda — pode ser qualquer medida da obra."
               value={campos.deslocamento}
               onChange={(v) => setCampo("deslocamento", v)}
             />
@@ -440,9 +440,8 @@ export function CalculadoraCondutoresPage() {
             </table>
           </div>
           <p className="dash-condutor-footnote">
-            2,5 cm a menos na horizontal viraram 5,5 cm na inclinação. Não use interpolação como
-            gabarito de corte. Meça o desenvolvimento das duas dobras e a folga de encaixe antes de
-            cortar a chapa.
+            As peças 1 e 2 só calibram 51 e 53,5 cm. Fora disso a inclinação é estimada. Meça o
+            desenvolvimento das duas dobras e a folga de encaixe antes de cortar a chapa.
           </p>
         </section>
       </div>
