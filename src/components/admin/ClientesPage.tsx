@@ -302,16 +302,27 @@ export function ClientesPage() {
                     <p className="cli-toolbar__hint mb-0">Cada agendamento entra aqui automaticamente</p>
                   </div>
                 </div>
-                <Link to="/painel/agendar" className="cli-toolbar__cta">
-                  <span className="cli-toolbar__cta-icon" aria-hidden="true">
-                    <i className="bi bi-calendar-plus" />
-                  </span>
-                  <span className="cli-toolbar__cta-text">
-                    <strong>Agendar visita</strong>
-                    <small>Novo cliente ou retorno</small>
-                  </span>
-                  <i className="bi bi-arrow-right cli-toolbar__cta-arrow" aria-hidden="true" />
-                </Link>
+                <div className="cli-toolbar__ctas">
+                  <Link to="/painel/avisos" className="cli-toolbar__cta cli-toolbar__cta--ghost">
+                    <span className="cli-toolbar__cta-icon" aria-hidden="true">
+                      <i className="bi bi-megaphone" />
+                    </span>
+                    <span className="cli-toolbar__cta-text">
+                      <strong>Avisar clientes</strong>
+                      <small>Mensagem no WhatsApp</small>
+                    </span>
+                  </Link>
+                  <Link to="/painel/agendar" className="cli-toolbar__cta">
+                    <span className="cli-toolbar__cta-icon" aria-hidden="true">
+                      <i className="bi bi-calendar-plus" />
+                    </span>
+                    <span className="cli-toolbar__cta-text">
+                      <strong>Agendar visita</strong>
+                      <small>Novo cliente ou retorno</small>
+                    </span>
+                    <i className="bi bi-arrow-right cli-toolbar__cta-arrow" aria-hidden="true" />
+                  </Link>
+                </div>
               </div>
               <form onSubmit={buscar} className="cli-toolbar__search row g-2 align-items-end">
                 <div className="col-12 col-lg">

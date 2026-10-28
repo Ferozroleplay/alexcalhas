@@ -23,6 +23,7 @@ import { Route as ApiOsRouteImport } from './routes/api/os'
 import { Route as ApiSiteChatRouteImport } from './routes/api/site-chat'
 import { Route as PainelIndexRouteImport } from './routes/painel/index'
 import { Route as PainelAgendarRouteImport } from './routes/painel/agendar'
+import { Route as PainelAvisosRouteImport } from './routes/painel/avisos'
 import { Route as PainelCalculadoraBobinaRouteImport } from './routes/painel/calculadora-bobina'
 import { Route as PainelCalculadoraCondutoresRouteImport } from './routes/painel/calculadora-condutores'
 import { Route as PainelClientesRouteImport } from './routes/painel/clientes'
@@ -47,6 +48,7 @@ import { Route as PainelUsuariosRouteImport } from './routes/painel/usuarios'
 import { Route as PainelVisitasRouteImport } from './routes/painel/visitas'
 import { Route as ApiAdminCaixaRouteImport } from './routes/api/admin/caixa'
 import { Route as ApiAdminClientesRouteImport } from './routes/api/admin/clientes'
+import { Route as ApiAdminClientesAvisoRouteImport } from './routes/api/admin/clientes-aviso'
 import { Route as ApiAdminConsultaCnpjRouteImport } from './routes/api/admin/consulta-cnpj'
 import { Route as ApiAdminConsultaDocumentoRouteImport } from './routes/api/admin/consulta-documento'
 import { Route as ApiAdminDashboardRouteImport } from './routes/api/admin/dashboard'
@@ -154,6 +156,11 @@ const PainelIndexRoute = PainelIndexRouteImport.update({
 const PainelAgendarRoute = PainelAgendarRouteImport.update({
   id: '/agendar',
   path: '/agendar',
+  getParentRoute: () => PainelRouteRoute,
+} as any)
+const PainelAvisosRoute = PainelAvisosRouteImport.update({
+  id: '/avisos',
+  path: '/avisos',
   getParentRoute: () => PainelRouteRoute,
 } as any)
 const PainelCalculadoraBobinaRoute = PainelCalculadoraBobinaRouteImport.update({
@@ -275,6 +282,11 @@ const ApiAdminCaixaRoute = ApiAdminCaixaRouteImport.update({
 const ApiAdminClientesRoute = ApiAdminClientesRouteImport.update({
   id: '/api/admin/clientes',
   path: '/api/admin/clientes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminClientesAvisoRoute = ApiAdminClientesAvisoRouteImport.update({
+  id: '/api/admin/clientes-aviso',
+  path: '/api/admin/clientes-aviso',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAdminConsultaCnpjRoute = ApiAdminConsultaCnpjRouteImport.update({
@@ -491,6 +503,7 @@ export interface FileRoutesByFullPath {
   '/api/os': typeof ApiOsRoute
   '/api/site-chat': typeof ApiSiteChatRoute
   '/painel/agendar': typeof PainelAgendarRoute
+  '/painel/avisos': typeof PainelAvisosRoute
   '/painel/calculadora-bobina': typeof PainelCalculadoraBobinaRoute
   '/painel/calculadora-condutores': typeof PainelCalculadoraCondutoresRoute
   '/painel/clientes': typeof PainelClientesRoute
@@ -516,6 +529,7 @@ export interface FileRoutesByFullPath {
   '/painel/': typeof PainelIndexRoute
   '/api/admin/caixa': typeof ApiAdminCaixaRoute
   '/api/admin/clientes': typeof ApiAdminClientesRoute
+  '/api/admin/clientes-aviso': typeof ApiAdminClientesAvisoRoute
   '/api/admin/consulta-cnpj': typeof ApiAdminConsultaCnpjRoute
   '/api/admin/consulta-documento': typeof ApiAdminConsultaDocumentoRoute
   '/api/admin/dashboard': typeof ApiAdminDashboardRoute
@@ -568,6 +582,7 @@ export interface FileRoutesByTo {
   '/api/os': typeof ApiOsRoute
   '/api/site-chat': typeof ApiSiteChatRoute
   '/painel/agendar': typeof PainelAgendarRoute
+  '/painel/avisos': typeof PainelAvisosRoute
   '/painel/calculadora-bobina': typeof PainelCalculadoraBobinaRoute
   '/painel/calculadora-condutores': typeof PainelCalculadoraCondutoresRoute
   '/painel/clientes': typeof PainelClientesRoute
@@ -593,6 +608,7 @@ export interface FileRoutesByTo {
   '/painel': typeof PainelIndexRoute
   '/api/admin/caixa': typeof ApiAdminCaixaRoute
   '/api/admin/clientes': typeof ApiAdminClientesRoute
+  '/api/admin/clientes-aviso': typeof ApiAdminClientesAvisoRoute
   '/api/admin/consulta-cnpj': typeof ApiAdminConsultaCnpjRoute
   '/api/admin/consulta-documento': typeof ApiAdminConsultaDocumentoRoute
   '/api/admin/dashboard': typeof ApiAdminDashboardRoute
@@ -647,6 +663,7 @@ export interface FileRoutesById {
   '/api/os': typeof ApiOsRoute
   '/api/site-chat': typeof ApiSiteChatRoute
   '/painel/agendar': typeof PainelAgendarRoute
+  '/painel/avisos': typeof PainelAvisosRoute
   '/painel/calculadora-bobina': typeof PainelCalculadoraBobinaRoute
   '/painel/calculadora-condutores': typeof PainelCalculadoraCondutoresRoute
   '/painel/clientes': typeof PainelClientesRoute
@@ -672,6 +689,7 @@ export interface FileRoutesById {
   '/painel/': typeof PainelIndexRoute
   '/api/admin/caixa': typeof ApiAdminCaixaRoute
   '/api/admin/clientes': typeof ApiAdminClientesRoute
+  '/api/admin/clientes-aviso': typeof ApiAdminClientesAvisoRoute
   '/api/admin/consulta-cnpj': typeof ApiAdminConsultaCnpjRoute
   '/api/admin/consulta-documento': typeof ApiAdminConsultaDocumentoRoute
   '/api/admin/dashboard': typeof ApiAdminDashboardRoute
@@ -727,6 +745,7 @@ export interface FileRouteTypes {
     | '/api/os'
     | '/api/site-chat'
     | '/painel/agendar'
+    | '/painel/avisos'
     | '/painel/calculadora-bobina'
     | '/painel/calculadora-condutores'
     | '/painel/clientes'
@@ -752,6 +771,7 @@ export interface FileRouteTypes {
     | '/painel/'
     | '/api/admin/caixa'
     | '/api/admin/clientes'
+    | '/api/admin/clientes-aviso'
     | '/api/admin/consulta-cnpj'
     | '/api/admin/consulta-documento'
     | '/api/admin/dashboard'
@@ -804,6 +824,7 @@ export interface FileRouteTypes {
     | '/api/os'
     | '/api/site-chat'
     | '/painel/agendar'
+    | '/painel/avisos'
     | '/painel/calculadora-bobina'
     | '/painel/calculadora-condutores'
     | '/painel/clientes'
@@ -829,6 +850,7 @@ export interface FileRouteTypes {
     | '/painel'
     | '/api/admin/caixa'
     | '/api/admin/clientes'
+    | '/api/admin/clientes-aviso'
     | '/api/admin/consulta-cnpj'
     | '/api/admin/consulta-documento'
     | '/api/admin/dashboard'
@@ -882,6 +904,7 @@ export interface FileRouteTypes {
     | '/api/os'
     | '/api/site-chat'
     | '/painel/agendar'
+    | '/painel/avisos'
     | '/painel/calculadora-bobina'
     | '/painel/calculadora-condutores'
     | '/painel/clientes'
@@ -907,6 +930,7 @@ export interface FileRouteTypes {
     | '/painel/'
     | '/api/admin/caixa'
     | '/api/admin/clientes'
+    | '/api/admin/clientes-aviso'
     | '/api/admin/consulta-cnpj'
     | '/api/admin/consulta-documento'
     | '/api/admin/dashboard'
@@ -962,6 +986,7 @@ export interface RootRouteChildren {
   ApiSiteChatRoute: typeof ApiSiteChatRoute
   ApiAdminCaixaRoute: typeof ApiAdminCaixaRoute
   ApiAdminClientesRoute: typeof ApiAdminClientesRoute
+  ApiAdminClientesAvisoRoute: typeof ApiAdminClientesAvisoRoute
   ApiAdminConsultaCnpjRoute: typeof ApiAdminConsultaCnpjRoute
   ApiAdminConsultaDocumentoRoute: typeof ApiAdminConsultaDocumentoRoute
   ApiAdminDashboardRoute: typeof ApiAdminDashboardRoute
@@ -1088,6 +1113,13 @@ declare module '@tanstack/react-router' {
       path: '/agendar'
       fullPath: '/painel/agendar'
       preLoaderRoute: typeof PainelAgendarRouteImport
+      parentRoute: typeof PainelRouteRoute
+    }
+    '/painel/avisos': {
+      id: '/painel/avisos'
+      path: '/avisos'
+      fullPath: '/painel/avisos'
+      preLoaderRoute: typeof PainelAvisosRouteImport
       parentRoute: typeof PainelRouteRoute
     }
     '/painel/calculadora-bobina': {
@@ -1256,6 +1288,13 @@ declare module '@tanstack/react-router' {
       path: '/api/admin/clientes'
       fullPath: '/api/admin/clientes'
       preLoaderRoute: typeof ApiAdminClientesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/clientes-aviso': {
+      id: '/api/admin/clientes-aviso'
+      path: '/api/admin/clientes-aviso'
+      fullPath: '/api/admin/clientes-aviso'
+      preLoaderRoute: typeof ApiAdminClientesAvisoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/consulta-cnpj': {
@@ -1529,6 +1568,7 @@ declare module '@tanstack/react-router' {
 
 interface PainelRouteRouteChildren {
   PainelAgendarRoute: typeof PainelAgendarRoute
+  PainelAvisosRoute: typeof PainelAvisosRoute
   PainelCalculadoraBobinaRoute: typeof PainelCalculadoraBobinaRoute
   PainelCalculadoraCondutoresRoute: typeof PainelCalculadoraCondutoresRoute
   PainelClientesRoute: typeof PainelClientesRoute
@@ -1556,6 +1596,7 @@ interface PainelRouteRouteChildren {
 
 const PainelRouteRouteChildren: PainelRouteRouteChildren = {
   PainelAgendarRoute: PainelAgendarRoute,
+  PainelAvisosRoute: PainelAvisosRoute,
   PainelCalculadoraBobinaRoute: PainelCalculadoraBobinaRoute,
   PainelCalculadoraCondutoresRoute: PainelCalculadoraCondutoresRoute,
   PainelClientesRoute: PainelClientesRoute,
@@ -1710,6 +1751,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSiteChatRoute: ApiSiteChatRoute,
   ApiAdminCaixaRoute: ApiAdminCaixaRoute,
   ApiAdminClientesRoute: ApiAdminClientesRoute,
+  ApiAdminClientesAvisoRoute: ApiAdminClientesAvisoRoute,
   ApiAdminConsultaCnpjRoute: ApiAdminConsultaCnpjRoute,
   ApiAdminConsultaDocumentoRoute: ApiAdminConsultaDocumentoRoute,
   ApiAdminDashboardRoute: ApiAdminDashboardRoute,

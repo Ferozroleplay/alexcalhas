@@ -23,13 +23,18 @@ export function saudacaoPeriodoDia(): "Bom dia" | "Boa tarde" | "Boa noite" {
   return "Boa noite";
 }
 
-function abrirWhatsappComTexto(telefone: string, text: string): void {
+export function abrirWhatsappComTexto(telefone: string, text: string, janela?: string): boolean {
   const wa = telefoneWhatsappLink(telefone);
   if (!wa) {
     void dashAlert({ message: "Telefone inválido para WhatsApp.", variant: "warning" });
-    return;
+    return false;
   }
-  window.open(`${wa}?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+  const url = `${wa}?text=${encodeURIComponent(text)}`;
+  const alvo = janela?.trim() || "_blank";
+  const popup = janela
+    ? window.open(url, alvo)
+    : window.open(url, "_blank", "noopener,noreferrer");
+  return popup !== null;
 }
 
 export function mensagemWhatsappVisita(nome: string): string {

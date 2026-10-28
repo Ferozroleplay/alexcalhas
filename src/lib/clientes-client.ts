@@ -71,6 +71,23 @@ export async function fetchClientes(params: {
   };
 }
 
+export type ClienteAviso = {
+  nome: string;
+  telefone: string;
+};
+
+export async function fetchClientesAviso(): Promise<{ total: number; itens: ClienteAviso[] }> {
+  const res = await fetch("/api/admin/clientes-aviso", { credentials: "include" });
+  const data = await parseJson<{
+    ok?: boolean;
+    total?: number;
+    itens?: ClienteAviso[];
+    message?: string;
+  }>(res);
+  if (!res.ok) throw new Error(data.message ?? "Erro ao carregar os telefones.");
+  return { total: data.total ?? 0, itens: data.itens ?? [] };
+}
+
 export async function fetchClienteDetalhe(verId: number): Promise<{
   detalhe: ClienteDetalhe;
   historico: ClienteHistoricoItem[];

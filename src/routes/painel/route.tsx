@@ -32,6 +32,7 @@ export const Route = createFileRoute("/painel")({
       { rel: "stylesheet", href: "/admin/despesas-page.css" },
       { rel: "stylesheet", href: "/admin/material-cadastro.css" },
       { rel: "stylesheet", href: "/admin/caixa-page.css" },
+      { rel: "stylesheet", href: "/admin/avisos-page.css" },
     ],
   }),
   component: PainelLayout,

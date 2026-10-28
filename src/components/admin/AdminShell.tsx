@@ -27,6 +27,7 @@ const NAV_MAIN: { to: string; label: string; icon: string; exact?: boolean }[] =
 const NAV_ADMIN: { to: string; label: string; icon: string }[] = [
   { to: "/painel/empresa", label: "Empresa", icon: "bi-buildings" },
   { to: "/painel/clientes", label: "Clientes", icon: "bi-person-vcard" },
+  { to: "/painel/avisos", label: "Avisos", icon: "bi-megaphone" },
   { to: "/painel/material", label: "Materiais", icon: "bi-box-seam" },
   { to: "/painel/parceiros", label: "Parceiros", icon: "bi-building" },
   { to: "/painel/calculadora-bobina", label: "Calculadora", icon: "bi-calculator" },

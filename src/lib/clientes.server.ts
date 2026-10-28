@@ -204,6 +204,47 @@ export async function obterClienteDetalhe(visitaId: number): Promise<ClienteDeta
   };
 }
 
+export type ClienteAviso = {
+  nome: string;
+  telefone: string;
+};
+
+function chaveTelefoneAviso(raw: string): string {
+  let d = String(raw ?? "").replace(/\D/g, "");
+  if (d.startsWith("55") && d.length >= 12) d = d.slice(2);
+  d = d.replace(/^0+/, "");
+  return d;
+}
+
+function telefoneAvisoValido(digits: string): boolean {
+  return digits.length === 10 || digits.length === 11;
+}
+
+/** Um contato por telefone, o mais recente, para aviso em massa no WhatsApp. */
+export async function listarClientesAviso(): Promise<ClienteAviso[]> {
+  const prisma = await getPrisma();
+  const rows = await prisma.$queryRawUnsafe<{ nome: string; telefone: string }[]>(
+    `SELECT nome, telefone
+     FROM inventario
+     WHERE telefone IS NOT NULL AND TRIM(telefone) <> ''
+     ORDER BY id DESC
+     LIMIT 8000`,
+  );
+
+  const vistos = new Set<string>();
+  const itens: ClienteAviso[] = [];
+  for (const row of rows) {
+    const chave = chaveTelefoneAviso(row.telefone);
+    if (!telefoneAvisoValido(chave) || vistos.has(chave)) continue;
+    vistos.add(chave);
+    itens.push({
+      nome: String(row.nome ?? "").trim() || "Cliente",
+      telefone: String(row.telefone ?? "").trim(),
+    });
+  }
+  return itens;
+}
+
 export async function historicoCliente(visitaId: number): Promise<ClienteHistoricoItem[]> {
   const base = await obterInventarioPorId(visitaId);
   if (!base) return [];
