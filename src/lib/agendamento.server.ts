@@ -7,6 +7,7 @@ import {
 } from "@/lib/agendamento-horarios";
 import { getPrisma } from "@/lib/db.server";
 import {
+  extrairHoraDeDataVisita,
   formatHoraVisitaExibicao,
   resolveHoraVisitaInventario,
 } from "@/lib/inventario-format";
@@ -65,7 +66,7 @@ async function minutosOcupadosNoDia(prisma: PrismaClient, dataBr: string): Promi
   for (const row of rows) {
     const min =
       minutosDeHora(String(row.horaVisita ?? "")) ??
-      minutosDeHora(String(row.dataVisita ?? ""));
+      minutosDeHora(extrairHoraDeDataVisita(String(row.dataVisita ?? "")));
     if (min != null) ocupados.push(min);
   }
   return ocupados;

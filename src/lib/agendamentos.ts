@@ -14,7 +14,9 @@ export async function fetchHorariosVisita(
   const qs = new URLSearchParams({ data });
   const res = await fetch(`/api/horarios-visita?${qs}`, { signal });
   const json = (await res.json()) as { ok?: boolean; horarios?: string[] };
-  if (!res.ok || !json.ok) return [];
+  if (!res.ok || !json.ok) {
+    throw new Error("Não foi possível carregar os horários.");
+  }
   return Array.isArray(json.horarios) ? json.horarios : [];
 }
 

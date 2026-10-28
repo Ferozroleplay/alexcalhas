@@ -1254,8 +1254,13 @@ body.ac-landing > main {
 }
 
 .ac-hora-slot:disabled {
-    opacity: 0.55;
+    opacity: 0.45;
     cursor: wait;
+}
+
+.ac-hora-slot.is-taken:disabled {
+    cursor: not-allowed;
+    text-decoration: line-through;
 }
 
 .ac-form-alert {

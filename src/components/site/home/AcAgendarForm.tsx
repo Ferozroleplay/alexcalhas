@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import { HOME_SITE, waUrl } from "@/data/home-config";
 import { AcAgendarSucessoModal } from "@/components/site/home/AcAgendarSucessoModal";
 import { enviarAgendamento, fetchHorariosVisita } from "@/lib/agendamentos";
+import { VISITA_SLOTS } from "@/lib/agendamento-horarios";
 import { pontoHojeIso } from "@/lib/ponto-timezone";
 import { fetchConsultaDocumentoSite, fetchViaCep } from "@/lib/site-consulta-client";
 import { agendamentoSiteSchema } from "@/lib/validation";
@@ -74,6 +75,7 @@ export function AcAgendarForm() {
   const [docLoading, setDocLoading] = useState(false);
   const [horarios, setHorarios] = useState<string[]>([]);
   const [horaLoading, setHoraLoading] = useState(false);
+  const [horaErro, setHoraErro] = useState(false);
 
   const lastCepFetched = useRef("");
   const lastDocFetched = useRef("");
@@ -207,19 +209,23 @@ export function AcAgendarForm() {
     if (!form.data) {
       setHorarios([]);
       setHoraLoading(false);
+      setHoraErro(false);
       return;
     }
 
     const ac = new AbortController();
     setHoraLoading(true);
+    setHoraErro(false);
     void fetchHorariosVisita(form.data, ac.signal)
       .then((livres) => {
+        if (ac.signal.aborted) return;
         setHorarios(livres);
         setForm((f) => ({ ...f, hora: livres.includes(f.hora) ? f.hora : "" }));
       })
       .catch((err: unknown) => {
         if (err instanceof DOMException && err.name === "AbortError") return;
         setHorarios([]);
+        setHoraErro(true);
       })
       .finally(() => {
         if (!ac.signal.aborted) setHoraLoading(false);
@@ -403,31 +409,41 @@ export function AcAgendarForm() {
           </span>
           {!form.data ? (
             <p className="ac-agendar-hora-hint">Escolha a data para ver os horários disponíveis.</p>
-          ) : horaLoading ? (
-            <p className="ac-agendar-hora-hint" role="status">
-              Buscando horários…
-            </p>
-          ) : horarios.length === 0 ? (
-            <p className="ac-agendar-hora-hint ac-agendar-hora-hint--warn">
-              Esse dia já está cheio. Escolha outra data.
-            </p>
           ) : (
             <>
               <div className="ac-hora-slots" role="group" aria-labelledby="ac-ag-hora-label">
-                {horarios.map((hora) => (
-                  <button
-                    key={hora}
-                    type="button"
-                    className={`ac-hora-slot${form.hora === hora ? " is-selected" : ""}`}
-                    aria-pressed={form.hora === hora}
-                    disabled={busy}
-                    onClick={() => setForm((f) => ({ ...f, hora }))}
-                  >
-                    {hora}
-                  </button>
-                ))}
+                {VISITA_SLOTS.map((hora) => {
+                  const livre = horarios.includes(hora);
+                  const taken = !horaLoading && !horaErro && !livre;
+                  return (
+                    <button
+                      key={hora}
+                      type="button"
+                      className={`ac-hora-slot${form.hora === hora ? " is-selected" : ""}${taken ? " is-taken" : ""}`}
+                      aria-pressed={form.hora === hora}
+                      disabled={busy || !livre}
+                      onClick={() => setForm((f) => ({ ...f, hora }))}
+                    >
+                      {hora}
+                    </button>
+                  );
+                })}
               </div>
-              <p className="ac-agendar-hora-hint">Horários com 2 horas de intervalo entre visitas.</p>
+              {horaLoading ? (
+                <p className="ac-agendar-hora-hint" role="status">
+                  Buscando horários…
+                </p>
+              ) : horaErro ? (
+                <p className="ac-agendar-hora-hint ac-agendar-hora-hint--warn">
+                  Não deu para carregar os horários. Tente outra data ou recarregue.
+                </p>
+              ) : horarios.length === 0 ? (
+                <p className="ac-agendar-hora-hint ac-agendar-hora-hint--warn">
+                  Sem horário livre nesse dia. Escolha outra data.
+                </p>
+              ) : (
+                <p className="ac-agendar-hora-hint">Horários com 2 horas de intervalo entre visitas.</p>
+              )}
             </>
           )}
         </div>
