@@ -42,7 +42,7 @@ export const Route = createFileRoute("/")({
         rel: "stylesheet",
         href: "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css",
       },
-      { rel: "stylesheet", href: "/css/home-landing.css" },
+      { rel: "stylesheet", href: "/css/home-landing.css?v=agenda" },
       { rel: "stylesheet", href: "/css/home-landing-enhance.css" },
     ],
   }),

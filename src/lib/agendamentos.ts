@@ -20,6 +20,19 @@ export async function fetchHorariosVisita(
   return Array.isArray(json.horarios) ? json.horarios : [];
 }
 
+export async function fetchHorariosMes(
+  mes: string,
+  signal?: AbortSignal,
+): Promise<Record<string, string[]>> {
+  const qs = new URLSearchParams({ mes });
+  const res = await fetch(`/api/horarios-visita?${qs}`, { signal });
+  const json = (await res.json()) as { ok?: boolean; dias?: Record<string, string[]> };
+  if (!res.ok || !json.ok) {
+    throw new Error("Não foi possível carregar os horários.");
+  }
+  return json.dias && typeof json.dias === "object" ? json.dias : {};
+}
+
 /**
  * Envia um agendamento para a API REST.
  *

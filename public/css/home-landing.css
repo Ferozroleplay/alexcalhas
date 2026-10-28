@@ -1263,6 +1263,200 @@ body.ac-landing > main {
     text-decoration: line-through;
 }
 
+.ac-form-group--agenda {
+    margin-bottom: 1.15rem;
+}
+
+.ac-agenda-cal {
+    display: grid;
+    grid-template-columns: minmax(240px, 280px) 1fr;
+    gap: 1.25rem 1.75rem;
+    align-items: start;
+    padding: 0.85rem 0.9rem 1rem;
+    border: 1px solid var(--ac-border);
+    border-radius: 14px;
+    background: #f7fbf9;
+}
+
+.ac-agenda-cal__nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.65rem;
+}
+
+.ac-agenda-cal__title {
+    margin: 0;
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: var(--ac-navy);
+    letter-spacing: 0.01em;
+}
+
+.ac-agenda-cal__nav-btn {
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ac-navy);
+    font-size: 1.35rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.ac-agenda-cal__nav-btn:hover:not(:disabled) {
+    background: var(--ac-green-light);
+    color: var(--ac-green);
+}
+
+.ac-agenda-cal__nav-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.ac-agenda-cal__week,
+.ac-agenda-cal__grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.28rem;
+}
+
+.ac-agenda-cal__week {
+    margin-bottom: 0.35rem;
+}
+
+.ac-agenda-cal__week span {
+    text-align: center;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--ac-text);
+    letter-spacing: 0.04em;
+}
+
+.ac-agenda-cal__day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 1;
+    min-height: 34px;
+    border-radius: 999px;
+    border: 1.5px solid transparent;
+    background: transparent;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--ac-navy);
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+}
+
+.ac-agenda-cal__day--empty {
+    pointer-events: none;
+    visibility: hidden;
+}
+
+.ac-agenda-cal__day.is-free {
+    border-color: #16a34a;
+    color: #15803d;
+}
+
+.ac-agenda-cal__day.is-full {
+    border-color: #f43f5e;
+    color: #e11d48;
+}
+
+.ac-agenda-cal__day.is-past,
+.ac-agenda-cal__day.is-wait {
+    border-color: #d4d4d8;
+    color: #a1a1aa;
+    cursor: default;
+}
+
+.ac-agenda-cal__day.is-free:hover {
+    background: #dcfce7;
+}
+
+.ac-agenda-cal__day.is-selected {
+    background: #84cc16;
+    border-color: #65a30d;
+    color: #14532d;
+}
+
+.ac-agenda-cal__day:disabled.is-full {
+    cursor: not-allowed;
+}
+
+.ac-agenda-cal__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem 0.85rem;
+    list-style: none;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    font-size: 0.72rem;
+    color: var(--ac-text);
+}
+
+.ac-agenda-cal__legend li {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.ac-agenda-cal__dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 99px;
+    border: 1.5px solid currentColor;
+    display: inline-block;
+}
+
+.ac-agenda-cal__dot.is-free {
+    color: #16a34a;
+    background: #dcfce7;
+}
+
+.ac-agenda-cal__dot.is-full {
+    color: #e11d48;
+    background: #ffe4e6;
+}
+
+.ac-agenda-cal__dot.is-past {
+    color: #a1a1aa;
+    background: #e4e4e7;
+}
+
+.ac-agenda-cal__when {
+    margin: 0 0 0.7rem;
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: var(--ac-navy);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.ac-agenda-cal__when span {
+    color: var(--ac-green);
+}
+
+.ac-agenda-cal__when--muted {
+    font-weight: 600;
+    color: var(--ac-text);
+}
+
+.ac-agenda-cal__times .ac-hora-slots {
+    gap: 0.45rem;
+}
+
+.ac-agenda-cal__times .ac-hora-slot {
+    min-width: 4.4rem;
+    background: #fff;
+}
+
 .ac-form-alert {
     display: flex;
     align-items: flex-start;
@@ -2711,6 +2905,11 @@ body.ac-agendar-sucesso-open .ac-chat {
 
     .ac-form-row {
         grid-template-columns: 1fr;
+    }
+
+    .ac-agenda-cal {
+        grid-template-columns: 1fr;
+        padding: 0.85rem 0.75rem 1rem;
     }
 
     .ac-form-row--3 {

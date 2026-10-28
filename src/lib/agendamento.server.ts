@@ -32,6 +32,16 @@ export function dataBrParaInput(data: string): string {
   return `${m[3]}-${m[2]}-${m[1]}`;
 }
 
+/** Data da visita (BR, ISO ou com hora) → YYYY-MM-DD. */
+export function dataVisitaParaIso(raw: string): string | null {
+  const t = String(raw ?? "").trim();
+  const br = /^(\d{2})-(\d{2})-(\d{4})/.exec(t);
+  if (br) return `${br[3]}-${br[2]}-${br[1]}`;
+  const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(t);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  return null;
+}
+
 export function dataInputParaDb(isoDate: string): string {
   if (!isoDate.trim()) return "";
   return toDataVisitaBr(isoDate);
@@ -64,12 +74,17 @@ async function minutosOcupadosNoDia(prisma: PrismaClient, dataBr: string): Promi
 
   const ocupados: number[] = [];
   for (const row of rows) {
-    const min =
-      minutosDeHora(String(row.horaVisita ?? "")) ??
-      minutosDeHora(extrairHoraDeDataVisita(String(row.dataVisita ?? "")));
+    const min = minutosOcupadosDaLinha(row);
     if (min != null) ocupados.push(min);
   }
   return ocupados;
+}
+
+function minutosOcupadosDaLinha(row: { horaVisita?: string | null; dataVisita?: string | null }): number | null {
+  return (
+    minutosDeHora(String(row.horaVisita ?? "")) ??
+    minutosDeHora(extrairHoraDeDataVisita(String(row.dataVisita ?? "")))
+  );
 }
 
 /**
@@ -99,6 +114,64 @@ export async function proximoHorarioLivreVisita(
 ): Promise<string | null> {
   const livres = await horariosLivresVisita(prisma, dataIso);
   return livres[0] ?? null;
+}
+
+/** Horários livres de cada dia do mês (YYYY-MM) para pintar o calendário. */
+export async function horariosLivresNoMes(
+  prisma: PrismaClient,
+  anoMes: string,
+): Promise<Record<string, string[]>> {
+  const m = /^(\d{4})-(\d{2})$/.exec(anoMes.trim());
+  if (!m) return {};
+  const yyyy = m[1];
+  const mm = m[2];
+  const lastDay = new Date(Number(yyyy), Number(mm), 0).getDate();
+  if (!lastDay) return {};
+
+  const hoje = pontoHojeIso();
+  const agora = minutosDeHora(agendamentoHoraAtualBr()) ?? VISITA_PRIMEIRO_MIN;
+  const sufixoBr = `-${mm}-${yyyy}`;
+  const prefixoIso = `${yyyy}-${mm}-`;
+
+  const rows = await prisma.inventario.findMany({
+    where: {
+      AND: [
+        {
+          OR: [
+            { dataVisita: { contains: sufixoBr } },
+            { dataVisita: { startsWith: prefixoIso } },
+          ],
+        },
+        {
+          status: { in: ["agendado", "orcamentado", "orçamentado", "confirmado"] },
+        },
+      ],
+    },
+    select: { horaVisita: true, dataVisita: true },
+  });
+
+  const ocupadosPorDia = new Map<string, number[]>();
+  for (const row of rows) {
+    const iso = dataVisitaParaIso(String(row.dataVisita ?? ""));
+    if (!iso || !iso.startsWith(prefixoIso)) continue;
+    const min = minutosOcupadosDaLinha(row);
+    if (min == null) continue;
+    const lista = ocupadosPorDia.get(iso) ?? [];
+    lista.push(min);
+    ocupadosPorDia.set(iso, lista);
+  }
+
+  const dias: Record<string, string[]> = {};
+  for (let d = 1; d <= lastDay; d++) {
+    const iso = `${prefixoIso}${String(d).padStart(2, "0")}`;
+    if (iso < hoje) {
+      dias[iso] = [];
+      continue;
+    }
+    const piso = iso === hoje ? Math.max(VISITA_PRIMEIRO_MIN, agora) : VISITA_PRIMEIRO_MIN;
+    dias[iso] = filtrarHorariosLivres(ocupadosPorDia.get(iso) ?? [], piso);
+  }
+  return dias;
 }
 
 /** Normaliza hora do formulário (input time) para gravar em hora-visita (HH:MM). */

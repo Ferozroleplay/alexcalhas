@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 
 import { HOME_SITE, waUrl } from "@/data/home-config";
+import { AcAgendarCalendario, chaveMes, mesDeIso } from "@/components/site/home/AcAgendarCalendario";
 import { AcAgendarSucessoModal } from "@/components/site/home/AcAgendarSucessoModal";
-import { enviarAgendamento, fetchHorariosVisita } from "@/lib/agendamentos";
-import { VISITA_SLOTS } from "@/lib/agendamento-horarios";
+import { enviarAgendamento, fetchHorariosMes } from "@/lib/agendamentos";
 import { pontoHojeIso } from "@/lib/ponto-timezone";
 import { fetchConsultaDocumentoSite, fetchViaCep } from "@/lib/site-consulta-client";
 import { agendamentoSiteSchema } from "@/lib/validation";
@@ -73,19 +73,17 @@ export function AcAgendarForm() {
   const [submitting, setSubmitting] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [docLoading, setDocLoading] = useState(false);
-  const [horarios, setHorarios] = useState<string[]>([]);
-  const [horaLoading, setHoraLoading] = useState(false);
-  const [horaErro, setHoraErro] = useState(false);
+  const hojeMes = mesDeIso(pontoHojeIso());
+  const [viewY, setViewY] = useState(hojeMes.y);
+  const [viewM, setViewM] = useState(hojeMes.m);
+  const [diasMes, setDiasMes] = useState<Record<string, string[]>>({});
+  const [mesLoading, setMesLoading] = useState(false);
+  const [mesErro, setMesErro] = useState(false);
 
   const lastCepFetched = useRef("");
   const lastDocFetched = useRef("");
   const cepTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const docTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const el = document.getElementById("ac-ag-data") as HTMLInputElement | null;
-    if (el) el.min = pontoHojeIso();
-  }, []);
 
   const showError = (msg: string) => {
     if (document.activeElement instanceof HTMLElement) {
@@ -206,33 +204,36 @@ export function AcAgendarForm() {
   }, [form.cpfCnpj, preencherDocumento]);
 
   useEffect(() => {
-    if (!form.data) {
-      setHorarios([]);
-      setHoraLoading(false);
-      setHoraErro(false);
-      return;
-    }
-
     const ac = new AbortController();
-    setHoraLoading(true);
-    setHoraErro(false);
-    void fetchHorariosVisita(form.data, ac.signal)
-      .then((livres) => {
+    const mes = chaveMes(viewY, viewM);
+    setMesLoading(true);
+    setMesErro(false);
+    void fetchHorariosMes(mes, ac.signal)
+      .then((dias) => {
         if (ac.signal.aborted) return;
-        setHorarios(livres);
-        setForm((f) => ({ ...f, hora: livres.includes(f.hora) ? f.hora : "" }));
+        setDiasMes(dias);
+        setForm((f) => {
+          const livres = f.data ? (dias[f.data] ?? []) : [];
+          if (f.data) {
+            return { ...f, hora: livres.includes(f.hora) ? f.hora : "" };
+          }
+          const hojeIso = pontoHojeIso();
+          const pick = Object.keys(dias)
+            .sort()
+            .find((iso) => iso >= hojeIso && (dias[iso]?.length ?? 0) > 0);
+          return pick ? { ...f, data: pick, hora: "" } : f;
+        });
       })
       .catch((err: unknown) => {
         if (err instanceof DOMException && err.name === "AbortError") return;
-        setHorarios([]);
-        setHoraErro(true);
+        setDiasMes({});
+        setMesErro(true);
       })
       .finally(() => {
-        if (!ac.signal.aborted) setHoraLoading(false);
+        if (!ac.signal.aborted) setMesLoading(false);
       });
-
     return () => ac.abort();
-  }, [form.data]);
+  }, [viewY, viewM]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -258,22 +259,20 @@ export function AcAgendarForm() {
       setSucessoOpen(true);
       setErrorMsg(null);
       setForm(initial);
-      setHorarios([]);
+      setViewY(hojeMes.y);
+      setViewM(hojeMes.m);
       lastCepFetched.current = "";
       lastDocFetched.current = "";
-      const el = document.getElementById("ac-ag-data") as HTMLInputElement | null;
-      if (el) el.min = pontoHojeIso();
+      void fetchHorariosMes(chaveMes(hojeMes.y, hojeMes.m)).then(setDiasMes).catch(() => {});
     } catch (err) {
       showError(err instanceof Error ? err.message : "Não foi possível agendar. Tente novamente.");
-      if (form.data) {
-        void fetchHorariosVisita(form.data).then(setHorarios).catch(() => {});
-      }
+      void fetchHorariosMes(chaveMes(viewY, viewM)).then(setDiasMes).catch(() => {});
     } finally {
       setSubmitting(false);
     }
   }
 
-  const busy = submitting || cepLoading || docLoading || horaLoading;
+  const busy = submitting || cepLoading || docLoading || mesLoading;
 
   return (
     <div className="ac-contact__form-wrap ac-agendar-card">
@@ -392,69 +391,33 @@ export function AcAgendarForm() {
             <label htmlFor="ac-ag-numero">Nº</label>
             <input type="text" id="ac-ag-numero" required value={form.numero} onChange={(e) => setForm((f) => ({ ...f, numero: e.target.value }))} />
           </div>
-          <div className="ac-form-group">
-            <label htmlFor="ac-ag-data">Data</label>
-            <input
-              type="date"
-              id="ac-ag-data"
-              required
-              value={form.data}
-              onChange={(e) => setForm((f) => ({ ...f, data: e.target.value, hora: "" }))}
-            />
-          </div>
+        </div>
+        <div className="ac-form-group ac-form-group--agenda">
+          <span className="ac-agendar-hora-label">Data e horário</span>
+          <input type="hidden" id="ac-ag-data" name="data" value={form.data} />
+          <AcAgendarCalendario
+            data={form.data}
+            hora={form.hora}
+            dias={diasMes}
+            mesLoading={mesLoading}
+            mesErro={mesErro}
+            viewY={viewY}
+            viewM={viewM}
+            busy={busy}
+            onView={(y, m) => {
+              setViewY(y);
+              setViewM(m);
+            }}
+            onSelectData={(iso) => setForm((f) => ({ ...f, data: iso, hora: "" }))}
+            onSelectHora={(slot) => setForm((f) => ({ ...f, hora: slot }))}
+          />
         </div>
         <div className="ac-form-group">
-          <span className="ac-agendar-hora-label" id="ac-ag-hora-label">
-            Horário
-          </span>
-          {!form.data ? (
-            <p className="ac-agendar-hora-hint">Escolha a data para ver os horários disponíveis.</p>
-          ) : (
-            <>
-              <div className="ac-hora-slots" role="group" aria-labelledby="ac-ag-hora-label">
-                {VISITA_SLOTS.map((hora) => {
-                  const livre = horarios.includes(hora);
-                  const taken = !horaLoading && !horaErro && !livre;
-                  return (
-                    <button
-                      key={hora}
-                      type="button"
-                      className={`ac-hora-slot${form.hora === hora ? " is-selected" : ""}${taken ? " is-taken" : ""}`}
-                      aria-pressed={form.hora === hora}
-                      disabled={busy || !livre}
-                      onClick={() => setForm((f) => ({ ...f, hora }))}
-                    >
-                      {hora}
-                    </button>
-                  );
-                })}
-              </div>
-              {horaLoading ? (
-                <p className="ac-agendar-hora-hint" role="status">
-                  Buscando horários…
-                </p>
-              ) : horaErro ? (
-                <p className="ac-agendar-hora-hint ac-agendar-hora-hint--warn">
-                  Não deu para carregar os horários. Tente outra data ou recarregue.
-                </p>
-              ) : horarios.length === 0 ? (
-                <p className="ac-agendar-hora-hint ac-agendar-hora-hint--warn">
-                  Sem horário livre nesse dia. Escolha outra data.
-                </p>
-              ) : (
-                <p className="ac-agendar-hora-hint">Horários com 2 horas de intervalo entre visitas.</p>
-              )}
-            </>
-          )}
-        </div>
-        <div className="ac-form-group">
-          <label htmlFor="ac-ag-obs">
-            Observação <span className="ac-label-opt">(opcional)</span>
-          </label>
+          <label htmlFor="ac-ag-obs">O que você quer resolver</label>
           <textarea
             id="ac-ag-obs"
             rows={3}
-            placeholder="Descreva seu projeto ou necessidade"
+            placeholder="Calha, rufo, pingadeira — o que já tentou, o que está travando."
             value={form.observacao}
             onChange={(e) => setForm((f) => ({ ...f, observacao: e.target.value }))}
           />
