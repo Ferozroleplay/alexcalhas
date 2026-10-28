@@ -42,18 +42,49 @@ function horaAgora(): string {
   return new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
 
+function jitter(ms: number): number {
+  return Math.round(ms * (0.82 + Math.random() * 0.36));
+}
+
+function tempoLeitura(texto: string): number {
+  return jitter(Math.min(900, 380 + texto.trim().length * 14));
+}
+
+function tempoDigitando(texto: string): number {
+  const chars = texto.replace(/\s+/g, " ").trim().length;
+  return jitter(Math.min(2200, Math.max(600, 380 + chars * 26)));
+}
+
+function partirFalas(texto: string): string[] {
+  const partes = texto.split(/\n\n+/).map((s) => s.trim()).filter(Boolean);
+  if (partes.length <= 1) return [texto.trim()].filter(Boolean);
+  const out: string[] = [];
+  for (const p of partes) {
+    if (out.length && p.length < 28 && !/^[📍📋👤📞🔧📅🕒📌]/.test(p)) {
+      out[out.length - 1] += `\n\n${p}`;
+    } else {
+      out.push(p);
+    }
+  }
+  return out.slice(0, 4);
+}
+
+function esperar(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
 /** Widget de atendimento — Poliane agenda no sistema. */
 export function AcSiteChat() {
   const [open, setOpen] = useState(false);
   const [chat, setChat] = useState<SiteChatPublico>(FALLBACK);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [ficha, setFicha] = useState<PolianeFicha>({});
-  const [pills, setPills] = useState<PolianePill[]>([
-    { label: "Agendar visita", value: "quero agendar uma visita" },
-    { label: "Falar no WhatsApp", value: "__whatsapp__" },
-  ]);
+  const [pills, setPills] = useState<PolianePill[]>([]);
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [fase, setFase] = useState<null | "lendo" | "digitando">(null);
   const threadRef = useRef<HTMLDivElement>(null);
   const seq = useRef(1);
 
@@ -73,7 +104,7 @@ export function AcSiteChat() {
     const el = threadRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
-  }, [msgs, pills, enviando, open]);
+  }, [msgs, pills, enviando, fase, open]);
 
   const abrirWa = (extra?: string) => {
     const msg = extra?.trim()
@@ -94,12 +125,28 @@ export function AcSiteChat() {
     setTexto("");
     setPills([]);
     setEnviando(true);
+    setFase("lendo");
     try {
-      const res = await enviarMensagemPoliane(mensagem, ficha);
+      const [res] = await Promise.all([
+        enviarMensagemPoliane(mensagem, ficha),
+        esperar(tempoLeitura(mensagem)),
+      ]);
+      const falas = partirFalas(res.reply);
       setFicha(res.ficha ?? {});
-      setMsgs((m) => [...m, { id: seq.current++, from: "in", text: res.reply }]);
+      for (let i = 0; i < falas.length; i++) {
+        setFase("digitando");
+        await esperar(tempoDigitando(falas[i]));
+        const fala = falas[i];
+        setMsgs((m) => [...m, { id: seq.current++, from: "in", text: fala }]);
+        if (i < falas.length - 1) {
+          setFase("lendo");
+          await esperar(jitter(280));
+        }
+      }
       setPills(res.pills ?? []);
     } catch (e) {
+      setFase("digitando");
+      await esperar(jitter(700));
       setMsgs((m) => [
         ...m,
         {
@@ -113,6 +160,7 @@ export function AcSiteChat() {
       ]);
       setPills([{ label: "Falar no WhatsApp", value: "__whatsapp__" }]);
     } finally {
+      setFase(null);
       setEnviando(false);
     }
   }
@@ -153,7 +201,9 @@ export function AcSiteChat() {
             <h2 id="ac-chat-title" className="ac-chat__title">
               {chat.nome}
             </h2>
-            <p className="ac-chat__subtitle">{chat.cargo} · online agora</p>
+            <p className="ac-chat__subtitle">
+              {fase === "digitando" ? "digitando…" : `${chat.cargo} · online agora`}
+            </p>
           </div>
           <button type="button" className="ac-chat__close" aria-label="Fechar chat" onClick={() => setOpen(false)}>
             <i className="bi bi-x-lg" aria-hidden="true" />
@@ -161,17 +211,19 @@ export function AcSiteChat() {
         </header>
         <div className="ac-chat__body" ref={threadRef}>
           <div className="ac-chat__thread">
-            <article className="ac-chat__bubble ac-chat__bubble--in">
-              <p className="ac-chat__bubble-text">{renderMensagem(chat.mensagem, chat.nome)}</p>
-              <time className="ac-chat__bubble-time">{horaAgora()}</time>
-            </article>
+            {partirFalas(chat.mensagem).map((fala, i) => (
+              <article key={`hi-${i}`} className="ac-chat__bubble ac-chat__bubble--in">
+                <p className="ac-chat__bubble-text">{renderMensagem(fala, chat.nome)}</p>
+                <time className="ac-chat__bubble-time">{horaAgora()}</time>
+              </article>
+            ))}
             {msgs.map((m) => (
               <article key={m.id} className={`ac-chat__bubble ac-chat__bubble--${m.from}`}>
                 <p className="ac-chat__bubble-text">{formatNegrito(m.text)}</p>
                 <time className="ac-chat__bubble-time">{horaAgora()}</time>
               </article>
             ))}
-            {enviando ? (
+            {fase === "digitando" ? (
               <div className="ac-chat__typing" aria-label="Digitando">
                 <span />
                 <span />

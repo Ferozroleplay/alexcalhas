@@ -19,8 +19,7 @@ export const HOME_SITE = {
     nome: "Poliane",
     cargo: "Atendimento Alex Calhas",
     foto: "/images/perfil/poliane.jpg",
-    mensagem:
-      "Olá! 😊 Seja muito bem-vindo(a) à Alex Calhas!\n\nMeu nome é {nome} e sou responsável pelo atendimento e agendamentos. 💜\n\nComo posso ajudar você hoje?",
+    mensagem: "Oi! 😊 Sou a {nome}, da Alex Calhas.\n\nEm que posso ajudar?",
   },
   img: {
     logoHeader: "/images/logo/logo-home.png",

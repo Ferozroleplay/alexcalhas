@@ -50,15 +50,6 @@ const SERVICOS: { id: string; label: string; re: RegExp }[] = [
   { id: "visita", label: "Visita técnica", re: /\bvisita\b/i },
 ];
 
-const PILLS_SERVICO: PolianePill[] = [
-  { label: "Calhas", value: "Instalação de calhas" },
-  { label: "Rufos", value: "Instalação de rufos" },
-  { label: "Condutores", value: "Instalação de condutores" },
-  { label: "Vazamento", value: "Reparos em vazamentos" },
-  { label: "Limpeza", value: "Limpeza de calhas" },
-  { label: "Orçamento / visita", value: "Visita técnica para orçamento" },
-];
-
 function limparFicha(raw: unknown): PolianeFicha {
   if (!raw || typeof raw !== "object") return {};
   const o = raw as Record<string, unknown>;
@@ -241,23 +232,37 @@ function querOutroEndereco(texto: string): boolean {
 }
 
 function ehSaudacao(texto: string): boolean {
-  return /^(boa\s*(noite|tarde|dia)|bom\s*dia|ol[aá]|oie+|eae+|e\s*a[ií]|blz|beleza|tudo\s*(bem|bom)|obrigad[oa]|valeu|tchau)[\s,!.😅😊💜🙏]*$/i.test(
+  return /^(boa\s*(noite|tarde|dia)|bom\s*dia|ol[aá]|oi+|eae+|e\s*a[ií]|blz|beleza|tudo\s*(bem|bom)|obrigad[oa]|valeu|tchau)[\s,!.😅😊💜🙏]*$/i.test(
     texto.trim(),
   );
 }
 
+function cumprimentoAgora(): string {
+  const hora = Number(
+    new Date().toLocaleString("en-GB", { hour: "2-digit", hour12: false, timeZone: "America/Sao_Paulo" }).slice(0, 2),
+  );
+  if (hora < 12) return "Bom dia! 😊";
+  if (hora < 18) return "Boa tarde! 😊";
+  return "Boa noite! 😊";
+}
+
 function cumprimentoDe(texto: string): string {
   const t = texto.toLowerCase();
-  if (/noite/.test(t)) return "Boa noite! 😊 ";
-  if (/tarde/.test(t)) return "Boa tarde! 😊 ";
-  if (/dia/.test(t)) return "Bom dia! 😊 ";
-  return "Olá! 😊 ";
+  if (/noite/.test(t)) return "Boa noite! 😊";
+  if (/tarde/.test(t)) return "Boa tarde! 😊";
+  if (/\bdia\b/.test(t)) return "Bom dia! 😊";
+  if (/^(oi+|ol[aá])\b/.test(t.trim())) return "Oi! Tudo bem? 😊";
+  return "Oi! 😊";
+}
+
+function fala(...partes: Array<string | undefined>): string {
+  return partes.map((p) => p?.trim()).filter(Boolean).join("\n\n");
 }
 
 function textoEndereco(texto: string): string {
   return texto
     .trim()
-    .replace(/^(boa\s*(noite|tarde|dia)|bom\s*dia|ol[aá]|oie+|eae+|e\s*a[ií]|blz|beleza)[\s,!.😅😊💜🙏]*/i, "")
+    .replace(/^(boa\s*(noite|tarde|dia)|bom\s*dia|ol[aá]|oi+|eae+|e\s*a[ií]|blz|beleza)[\s,!.😅😊💜🙏]*/i, "")
     .replace(
       /^(n[aã]o)[\s,!.]+(?=.*(rua|r\.|av\.?|avenida|travessa|alameda|estrada|rodovia|pra[cç]a|\d))/i,
       "",
@@ -384,7 +389,7 @@ function parseEnderecoLivre(texto: string): Partial<PolianeFicha> {
     return out;
   }
   const partes = textoEndereco(texto).split(/[,;\n]/).map((s) => s.trim()).filter(Boolean);
-  if (partes.length >= 2 && pareceRua(partes[0])) {
+  if (partes.length >= 2 && /^(rua|r\.|av\.?|avenida|travessa|alameda|estrada|rodovia|pra[cç]a)\b/i.test(partes[0])) {
     out.rua = comTipoLogradouro(partes[0]);
     let i = 1;
     if (numeroImovelOk(partes[i])) {
@@ -398,7 +403,9 @@ function parseEnderecoLivre(texto: string): Partial<PolianeFicha> {
     if (partes[i] && !/^cep\b/i.test(partes[i])) out.cidade = capNome(partes[i]);
     return out;
   }
-  if (pareceRua(t)) out.rua = comTipoLogradouro(t);
+  if (/^(rua|r\.|av\.?|avenida|travessa|alameda|estrada|rodovia|pra[cç]a)\b/i.test(t)) {
+    out.rua = comTipoLogradouro(t);
+  }
   return out;
 }
 
@@ -482,60 +489,47 @@ function sanitizarEnderecoFicha(f: PolianeFicha): PolianeFicha {
 function pedirEndereco(f: PolianeFicha, prefixo = ""): PolianeResult | null {
   if (!f.rua && !f.cep) {
     return {
-      reply:
-        prefixo +
-        "Agora preciso do endereço completo da visita: rua, número, bairro e cidade. Sem o local correto eu não agendo. Pode mandar o CEP ou escrever o endereço.",
+      reply: fala(prefixo, "Qual seu endereço?"),
       ficha: f,
       pills: [],
     };
   }
   if (!f.rua || ehSaudacao(f.rua) || !pareceRua(f.rua)) {
     return {
-      reply: prefixo + "Qual a rua ou avenida da visita?",
+      reply: fala(prefixo, "Qual a rua?"),
       ficha: { ...f, rua: undefined, enderecoConfirmado: false },
       pills: [],
     };
   }
   if (!numeroImovelOk(f.numero)) {
     return {
-      reply: prefixo + "Qual o número do imóvel?",
+      reply: fala(prefixo, "E o número?"),
       ficha: { ...f, enderecoConfirmado: false },
       pills: [],
     };
   }
   if (!f.bairro || /^cep\b/i.test(f.bairro)) {
     return {
-      reply: prefixo + "Qual o bairro?",
+      reply: fala(prefixo, "Qual o bairro?"),
       ficha: { ...f, bairro: undefined, enderecoConfirmado: false },
       pills: [],
     };
   }
   if (!f.cidade) {
     return {
-      reply: prefixo + "Qual a cidade?",
+      reply: fala(prefixo, "De qual cidade?"),
       ficha: { ...f, enderecoConfirmado: false },
       pills: [],
     };
   }
   if (!enderecoPronto(f)) {
     return {
-      reply: prefixo + "Ainda falta completar o endereço. Me passa rua, número, bairro e cidade da visita.",
+      reply: fala(prefixo, "Me passa o endereço completo: rua, número, bairro e cidade."),
       ficha: { ...f, enderecoConfirmado: false },
       pills: [],
     };
   }
   return null;
-}
-
-function confirmarEnderecoMsg(f: PolianeFicha): PolianeResult {
-  return {
-    reply: `Confere se o endereço da visita está certo? Eu só agendo com o local correto.\n\n📍 ${enderecoCompleto(f)}\n\nÉ esse?`,
-    ficha: { ...f, enderecoConfirmado: false, pendenteConfirmacao: false },
-    pills: [
-      { label: "Sim, esse endereço", value: "sim" },
-      { label: "Não, outro endereço", value: "não, é outro endereço" },
-    ],
-  };
 }
 
 function limparEndereco(f: PolianeFicha, opts?: { manterCep?: boolean }): PolianeFicha {
@@ -696,7 +690,7 @@ function textoOpcoes(dias: { iso: string; horas: string[] }[]): { text: string; 
     }
   }
   return {
-    text: `Consultei a agenda. Estes horários estão livres (segunda a sexta, 8h às 18h, com 2h entre visitas):\n\n${linhas.join("\n")}\n\nQual fica melhor pra você?`,
+    text: fala("Temos alguns horários disponíveis. Qual fica melhor pra você?", linhas.join("\n")),
     pills: pills.slice(0, 8),
   };
 }
@@ -759,16 +753,11 @@ function resumo(f: PolianeFicha): string {
 }
 
 function confirmacao(f: PolianeFicha, id: number): string {
-  return `Perfeito! 😊 Seu agendamento na Alex Calhas foi realizado com sucesso! 💜
-
-📋 **Dados do agendamento**
-
-${resumo(f)}
-📌 Protocolo: ${id}
-
-Agradecemos pela preferência! Nossa equipe estará preparada para atender você. 🙏
-
-A visita é para orçamento e medição — o serviço em si só acontece depois da aprovação.`;
+  return fala(
+    "Ok, vou fazer seu agendamento.",
+    `${resumo(f)}\n📌 Protocolo: ${id}`,
+    "A visita é pra orçamento e medição. Qualquer coisa é só chamar.",
+  );
 }
 
 async function criarVisita(f: PolianeFicha): Promise<{ id: number; hora: string } | { erro: string; horas?: string[] }> {
@@ -856,15 +845,12 @@ function aplicarTexto(ficha: PolianeFicha, texto: string, hoje: string): Poliane
 function campoPendente(f: PolianeFicha): string | null {
   if (!f.servico) return "servico";
   if (!f.nome) return "nome";
-  if (!f.telefone) return "telefone";
-  if (!f.responsavel) return "responsavel";
   if (!f.rua) return "endereco";
   if (!f.numero) return "numero";
   if (!f.bairro) return "bairro";
   if (!f.cidade) return "cidade";
-  if (!f.enderecoConfirmado) return "confirmaEndereco";
   if (!f.dataIso || !f.hora) return "agenda";
-  if (!f.pendenteConfirmacao) return "confirma";
+  if (!f.telefone) return "telefone";
   return null;
 }
 
@@ -879,8 +865,7 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
 
   if (/\b(whatsapp|atendente humano|falar com (uma )?pessoa|operador)\b/i.test(texto)) {
     return {
-      reply:
-        "Sem problema! Você pode falar direto com a equipe no WhatsApp. Eu continuo aqui se quiser agendar pelo chat.",
+      reply: fala("Sem problema!", "Pode falar direto com a equipe no WhatsApp. Eu fico aqui se quiser agendar pelo chat."),
       ficha,
       pills: [{ label: "Abrir WhatsApp", value: "__whatsapp__" }],
     };
@@ -888,17 +873,19 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
 
   if (/\b(pre[cç]o|valor|quanto custa|desconto)\b/i.test(texto) && !ficha.pendenteConfirmacao) {
     return {
-      reply:
-        "Valor e prazo a gente só passa depois da visita, com a medida no local. Posso agendar essa visita técnica pra vocês — sem compromisso de execução no mesmo dia. Qual serviço você precisa?",
+      reply: fala(
+        "Valor e prazo a gente só passa depois da visita, com a medida no local.",
+        "Quer que eu marque uma visita técnica? Sem compromisso de fazer o serviço no mesmo dia.",
+      ),
       ficha,
-      pills: PILLS_SERVICO,
+      pills: [],
     };
   }
 
   if (nao(texto) && ficha.pendenteConfirmacao) {
     ficha = { ...ficha, pendenteConfirmacao: false, dataIso: undefined, hora: undefined };
     return {
-      reply: "Tudo bem, não salvei. Me diz o que quer ajustar: data, horário ou endereço?",
+      reply: fala("Tudo bem, não salvei.", "Quer trocar a data, o horário ou o endereço?"),
       ficha,
       pills: [
         { label: "Trocar data", value: "quero outra data" },
@@ -920,7 +907,7 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
       return {
         reply: "Não achei uma visita em aberto nesse telefone. Se quiser, posso marcar uma nova.",
         ficha: { ...ficha, intencao: "agendar" },
-        pills: PILLS_SERVICO,
+        pills: [],
       };
     }
     if (!sim(texto) && !/cancelar/.test(texto.toLowerCase())) {
@@ -959,7 +946,7 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
       return {
         reply: "Não achei visita em aberto nesse telefone. Posso marcar uma nova, se quiser.",
         ficha: { ...ficha, intencao: "agendar" },
-        pills: PILLS_SERVICO,
+        pills: [],
       };
     }
     ficha.agendamentoId = atual.id;
@@ -1055,17 +1042,12 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
     if (faltava === "nome" && !ficha.nome && soTexto.length >= 2 && !extrairTelefone(texto) && !mandouEnderecoNovo) {
       ficha.nome = capNome(texto.replace(/meu nome [eé]\s*/i, "").trim()).slice(0, 120);
     }
-    if (faltava === "responsavel" && !ficha.responsavel) {
-      if (/^(eu|o mesmo|a mesma|sou eu|pode ser eu)\b/i.test(texto) && ficha.nome) ficha.responsavel = ficha.nome;
-      else if (soTexto.length >= 2 && !mandouEnderecoNovo) ficha.responsavel = capNome(texto).slice(0, 80);
-    }
     const pedindoEndereco =
       faltava === "endereco" ||
       faltava === "rua" ||
       faltava === "numero" ||
       faltava === "bairro" ||
-      faltava === "cidade" ||
-      faltava === "confirmaEndereco";
+      faltava === "cidade";
     if (pedindoEndereco && mandouEnderecoNovo) {
       ficha = aplicarEnderecoColado(ficha, texto);
     } else if ((faltava === "endereco" || faltava === "rua") && !ficha.rua && pareceRua(textoEndereco(texto))) {
@@ -1085,6 +1067,7 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
   }
 
   ficha = sanitizarEnderecoFicha(ficha);
+  if (ficha.nome && !ficha.responsavel) ficha.responsavel = ficha.nome;
 
   if (ficha.cep && ficha.cep.length === 8 && (!ficha.rua || ehSaudacao(ficha.rua) || !ficha.bairro || !ficha.cidade)) {
     const end = await viaCep(ficha.cep);
@@ -1092,51 +1075,39 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
       if (!ficha.rua || ehSaudacao(ficha.rua) || !pareceRua(ficha.rua)) ficha.rua = end.rua ? comTipoLogradouro(end.rua) : ficha.rua;
       if (!ficha.bairro || /^cep\b/i.test(ficha.bairro)) ficha.bairro = end.bairro ? capNome(end.bairro) : ficha.bairro;
       ficha.cidade = ficha.cidade || (end.cidade ? capNome(end.cidade) : undefined);
-      ficha.enderecoConfirmado = false;
     }
   }
+  if (enderecoPronto(ficha)) ficha.enderecoConfirmado = true;
 
   if (!ficha.servico) {
     return {
-      reply:
-        prefixo +
-        "Como posso ajudar hoje? Me diz o serviço: calha, rufo, condutor, vazamento, limpeza ou uma visita para orçamento.",
+      reply: fala(prefixo || cumprimentoAgora(), "Em que posso ajudar?"),
       ficha,
-      pills: PILLS_SERVICO,
+      pills: [],
     };
   }
   if (!ficha.nome) {
     return {
-      reply: prefixo + `Combinado: ${ficha.servico}. Qual o seu nome completo?`,
+      reply: fala(prefixo, "Ok, me informa seu nome completo."),
       ficha,
       pills: [],
-    };
-  }
-  if (!ficha.telefone) {
-    const primeiro = ficha.nome.split(/\s+/)[0];
-    return {
-      reply: prefixo + `Prazer, ${primeiro}! Qual o telefone com DDD para a equipe falar com você?`,
-      ficha,
-      pills: [],
-    };
-  }
-  if (!ficha.responsavel) {
-    return {
-      reply: prefixo + "Quem recebe a equipe no local? Se for você, pode responder “eu”.",
-      ficha,
-      pills: [{ label: "Eu mesmo(a)", value: "eu" }],
     };
   }
 
   if (
+    ficha.telefone &&
     !ficha.rua &&
-    !ficha.enderecoConfirmado &&
     !ficha.aguardandoConfirmaCadastro
   ) {
     const cli = await consultarCliente(ficha.telefone);
     if (cli && cadastroTemEndereco(cli)) {
       return {
-        reply: `${prefixo}Achei um cadastro neste telefone:\n\n👤 ${cli.nome}\n📍 ${formatarCadastro(cli)}\n\nA visita é nesse mesmo endereço? Se for outro local, me fala que eu anoto o correto — não posso agendar no endereço de outra pessoa.`,
+        reply: fala(
+          prefixo,
+          "Achei um cadastro nesse telefone.",
+          `👤 ${cli.nome}\n📍 ${formatarCadastro(cli)}`,
+          "A visita é nesse mesmo endereço?",
+        ),
         ficha: { ...ficha, aguardandoConfirmaCadastro: true },
         pills: [
           { label: "Mesmo endereço", value: "sim, mesmo endereço" },
@@ -1149,33 +1120,6 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
   const faltaEnd = pedirEndereco(ficha, prefixo);
   if (faltaEnd) return faltaEnd;
 
-  if (!ficha.enderecoConfirmado) {
-    if (faltava === "confirmaEndereco" && nao(texto) && !mandouEnderecoNovo) {
-      ficha = limparEndereco(ficha, { manterCep: true });
-      return {
-        reply: "Beleza. Me passa o endereço correto da visita: rua, número, bairro e cidade.",
-        ficha,
-        pills: [],
-      };
-    }
-    const confirmandoEndereco =
-      faltava === "confirmaEndereco" &&
-      !antes.pendenteConfirmacao &&
-      !mandouEnderecoNovo &&
-      (sim(texto) || /esse endere[cç]o|endere[cç]o certo/i.test(texto));
-    if (confirmandoEndereco) {
-      ficha.enderecoConfirmado = true;
-      ficha.pendenteConfirmacao = false;
-    } else if (mandouEnderecoNovo && (faltava === "confirmaEndereco" || faltava === "confirma")) {
-      ficha = aplicarEnderecoColado(limparEndereco(ficha, { manterCep: true }), texto);
-      const ainda = pedirEndereco(ficha, prefixo);
-      if (ainda) return ainda;
-      return confirmarEnderecoMsg(ficha);
-    } else {
-      return confirmarEnderecoMsg(ficha);
-    }
-  }
-
   if (!ficha.descricao && /\b(goteira|telhado|muro|port[aã]o|cozinha|quarto)\b/i.test(texto) && texto.length > 12) {
     ficha.descricao = texto.slice(0, 400);
   }
@@ -1184,7 +1128,7 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
     if (ficha.dataIso && !ehDiaUtil(ficha.dataIso)) {
       ficha.dataIso = undefined;
       return {
-        reply: "A gente atende de segunda a sexta, das 8h às 18h. Escolhe um dia útil pra mim?",
+        reply: fala("A gente atende de segunda a sexta, das 8h às 18h.", "Escolhe um dia útil pra mim?"),
         ficha,
         pills: [],
       };
@@ -1193,8 +1137,8 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
     if (!dias.length) {
       return {
         reply: ficha.dataIso
-          ? "Esse dia já está cheio. Me passa outro dia útil que eu olho na agenda."
-          : "Não achei horário livre nos próximos dias. Me diz uma data (segunda a sexta) que eu confiro.",
+          ? fala("Esse dia já está cheio.", "Me passa outro dia útil que eu olho na agenda?")
+          : fala("Não achei horário livre nos próximos dias.", "Me diz uma data, de segunda a sexta, que eu confiro."),
         ficha: { ...ficha, dataIso: undefined, hora: undefined },
         pills: [
           { label: "Manhã", value: "prefiro de manhã" },
@@ -1208,41 +1152,24 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
 
   if (!ehDiaUtil(ficha.dataIso)) {
     return {
-      reply: "Esse dia não é útil. Segunda a sexta, das 8h às 18h — me passa outra data?",
+      reply: fala("Esse dia a gente não atende.", "Segunda a sexta, das 8h às 18h — me passa outra data?"),
       ficha: { ...ficha, dataIso: undefined, hora: undefined },
       pills: [],
     };
   }
 
-  if (!ficha.pendenteConfirmacao) {
-    ficha.pendenteConfirmacao = true;
+  if (!ficha.telefone) {
     return {
-      reply: `Antes de salvar, confere se está certo?\n\n${resumo(ficha)}\n\nA visita é para orçamento e medição. Posso confirmar no sistema?`,
+      reply: fala("Ok!", "Me passa um telefone com DDD que eu fecho o agendamento."),
       ficha,
-      pills: [
-        { label: "Confirmar agendamento", value: "sim" },
-        { label: "Alterar", value: "não" },
-      ],
+      pills: [],
     };
   }
 
-  if (!sim(texto) && !/confirm/i.test(texto)) {
+  if (!enderecoPronto(ficha)) {
     return {
-      reply: "Quando estiver certo, é só confirmar que eu registro no sistema.",
-      ficha,
-      pills: [
-        { label: "Confirmar agendamento", value: "sim" },
-        { label: "Alterar", value: "não" },
-      ],
-    };
-  }
-
-  if (!enderecoPronto(ficha) || !ficha.enderecoConfirmado) {
-    ficha.pendenteConfirmacao = false;
-    ficha.enderecoConfirmado = false;
-    return {
-      reply: "Não posso salvar sem o endereço completo e confirmado. Me passa rua, número, bairro e cidade da visita.",
-      ficha,
+      reply: fala("Ainda falta o endereço completo.", "Me passa rua, número, bairro e cidade."),
+      ficha: { ...ficha, enderecoConfirmado: false },
       pills: [],
     };
   }
@@ -1265,8 +1192,10 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
   } catch (err) {
     console.error("[poliane criar]", err);
     return {
-      reply:
-        "Não consegui gravar no sistema agora. Vou te encaminhar para o WhatsApp da equipe para não perder o atendimento.",
+      reply: fala(
+        "Não consegui gravar no sistema agora.",
+        "Vou te passar pro WhatsApp da equipe pra não perder o atendimento.",
+      ),
       ficha,
       pills: [{ label: "Abrir WhatsApp", value: "__whatsapp__" }],
     };

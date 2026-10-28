@@ -26,7 +26,10 @@ function escSql(valor: string): string {
   return valor.replace(/\\/g, "\\\\").replace(/'/g, "''");
 }
 
-const MSG_ANTIGA = "Oi! 😊 Sou a {nome}, da Alex Calhas. Em que posso te ajudar hoje?";
+const MSG_ANTIGAS = [
+  "Oi! 😊 Sou a {nome}, da Alex Calhas. Em que posso te ajudar hoje?",
+  "Olá! 😊 Seja muito bem-vindo(a) à Alex Calhas!\n\nMeu nome é {nome} e sou responsável pelo atendimento e agendamentos. 💜\n\nComo posso ajudar você hoje?",
+];
 
 export const SITE_CHAT_DEFAULTS: SiteChatPublico = {
   nome: HOME_SITE.chat.nome,
@@ -73,7 +76,7 @@ function mapPublico(row: DbRow | null): SiteChatPublico {
   return {
     nome: row.nome.trim() || SITE_CHAT_DEFAULTS.nome,
     cargo: row.cargo.trim() || SITE_CHAT_DEFAULTS.cargo,
-    mensagem: !mensagemBruta || mensagemBruta === MSG_ANTIGA ? SITE_CHAT_DEFAULTS.mensagem : mensagemBruta,
+    mensagem: !mensagemBruta || MSG_ANTIGAS.includes(mensagemBruta) ? SITE_CHAT_DEFAULTS.mensagem : mensagemBruta,
     foto_url: fotoChatPublicUrl(row.foto),
   };
 }

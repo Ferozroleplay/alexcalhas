@@ -1988,6 +1988,7 @@ body.ac-landing > main {
 .ac-chat__subtitle {
     margin: 0.2rem 0 0;
     font-size: 0.8rem;
+    min-height: 1.15em;
     opacity: 0.88;
 }
 
@@ -2033,6 +2034,12 @@ body.ac-landing > main {
 
 .ac-chat__bubble--in {
     align-self: flex-start;
+    animation: ac-chat-bubble-in 0.22s ease;
+}
+
+@keyframes ac-chat-bubble-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
 }
 
 .ac-chat__bubble--out {
@@ -2065,27 +2072,30 @@ body.ac-landing > main {
 .ac-chat__typing {
     align-self: flex-start;
     display: flex;
-    gap: 4px;
-    padding: 0.65rem 0.85rem;
+    align-items: center;
+    gap: 5px;
+    min-height: 2.4rem;
+    padding: 0.7rem 1rem;
     background: #fff;
-    border-radius: 14px;
+    border-radius: 14px 14px 14px 4px;
     border: 1px solid #e8ecf4;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
 }
 
 .ac-chat__typing span {
-    width: 7px;
-    height: 7px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    background: #94a3b8;
-    animation: ac-chat-typing 1.2s ease infinite;
+    background: #64748b;
+    animation: ac-chat-typing 1.05s ease infinite;
 }
 
-.ac-chat__typing span:nth-child(2) { animation-delay: 0.15s; }
-.ac-chat__typing span:nth-child(3) { animation-delay: 0.3s; }
+.ac-chat__typing span:nth-child(2) { animation-delay: 0.16s; }
+.ac-chat__typing span:nth-child(3) { animation-delay: 0.32s; }
 
 @keyframes ac-chat-typing {
-    0%, 60%, 100% { transform: translateY(0); opacity: 0.45; }
-    30% { transform: translateY(-4px); opacity: 1; }
+    0%, 70%, 100% { transform: translateY(0); opacity: 0.35; }
+    35% { transform: translateY(-5px); opacity: 1; }
 }
 
 .ac-chat__actions {
