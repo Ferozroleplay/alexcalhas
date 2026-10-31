@@ -2,9 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 
+import { ehDiaVisita } from "@/lib/agendamento-horarios";
 import {
   dataBrParaInput,
   dataInputParaDb,
+  dataVisitaParaIso,
   dbErrorMessage,
   ensureInventarioTextosCliente,
   normalizarHoraVisitaDb,
@@ -159,6 +161,13 @@ export const Route = createFileRoute("/api/agendamentos/$id/cliente")({
             ["confirmado", "orcamentado", "orçamentado"].includes(st) &&
             d.dataMontagem?.trim()
           ) {
+            const isoMontagem = dataVisitaParaIso(d.dataMontagem);
+            if (!isoMontagem || !ehDiaVisita(isoMontagem)) {
+              return jsonResponse(
+                { ok: false, message: "Não montamos em fim de semana nem feriado. Escolha um dia útil." },
+                422,
+              );
+            }
             update.dataMontagem = dataInputParaDb(d.dataMontagem);
           }
 

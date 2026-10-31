@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { AdminModal } from "@/components/admin/modals/AdminModal";
 import { confirmarMontagem, type AgendamentoItem } from "@/lib/admin-api";
+import { ehDiaVisita } from "@/lib/agendamento-horarios";
 import {
   calcularCreditoMaquininha,
   encodeFormaPagamento,
@@ -91,6 +92,10 @@ export function ModalConfirmarMontagem({ open, onClose, item, onSaved }: Props) 
       setError("Informe a data de montagem.");
       return;
     }
+    if (!ehDiaVisita(dataMontagem)) {
+      setError("Não montamos em fim de semana nem feriado. Escolha um dia útil.");
+      return;
+    }
     if (!forma) {
       setError("Escolha a forma de pagamento.");
       return;
@@ -131,11 +136,20 @@ export function ModalConfirmarMontagem({ open, onClose, item, onSaved }: Props) 
             <label className="form-label">Data da montagem</label>
             <input
               type="date"
-              className="form-control mb-3"
+              className="form-control"
               required
               value={dataMontagem}
-              onChange={(e) => setDataMontagem(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                setDataMontagem(v);
+                if (v && !ehDiaVisita(v)) {
+                  setError("Não montamos em fim de semana nem feriado. Escolha um dia útil.");
+                } else {
+                  setError("");
+                }
+              }}
             />
+            <p className="small text-muted mb-3 mt-1">Segunda a sexta, sem feriado.</p>
 
             <p className="form-label mb-2">Forma de pagamento</p>
             <div className="visitas-orc-pay-grid mb-3" role="radiogroup" aria-label="Forma de pagamento">
@@ -211,7 +225,11 @@ export function ModalConfirmarMontagem({ open, onClose, item, onSaved }: Props) 
             <button type="button" className="btn btn-secondary" onClick={onClose}>
               Cancelar
             </button>
-            <button type="submit" className="btn visitas-orc-save-btn" disabled={saving}>
+            <button
+              type="submit"
+              className="btn visitas-orc-save-btn"
+              disabled={saving || Boolean(dataMontagem && !ehDiaVisita(dataMontagem))}
+            >
               {saving ? <Loader2 className="spin" size={18} /> : null}
               Confirmar
             </button>

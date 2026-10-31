@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
-import { dataInputParaDb, dbErrorMessage, serializeInventario } from "@/lib/agendamento.server";
+import { ehDiaVisita } from "@/lib/agendamento-horarios";
+import { dataInputParaDb, dataVisitaParaIso, dbErrorMessage, serializeInventario } from "@/lib/agendamento.server";
 import {
   funcionarioPodeVerInventario,
   getAdminSessionFromRequest,
@@ -44,6 +45,13 @@ export const Route = createFileRoute("/api/agendamentos/$id/confirmar-montagem")
         }
         if (!parseFormaPagamento(parsed.data.formaPagamento).forma) {
           return jsonResponse({ ok: false, message: "Escolha PIX, débito ou crédito." }, 422);
+        }
+        const dataIso = dataVisitaParaIso(parsed.data.dataMontagem);
+        if (!dataIso || !ehDiaVisita(dataIso)) {
+          return jsonResponse(
+            { ok: false, message: "Não montamos em fim de semana nem feriado. Escolha um dia útil." },
+            422,
+          );
         }
 
         try {
