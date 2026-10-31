@@ -1,3 +1,5 @@
+import { feriadosBrasil } from "@/lib/holerite";
+
 /** Grade pública de visitas: 08:00–18:00, 2h entre um e outro. */
 export const VISITA_GAP_MIN = 120;
 export const VISITA_PRIMEIRO_MIN = 8 * 60;
@@ -31,6 +33,16 @@ export function encaixarNaGrade(minutos: number): number {
 
 export function slotLivreDeOcupados(slot: number, ocupados: number[]): boolean {
   return ocupados.every((o) => Math.abs(slot - o) >= VISITA_GAP_MIN);
+}
+
+/** Segunda a sexta, sem feriado nacional/SP nem aniversário de Tarumã. */
+export function ehDiaVisita(iso: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false;
+  const w = new Date(`${iso}T12:00:00`).getDay();
+  if (w < 1 || w > 5) return false;
+  const ano = Number(iso.slice(0, 4));
+  if (!Number.isFinite(ano) || feriadosBrasil(ano).has(iso)) return false;
+  return iso.slice(5) !== "03-20";
 }
 
 export function filtrarHorariosLivres(ocupados: number[], pisoMinutos: number): string[] {

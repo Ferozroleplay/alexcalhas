@@ -1,4 +1,4 @@
-import { VISITA_SLOTS } from "@/lib/agendamento-horarios";
+import { ehDiaVisita, VISITA_SLOTS } from "@/lib/agendamento-horarios";
 import { pontoHojeIso } from "@/lib/ponto-timezone";
 
 const SEMANA = ["D", "S", "T", "Q", "Q", "S", "S"] as const;
@@ -44,7 +44,7 @@ function celulasMes(y: number, m: number): Array<{ iso: string; dia: number } | 
 type StatusDia = "past" | "free" | "full" | "wait";
 
 function statusDia(iso: string, livres: string[] | undefined, hoje: string, loading: boolean): StatusDia {
-  if (iso < hoje) return "past";
+  if (iso < hoje || !ehDiaVisita(iso)) return "past";
   if (livres == null) return loading ? "wait" : "full";
   return livres.length > 0 ? "free" : "full";
 }

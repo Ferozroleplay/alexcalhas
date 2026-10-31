@@ -5,6 +5,7 @@ import {
   horariosLivresVisita,
   toDataVisitaBr,
 } from "@/lib/agendamento.server";
+import { ehDiaVisita } from "@/lib/agendamento-horarios";
 import { getPrisma } from "@/lib/db.server";
 import { parseOrcamentoJson } from "@/lib/orcamento.server";
 import { pontoHojeIso } from "@/lib/ponto-timezone";
@@ -116,8 +117,7 @@ function weekdayIso(iso: string): number {
 }
 
 function ehDiaUtil(iso: string): boolean {
-  const w = weekdayIso(iso);
-  return w >= 1 && w <= 5;
+  return ehDiaVisita(iso);
 }
 
 function somarDias(iso: string, n: number): string {
@@ -1407,7 +1407,7 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
       const dias = await proximosLivres(ficha.periodo);
       if (!dias.length) {
         return {
-          reply: "A agenda próxima está cheia nos dias úteis. Me diga outro dia (segunda a sexta) que eu confiro.",
+          reply: "A agenda próxima está cheia nos dias úteis. Me diga outro dia (segunda a sexta, sem feriado) que eu confiro.",
           ficha,
           pills: [],
         };
@@ -1594,7 +1594,7 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
     if (ficha.dataIso && !ehDiaUtil(ficha.dataIso)) {
       ficha.dataIso = undefined;
       return {
-        reply: fala("A gente atende de segunda a sexta, das 8h às 18h.", "Escolhe um dia útil pra mim?"),
+        reply: fala("A gente atende de segunda a sexta, das 8h às 18h, sem feriado.", "Escolhe um dia útil pra mim?"),
         ficha,
         pills: [],
       };
@@ -1618,7 +1618,7 @@ export async function atenderPoliane(mensagem: string, fichaRaw: unknown): Promi
 
   if (!ehDiaUtil(ficha.dataIso)) {
     return {
-      reply: fala("Esse dia a gente não atende.", "Segunda a sexta, das 8h às 18h — me passa outra data?"),
+      reply: fala("Esse dia a gente não atende.", "Segunda a sexta, das 8h às 18h, sem feriado — me passa outra data?"),
       ficha: { ...ficha, dataIso: undefined, hora: undefined },
       pills: [],
     };

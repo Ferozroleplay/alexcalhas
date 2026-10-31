@@ -1,6 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 
 import {
+  ehDiaVisita,
   filtrarHorariosLivres,
   minutosDeHora,
   VISITA_PRIMEIRO_MIN,
@@ -101,6 +102,7 @@ export async function horariosLivresVisita(
   const dataBr = toDataVisitaBr(dataIso);
   if (!/^\d{2}-\d{2}-\d{4}$/.test(dataBr)) return [];
   if (dataIso < pontoHojeIso()) return [];
+  if (!ehDiaVisita(dataIso)) return [];
 
   const ocupados = await minutosOcupadosNoDia(prisma, dataBr);
   let piso = VISITA_PRIMEIRO_MIN;
@@ -167,7 +169,7 @@ export async function horariosLivresNoMes(
   const dias: Record<string, string[]> = {};
   for (let d = 1; d <= lastDay; d++) {
     const iso = `${prefixoIso}${String(d).padStart(2, "0")}`;
-    if (iso < hoje) {
+    if (iso < hoje || !ehDiaVisita(iso)) {
       dias[iso] = [];
       continue;
     }

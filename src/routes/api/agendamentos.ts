@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
+import { ehDiaVisita } from "@/lib/agendamento-horarios";
 import {
   buildInventarioCreateData,
   dbErrorMessage,
@@ -213,6 +214,15 @@ export const Route = createFileRoute("/api/agendamentos")({
           const horaPedido = formatHoraVisitaExibicao(String(data.hora ?? "").trim());
           let hora = horaPedido;
           if (!session) {
+            if (!ehDiaVisita(data.data)) {
+              return corsJson(
+                {
+                  ok: false,
+                  message: "Não atendemos em fim de semana nem feriado. Escolha um dia útil.",
+                },
+                409,
+              );
+            }
             const livres = await horariosLivresVisita(prisma, data.data);
             if (horaPedido && livres.includes(horaPedido)) {
               hora = horaPedido;
