@@ -409,7 +409,7 @@ export function FuncionariosPage() {
                                 {card.pago ? "Pago" : "A pagar"}
                               </span>
                               <span className="dash-func-pag-card__total-val">
-                                {formatMoeda(card.pago ? (card.valor ?? 0) : card.valor_liquido)}
+                                {formatMoeda(card.valor_liquido)}
                               </span>
                             </span>
                             <span className="dash-func-pag-card__cta">

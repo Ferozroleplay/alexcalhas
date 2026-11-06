@@ -48,6 +48,35 @@ function pagamentoCalcularBrutoSemana(valorDiario: number, diasDiariaCount: numb
   return Math.round(Math.max(0, diasDiariaCount * valorDiario + totalEmpreitas) * 100) / 100;
 }
 
+function round2(n: number) {
+  return Math.round(n * 100) / 100;
+}
+
+function liquidoDe(bruto: number, vales: number) {
+  return Math.max(0, round2(bruto - vales));
+}
+
+function centavosIguais(a: number, b: number) {
+  return Math.abs(a - b) <= 0.009;
+}
+
+/** Diária + empreitas − vales. Se o valor salvo foi um ajuste manual, ele permanece. */
+function resolverValorLiquido(pag: Record<string, unknown> | null, bruto: number, vales: number): number {
+  const auto = liquidoDe(bruto, vales);
+  if (!pag) return auto;
+  const salvo = num(pag.valor);
+  const brutoSalvo = num(pag.valor_bruto);
+  const autoSalvo = liquidoDe(brutoSalvo, num(pag.total_vales));
+  if (centavosIguais(salvo, autoSalvo)) return auto;
+  // Semana gravada no bruto, antes de descontar o vale (ou com o desconto ignorado).
+  if (vales > 0 && (centavosIguais(salvo, brutoSalvo) || centavosIguais(salvo, bruto))) return auto;
+  return salvo;
+}
+
+function liquidoSegueFormula(pag: Record<string, unknown> | null, bruto: number, vales: number) {
+  return centavosIguais(resolverValorLiquido(pag, bruto, vales), liquidoDe(bruto, vales));
+}
+
 function diasUteisSemana(semanaInicio: string) {
   const inicio = pagamentoInicioSemana(semanaInicio);
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(inicio)!;
@@ -98,6 +127,54 @@ async function totalValesSemana(prisma: Awaited<ReturnType<typeof getPrisma>>, u
      WHERE usuario_id = ${uid} AND semana_inicio = '${esc(sem)}'`,
   ).catch(() => [{ total: 0 }]);
   return num(rows[0]?.total);
+}
+
+async function alinharValorPagamento(
+  prisma: Awaited<ReturnType<typeof getPrisma>>,
+  pag: Record<string, unknown> | null,
+  bruto: number,
+  totalVales: number,
+  totalEmpreitas: number,
+  liquido: number,
+) {
+  if (!pag || !liquidoSegueFormula(pag, bruto, totalVales)) return;
+  const id = int(pag.id);
+  if (id <= 0) return;
+  if (
+    centavosIguais(num(pag.valor), liquido) &&
+    centavosIguais(num(pag.total_vales), totalVales) &&
+    centavosIguais(num(pag.total_empreitas), totalEmpreitas) &&
+    centavosIguais(num(pag.valor_bruto), bruto)
+  ) {
+    return;
+  }
+  await prisma.$executeRawUnsafe(
+    `UPDATE funcionario_pagamento_semanal SET
+      valor = '${liquido.toFixed(2)}',
+      total_vales = '${totalVales.toFixed(2)}',
+      total_empreitas = '${totalEmpreitas.toFixed(2)}',
+      valor_bruto = '${bruto.toFixed(2)}'
+     WHERE id = ${id}`,
+  );
+  pag.valor = liquido;
+  pag.total_vales = totalVales;
+  pag.total_empreitas = totalEmpreitas;
+  pag.valor_bruto = bruto;
+}
+
+async function recalcularPagamentoAutomatico(
+  prisma: Awaited<ReturnType<typeof getPrisma>>,
+  uid: number,
+  sem: string,
+) {
+  const pag = await buscarPagamentoUsuarioSemana(prisma, uid, sem);
+  if (!pag) return;
+  const totalVales = await totalValesSemana(prisma, uid, sem);
+  const totalEmpreitas = await totalEmpreitasSemana(prisma, uid, sem);
+  const diasDiaria = contarDiasMarcados(diasFromRegistro(pag));
+  const bruto = pagamentoCalcularBrutoSemana(num(pag.valor_diario), diasDiaria, totalEmpreitas);
+  const liquido = resolverValorLiquido(pag, bruto, totalVales);
+  await alinharValorPagamento(prisma, pag, bruto, totalVales, totalEmpreitas, liquido);
 }
 
 async function totalEmpreitasSemana(prisma: Awaited<ReturnType<typeof getPrisma>>, uid: number, sem: string) {
@@ -221,26 +298,25 @@ export async function montarCardsSemana(semanaInicio: string): Promise<Pagamento
     let valorDiario = pag ? num(pag.valor_diario) : vdMap.get(f.id) ?? 0;
     if (valorDiario <= 0) valorDiario = vdMap.get(f.id) ?? 0;
 
-    const totalVales = pag ? num(pag.total_vales) : valesMap.get(f.id) ?? 0;
-    const totalEmpreitas = pag ? num(pag.total_empreitas) : empMap.get(f.id) ?? 0;
+    const totalVales = valesMap.get(f.id) ?? 0;
+    const totalEmpreitas = empMap.get(f.id) ?? 0;
     const empDiasQtd = empDiasMap.get(f.id) ?? 0;
 
     let diasCount: number;
     let valorBruto: number;
-    let valorLiquido: number;
 
     if (pag) {
       const diasDiaria = contarDiasMarcados(diasFromRegistro(pag));
       diasCount = diasDiaria + empDiasQtd;
-      valorBruto = num(pag.valor_bruto);
-      valorLiquido = num(pag.valor);
+      valorBruto = pagamentoCalcularBrutoSemana(valorDiario, diasDiaria, totalEmpreitas);
     } else {
       const sug = sugestaoMap[f.id] ?? (Object.fromEntries(DIAS_CHAVES.map((k) => [k, false])) as Record<DiaChave, boolean>);
       const diasDiaria = DIAS_CHAVES.filter((k) => sug[k]).length;
       diasCount = diasDiaria + empDiasQtd;
       valorBruto = pagamentoCalcularBrutoSemana(valorDiario, diasDiaria, totalEmpreitas);
-      valorLiquido = Math.max(0, Math.round((valorBruto - totalVales) * 100) / 100);
     }
+    const valorLiquido = resolverValorLiquido(pag, valorBruto, totalVales);
+    await alinharValorPagamento(prisma, pag, valorBruto, totalVales, totalEmpreitas, valorLiquido);
 
     cards.push({
       usuario_id: f.id,
@@ -250,7 +326,7 @@ export async function montarCardsSemana(semanaInicio: string): Promise<Pagamento
       semana_inicio: sem,
       semana_label: pagamentoFormatarSemana(sem),
       pagamento_id: pag ? int(pag.id) : null,
-      valor: pag ? num(pag.valor) : null,
+      valor: pag ? valorLiquido : null,
       valor_diario: valorDiario,
       valor_bruto: valorBruto,
       total_vales: totalVales,
@@ -339,7 +415,8 @@ export async function montarDadosSemana(usuarioId: number, semanaInicio: string)
   const totalEmpreitas = await totalEmpreitasSemana(prisma, uid, sem);
   const valorDiariaBruto = Math.round(diasDiariaCount * valorDiario * 100) / 100;
   const valorBruto = pagamentoCalcularBrutoSemana(valorDiario, diasDiariaCount, totalEmpreitas);
-  const valorLiquido = pag ? num(pag.valor) : Math.max(0, Math.round((valorBruto - totalVales) * 100) / 100);
+  const valorLiquido = resolverValorLiquido(pag, valorBruto, totalVales);
+  await alinharValorPagamento(prisma, pag, valorBruto, totalVales, totalEmpreitas, valorLiquido);
 
   const dias: DiaUi[] = diasUteisSemana(sem).map((dia) => {
     const emp = empreitaPorDia[dia.chave];
@@ -495,12 +572,21 @@ export async function valeSalvar(
     `INSERT INTO funcionario_pagamento_vale (usuario_id, semana_inicio, valor, observacao, data_vale, lancado_por)
      VALUES (${uid}, '${esc(sem)}', '${v.toFixed(2)}', '${esc(observacao)}', '${esc(dv)}', ${int(adminId)})`,
   );
+  await recalcularPagamentoAutomatico(prisma, uid, sem);
   return { ok: true, message: "Vale registrado!" };
 }
 
 export async function valeExcluir(id: number): Promise<boolean> {
   const prisma = await getPrisma();
+  const rows = await prisma.$queryRawUnsafe<{ usuario_id: unknown; semana_inicio: unknown }[]>(
+    `SELECT usuario_id, semana_inicio FROM funcionario_pagamento_vale WHERE id = ${int(id)} LIMIT 1`,
+  );
   await prisma.$executeRawUnsafe(`DELETE FROM funcionario_pagamento_vale WHERE id = ${int(id)} LIMIT 1`);
+  const row = rows[0];
+  if (row) {
+    const sem = ymdFromDb(row.semana_inicio);
+    if (sem) await recalcularPagamentoAutomatico(prisma, int(row.usuario_id), sem);
+  }
   return true;
 }
 
