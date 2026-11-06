@@ -252,7 +252,9 @@ export async function resumoFinanceiroGlobal() {
     listDespesas({ ano: anoMes, mes: mesNum }),
     listarPagamentosHistorico(deMes, ateMes),
   ]);
-  const despesasMes = despesasMesLista.reduce((s, d) => s + d.valor, 0);
+  const despesasMes = despesasMesLista
+    .filter((d) => d.categoria !== "folha")
+    .reduce((s, d) => s + d.valor, 0);
   const folhaMes = folhaMesLista.reduce((s, p) => s + p.valor, 0);
   const liquidoMes = recebidoMes - despesasMes - folhaMes;
 

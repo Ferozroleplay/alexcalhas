@@ -375,7 +375,7 @@ export function FuncionariosPage() {
                             </span>
                             {card.pago ? (
                               <span className="dash-func-pag-card__badge dash-func-pag-card__badge--ok">
-                                <i className="bi bi-check-circle-fill" aria-hidden="true" /> Fechado
+                                <i className="bi bi-check-circle-fill" aria-hidden="true" /> Pago
                               </span>
                             ) : (
                               <span className="dash-func-pag-card__badge dash-func-pag-card__badge--pend">
@@ -440,7 +440,7 @@ export function FuncionariosPage() {
                 </h2>
                 <p className="small text-secondary mb-3">
                   Visão das últimas <strong>8 semanas</strong> (a coluna destacada é a semana selecionada acima).
-                  Verde = semana fechada · cinza = ainda não pagou · clique na célula para abrir ou lançar.
+                  Verde = pago · cinza = ainda não pagou · clique na célula para abrir ou lançar.
                 </p>
                 {cards.length === 0 ? (
                   <p className="text-secondary mb-0">Cadastre funcionários para ver o mapa.</p>

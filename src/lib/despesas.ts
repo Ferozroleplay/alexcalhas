@@ -1,4 +1,5 @@
 export const DESPESA_CATEGORIAS = [
+  { value: "folha", label: "Folha / pagamento" },
   { value: "combustivel", label: "Combustível" },
   { value: "material", label: "Material" },
   { value: "ferramenta", label: "Ferramenta" },

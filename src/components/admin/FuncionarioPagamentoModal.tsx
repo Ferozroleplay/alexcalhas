@@ -7,7 +7,7 @@ import {
   parseValorInput,
 } from "@/lib/funcionario-pagamento-display";
 import type { DiaChave, PagamentoModalData } from "@/lib/funcionario-pagamento.server";
-import { dashAlert, dashConfirm } from "@/lib/dash-ui";
+import { dashAlert, dashConfirm, dashToast } from "@/lib/dash-ui";
 
 type Props = {
   open: boolean;
@@ -198,6 +198,7 @@ export function FuncionarioPagamentoModal({ open, onClose, usuarioId, semana, on
       });
       const json = (await res.json()) as { ok?: boolean; message?: string };
       if (!res.ok) throw new Error(json.message ?? "Erro ao salvar.");
+      dashToast(json.message ?? "Pagamento salvo. Entrou nas despesas.");
       onClose();
       onSaved();
     } catch (err) {
@@ -478,7 +479,9 @@ export function FuncionarioPagamentoModal({ open, onClose, usuarioId, semana, on
                         }}
                       />
                     </div>
-                    <p className="dash-func-pag-modal__hint">Diária + empreitas − vales (pode ajustar).</p>
+                    <p className="dash-func-pag-modal__hint">
+                      Diária + empreitas − vales (pode ajustar). Ao salvar, fica pago e entra nas despesas.
+                    </p>
                   </div>
                   <div className="col-12 col-md-7">
                     <label className="dash-edit-modal__label" htmlFor="modal-pag-obs">
@@ -503,7 +506,7 @@ export function FuncionarioPagamentoModal({ open, onClose, usuarioId, semana, on
               </button>
               <button type="submit" className="btn dash-edit-modal__btn-save visitas-orc-add-btn" disabled={saving}>
                 <i className="bi bi-check-lg" aria-hidden="true" />{" "}
-                {saving ? "Salvando…" : dados.pago ? "Salvar pagamento" : "Fechar semana"}
+                {saving ? "Salvando…" : "Salvar pagamento"}
               </button>
             </div>
           </form>

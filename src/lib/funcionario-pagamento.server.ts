@@ -1,4 +1,5 @@
 import { getPrisma } from "@/lib/db.server";
+import { createDespesa, deleteDespesa, findDespesaById, isFormaValida, updateDespesa } from "@/lib/despesas.server";
 import {
   pagamentoFimSemana,
   pagamentoInicioSemana,
@@ -114,6 +115,86 @@ export async function listarFuncionarios() {
   return rows.map((r) => ({ id: int(r.id), nome: r.nome, thumb: String(r.thumb ?? "nao.png") }));
 }
 
+let colunaDespesaPronta = false;
+
+async function ensurePagamentoDespesaColuna(prisma: Awaited<ReturnType<typeof getPrisma>>) {
+  if (colunaDespesaPronta) return;
+  try {
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE funcionario_pagamento_semanal ADD COLUMN despesa_id INT NULL`,
+    );
+  } catch {
+    /* coluna já existe */
+  }
+  colunaDespesaPronta = true;
+}
+
+function hojeBrasil(): string {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+}
+
+async function lancarDespesaDoPagamento(
+  prisma: Awaited<ReturnType<typeof getPrisma>>,
+  adminId: number,
+  uid: number,
+  sem: string,
+  valorLiq: number,
+  observacao: string,
+) {
+  await ensurePagamentoDespesaColuna(prisma);
+  const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+    `SELECT p.id, p.despesa_id, u.nome AS funcionario_nome
+     FROM funcionario_pagamento_semanal p
+     INNER JOIN usuarios u ON u.id = p.usuario_id
+     WHERE p.usuario_id = ${uid} AND p.semana_inicio = '${esc(sem)}' LIMIT 1`,
+  );
+  const row = rows[0];
+  if (!row) return;
+  const pagId = int(row.id);
+  const despesaId = int(row.despesa_id);
+  const nome = String(row.funcionario_nome ?? "Funcionário");
+  const descricao = `Pagamento de ${nome} — ${pagamentoFormatarSemana(sem)}`.slice(0, 255);
+  const obs = observacao.trim();
+
+  if (valorLiq <= 0) {
+    if (despesaId > 0) {
+      await deleteDespesa(despesaId);
+      await prisma.$executeRawUnsafe(
+        `UPDATE funcionario_pagamento_semanal SET despesa_id = NULL WHERE id = ${pagId}`,
+      );
+    }
+    return;
+  }
+
+  if (despesaId > 0) {
+    const atual = await findDespesaById(despesaId);
+    if (atual) {
+      await updateDespesa(despesaId, {
+        data: atual.data,
+        descricao,
+        categoria: "folha",
+        valor: valorLiq,
+        forma_pagamento: isFormaValida(atual.forma_pagamento) ? atual.forma_pagamento : "pix",
+        observacao: obs,
+      });
+      return;
+    }
+  }
+
+  const criada = await createDespesa({
+    data: hojeBrasil(),
+    descricao,
+    categoria: "folha",
+    valor: valorLiq,
+    forma_pagamento: "pix",
+    observacao: obs,
+    registrado_por: adminId,
+  });
+  await prisma.$executeRawUnsafe(
+    `UPDATE funcionario_pagamento_semanal SET despesa_id = ${criada.id} WHERE id = ${pagId}`,
+  );
+}
+
 async function buscarPagamentoUsuarioSemana(prisma: Awaited<ReturnType<typeof getPrisma>>, uid: number, sem: string) {
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
     `SELECT * FROM funcionario_pagamento_semanal WHERE usuario_id = ${uid} AND semana_inicio = '${esc(sem)}' LIMIT 1`,
@@ -160,6 +241,20 @@ async function alinharValorPagamento(
   pag.total_vales = totalVales;
   pag.total_empreitas = totalEmpreitas;
   pag.valor_bruto = bruto;
+  const despesaId = int(pag.despesa_id);
+  if (despesaId > 0) {
+    if (liquido > 0) {
+      await prisma.$executeRawUnsafe(
+        `UPDATE despesas SET valor = '${liquido.toFixed(2)}' WHERE id = ${despesaId}`,
+      );
+    } else {
+      await deleteDespesa(despesaId);
+      await prisma.$executeRawUnsafe(
+        `UPDATE funcionario_pagamento_semanal SET despesa_id = NULL WHERE id = ${int(pag.id)}`,
+      );
+      pag.despesa_id = null;
+    }
+  }
 }
 
 async function recalcularPagamentoAutomatico(
@@ -522,7 +617,8 @@ export async function salvarPagamento(
         observacao = '${obsEsc}', lancado_por = ${int(adminId)}
        WHERE id = ${id}`,
     );
-    return { ok: true, message: "Pagamento atualizado!" };
+    await lancarDespesaDoPagamento(prisma, adminId, uid, sem, valorLiq, observacao);
+    return { ok: true, message: "Pagamento salvo. Ficou pago e entrou nas despesas." };
   }
 
   await prisma.$executeRawUnsafe(
@@ -545,12 +641,19 @@ export async function salvarPagamento(
       valor = VALUES(valor), observacao = VALUES(observacao), lancado_por = VALUES(lancado_por),
       atualizado_em = CURRENT_TIMESTAMP`,
   );
-  return { ok: true, message: "Pagamento registrado!" };
+  await lancarDespesaDoPagamento(prisma, adminId, uid, sem, valorLiq, observacao);
+  return { ok: true, message: "Pagamento salvo. Ficou pago e entrou nas despesas." };
 }
 
 export async function excluirPagamento(id: number): Promise<boolean> {
   const prisma = await getPrisma();
+  await ensurePagamentoDespesaColuna(prisma);
+  const rows = await prisma.$queryRawUnsafe<{ despesa_id: unknown }[]>(
+    `SELECT despesa_id FROM funcionario_pagamento_semanal WHERE id = ${int(id)} LIMIT 1`,
+  );
+  const despesaId = int(rows[0]?.despesa_id);
   await prisma.$executeRawUnsafe(`DELETE FROM funcionario_pagamento_semanal WHERE id = ${int(id)} LIMIT 1`);
+  if (despesaId > 0) await deleteDespesa(despesaId);
   return true;
 }
 
