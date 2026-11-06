@@ -150,11 +150,11 @@ export const Route = createFileRoute("/api/admin/funcionarios-pagamento")({
           const ate = url.searchParams.get("ate")?.trim() || ymdLocal(new Date());
           const filtroUser = Number(url.searchParams.get("usuario_filtro") ?? 0);
 
-          const [cards, funcionarios] = await Promise.all([
+          const [cards, historico, funcionarios] = await Promise.all([
             montarCardsSemana(semana),
+            listarPagamentosHistorico(de, ate, filtroUser > 0 ? filtroUser : undefined),
             listarFuncionarios(),
           ]);
-          const historico = await listarPagamentosHistorico(de, ate, filtroUser > 0 ? filtroUser : undefined);
 
           const semanasMapa = gerarSemanasAnteriores(semana, 8);
           const idsMapa = cards.map((c) => c.usuario_id);

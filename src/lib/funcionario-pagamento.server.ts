@@ -119,19 +119,22 @@ let colunaDespesaPronta = false;
 
 async function ensurePagamentoDespesaColuna(prisma: Awaited<ReturnType<typeof getPrisma>>) {
   if (colunaDespesaPronta) return;
-  try {
+  const rows = await prisma.$queryRawUnsafe<{ coluna: string }[]>(
+    `SELECT COLUMN_NAME AS coluna FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = 'funcionario_pagamento_semanal'
+       AND COLUMN_NAME IN ('despesa_id', 'confirmado')`,
+  );
+  const tem = new Set(rows.map((r) => String(r.coluna)));
+  if (!tem.has("despesa_id")) {
     await prisma.$executeRawUnsafe(
       `ALTER TABLE funcionario_pagamento_semanal ADD COLUMN despesa_id INT NULL`,
     );
-  } catch {
-    /* coluna já existe */
   }
-  try {
+  if (!tem.has("confirmado")) {
     await prisma.$executeRawUnsafe(
       `ALTER TABLE funcionario_pagamento_semanal ADD COLUMN confirmado TINYINT NOT NULL DEFAULT 1`,
     );
-  } catch {
-    /* coluna já existe */
   }
   colunaDespesaPronta = true;
 }
@@ -425,7 +428,6 @@ export async function montarCardsSemana(semanaInicio: string): Promise<Pagamento
       valorBruto = pagamentoCalcularBrutoSemana(valorDiario, diasDiaria, totalEmpreitas);
     }
     const valorLiquido = resolverValorLiquido(pag, valorBruto, totalVales);
-    await alinharValorPagamento(prisma, pag, valorBruto, totalVales, totalEmpreitas, valorLiquido);
 
     cards.push({
       usuario_id: f.id,
@@ -492,20 +494,28 @@ export async function montarDadosSemana(usuarioId: number, semanaInicio: string)
   if (uid <= 0) return null;
 
   const sem = pagamentoInicioSemana(semanaInicio);
-  const pag = await buscarPagamentoUsuarioSemana(prisma, uid, sem);
-
-  const userRows = await prisma.$queryRawUnsafe<{ nome: string; valor_diario: unknown }[]>(
-    `SELECT nome, valor_diario FROM usuarios WHERE id = ${uid} LIMIT 1`,
-  );
+  const semEsc = esc(sem);
+  const [pag, userRows, sugestaoMap, empreitaPorDia, totalVales, totalEmpreitas, valesRows] = await Promise.all([
+    buscarPagamentoUsuarioSemana(prisma, uid, sem),
+    prisma.$queryRawUnsafe<{ nome: string; valor_diario: unknown }[]>(
+      `SELECT nome, valor_diario FROM usuarios WHERE id = ${uid} LIMIT 1`,
+    ),
+    sugerirDiasBatePontoLote([uid], sem),
+    empreitaMapaPorDia(prisma, uid, sem),
+    totalValesSemana(prisma, uid, sem),
+    totalEmpreitasSemana(prisma, uid, sem),
+    prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+      `SELECT id, valor, observacao, data_vale FROM funcionario_pagamento_vale
+       WHERE usuario_id = ${uid} AND semana_inicio = '${semEsc}' ORDER BY data_vale DESC, id DESC`,
+    ).catch(() => [] as Record<string, unknown>[]),
+  ]);
   if (!userRows[0]) return null;
   const nome = userRows[0].nome;
 
   let valorDiario = pag ? num(pag.valor_diario) : num(userRows[0].valor_diario);
   if (valorDiario <= 0 && pag) valorDiario = num(userRows[0].valor_diario);
 
-  const sugestaoMap = await sugerirDiasBatePontoLote([uid], sem);
   const sugeridos = sugestaoMap[uid] ?? (Object.fromEntries(DIAS_CHAVES.map((k) => [k, false])) as Record<DiaChave, boolean>);
-  const empreitaPorDia = await empreitaMapaPorDia(prisma, uid, sem);
 
   let diasMarcados: Record<DiaChave, number>;
   if (pag) {
@@ -521,12 +531,9 @@ export async function montarDadosSemana(usuarioId: number, semanaInicio: string)
 
   const diasDiariaCount = contarDiasMarcados(diasMarcados);
   const diasTotaisCount = diasDiariaCount + Object.keys(empreitaPorDia).length;
-  const totalVales = await totalValesSemana(prisma, uid, sem);
-  const totalEmpreitas = await totalEmpreitasSemana(prisma, uid, sem);
   const valorDiariaBruto = Math.round(diasDiariaCount * valorDiario * 100) / 100;
   const valorBruto = pagamentoCalcularBrutoSemana(valorDiario, diasDiariaCount, totalEmpreitas);
   const valorLiquido = resolverValorLiquido(pag, valorBruto, totalVales);
-  await alinharValorPagamento(prisma, pag, valorBruto, totalVales, totalEmpreitas, valorLiquido);
 
   const dias: DiaUi[] = diasUteisSemana(sem).map((dia) => {
     const emp = empreitaPorDia[dia.chave];
@@ -547,11 +554,6 @@ export async function montarDadosSemana(usuarioId: number, semanaInicio: string)
       empreita_id: emp?.id ?? null,
     };
   });
-
-  const valesRows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `SELECT id, valor, observacao, data_vale FROM funcionario_pagamento_vale
-     WHERE usuario_id = ${uid} AND semana_inicio = '${esc(sem)}' ORDER BY data_vale DESC, id DESC`,
-  ).catch(() => []);
 
   const vales: ValeUi[] = valesRows.map((v) => {
     const dv = ymdFromDb(v.data_vale);
@@ -866,36 +868,37 @@ export async function resumoFuncionariosPeriodo(dataDe: string, dataAte: string)
     .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 }
 
-export async function descricaoDiasPagos(
-  pag: Record<string, unknown>,
-  semanaInicio: string,
-  usuarioId: number,
-): Promise<string> {
-  const prisma = await getPrisma();
-  const sem = pagamentoInicioSemana(ymdFromDb(semanaInicio) || semanaInicio);
-  const empreitaChaves = Object.keys(await empreitaMapaPorDia(prisma, usuarioId, sem));
-  const partes: string[] = [];
-  for (const dia of diasUteisSemana(sem)) {
-    const col = `dias_${dia.chave}`;
-    if (int(pag[col]) === 1) partes.push(dia.label);
-    else if (empreitaChaves.includes(dia.chave)) partes.push(`${dia.label} (empreita)`);
-  }
-  return partes.join(", ");
-}
-
 export async function listarPagamentosHistorico(de: string, ate: string, usuarioId?: number) {
   const prisma = await getPrisma();
   let where = `p.semana_inicio >= '${esc(pagamentoInicioSemana(de))}' AND p.semana_inicio <= '${esc(pagamentoInicioSemana(ate))}'`;
   if (usuarioId && usuarioId > 0) where += ` AND p.usuario_id = ${int(usuarioId)}`;
 
-  const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `SELECT p.*, u.nome AS funcionario_nome FROM funcionario_pagamento_semanal p
-     INNER JOIN usuarios u ON u.id = p.usuario_id
-     WHERE ${where}
-     ORDER BY p.semana_inicio DESC, u.nome ASC LIMIT 500`,
-  );
+  const deEsc = esc(pagamentoInicioSemana(de));
+  const ateEsc = esc(pagamentoInicioSemana(ate));
+  const [rows, empPeriodo, empChaves] = await Promise.all([
+    prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+      `SELECT p.*, u.nome AS funcionario_nome FROM funcionario_pagamento_semanal p
+       INNER JOIN usuarios u ON u.id = p.usuario_id
+       WHERE ${where}
+       ORDER BY p.semana_inicio DESC, u.nome ASC LIMIT 500`,
+    ),
+    buscarMapaEmpreitaDiasPorPeriodo(de, ate),
+    prisma.$queryRawUnsafe<{ usuario_id: unknown; semana_inicio: unknown; dia_chave: string }[]>(
+      `SELECT usuario_id, semana_inicio, dia_chave FROM funcionario_pagamento_empreita
+       WHERE semana_inicio >= '${deEsc}' AND semana_inicio <= '${ateEsc}'
+         AND dia_chave IS NOT NULL AND TRIM(dia_chave) <> ''`,
+    ).catch(() => []),
+  ]);
 
-  const empPeriodo = await buscarMapaEmpreitaDiasPorPeriodo(de, ate);
+  const chavesPorSemana = new Map<string, Set<string>>();
+  for (const row of empChaves) {
+    const semChave = ymdFromDb(row.semana_inicio);
+    if (!semChave) continue;
+    const key = `${int(row.usuario_id)}|${semChave}`;
+    const set = chavesPorSemana.get(key) ?? new Set<string>();
+    set.add(String(row.dia_chave ?? "").trim().toLowerCase());
+    chavesPorSemana.set(key, set);
+  }
 
   const out = [];
   for (const r of rows) {
@@ -904,6 +907,12 @@ export async function listarPagamentosHistorico(de: string, ate: string, usuario
     if (!sem) continue;
     const diasDiaria = contarDiasMarcados(diasFromRegistro(r));
     const empDias = empPeriodo[uid]?.[sem] ?? 0;
+    const empreitaChaves = chavesPorSemana.get(`${uid}|${sem}`) ?? new Set<string>();
+    const partes: string[] = [];
+    for (const dia of diasUteisSemana(sem)) {
+      if (int(r[`dias_${dia.chave}`]) === 1) partes.push(dia.label);
+      else if (empreitaChaves.has(dia.chave)) partes.push(`${dia.label} (empreita)`);
+    }
     out.push({
       id: int(r.id),
       usuario_id: uid,
@@ -911,7 +920,7 @@ export async function listarPagamentosHistorico(de: string, ate: string, usuario
       semana_inicio: sem,
       dias_trabalhados: int(r.dias_trabalhados),
       dias_qtd: diasDiaria + empDias,
-      dias_pagos: await descricaoDiasPagos(r, sem, uid),
+      dias_pagos: partes.join(", "),
       valor_bruto: num(r.valor_bruto),
       total_empreitas: num(r.total_empreitas),
       total_vales: num(r.total_vales),
