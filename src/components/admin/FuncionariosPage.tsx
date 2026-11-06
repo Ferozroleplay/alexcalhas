@@ -518,14 +518,15 @@ export function FuncionariosPage() {
                                 </td>
                                 {semanasMapa.map((semCol) => {
                                   const pagCell = mapaPagamentos[cardMap.usuario_id]?.[semCol];
+                                  const pagoCell = Boolean(pagCell) && Number(pagCell?.confirmado ?? 1) === 1;
                                   const isAtual = semCol === semana;
-                                  if (pagCell) totalLinha += Number(pagCell.valor ?? 0);
+                                  if (pagoCell) totalLinha += Number(pagCell?.valor ?? 0);
                                   const empD = empreitaDiasMapa[cardMap.usuario_id]?.[semCol] ?? 0;
                                   const diasQtd = contarDiasMapa(pagCell, empD);
                                   return (
                                     <td
                                       key={semCol}
-                                      className={`dash-func-pag-mapa__cel${pagCell ? " is-pago" : " is-vazio"}${isAtual ? " is-col-atual" : ""}`}
+                                      className={`dash-func-pag-mapa__cel${pagoCell ? " is-pago" : pagCell ? " is-aberto" : " is-vazio"}${isAtual ? " is-col-atual" : ""}`}
                                     >
                                       <Link
                                         to="/painel/funcionarios"
@@ -541,9 +542,15 @@ export function FuncionariosPage() {
                                       >
                                         {pagCell ? (
                                           <>
-                                            <span className="dash-func-pag-mapa__check" aria-hidden="true">
-                                              <i className="bi bi-check-lg" />
-                                            </span>
+                                            {pagoCell ? (
+                                              <span className="dash-func-pag-mapa__check" aria-hidden="true">
+                                                <i className="bi bi-check-lg" />
+                                              </span>
+                                            ) : (
+                                              <span className="dash-func-pag-mapa__dias" aria-hidden="true">
+                                                Em aberto
+                                              </span>
+                                            )}
                                             <span className="dash-func-pag-mapa__valor">
                                               {formatMoeda(Number(pagCell.valor ?? 0))}
                                             </span>

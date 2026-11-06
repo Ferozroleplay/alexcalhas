@@ -169,8 +169,7 @@ export function FuncionarioPagamentoModal({ open, onClose, usuarioId, semana, on
     }
   }
 
-  async function salvar(e: React.FormEvent) {
-    e.preventDefault();
+  async function salvar(confirmar: boolean) {
     if (!dados) return;
     setSaving(true);
     try {
@@ -194,11 +193,12 @@ export function FuncionarioPagamentoModal({ open, onClose, usuarioId, semana, on
           observacao: dados.observacao,
           id: dados.pagamento_id ?? undefined,
           dias,
+          confirmar,
         }),
       });
       const json = (await res.json()) as { ok?: boolean; message?: string };
       if (!res.ok) throw new Error(json.message ?? "Erro ao salvar.");
-      dashToast(json.message ?? "Pagamento salvo. Entrou nas despesas.");
+      dashToast(json.message ?? (confirmar ? "Pagamento confirmado." : "Semana salva."));
       onClose();
       onSaved();
     } catch (err) {
@@ -232,7 +232,12 @@ export function FuncionarioPagamentoModal({ open, onClose, usuarioId, semana, on
             <button type="button" className="btn-close" aria-label="Fechar" onClick={onClose} />
           </div>
 
-          <form onSubmit={(e) => void salvar(e)}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void salvar(true);
+            }}
+          >
             <div className="dash-func-pag-modal__resumo-bar" aria-live="polite">
               <div className="dash-func-pag-modal__resumo-pill">
                 <span>Dias</span>
@@ -455,7 +460,7 @@ export function FuncionarioPagamentoModal({ open, onClose, usuarioId, semana, on
 
               <section className="dash-edit-modal__panel dash-func-pag-modal__panel dash-func-pag-modal__panel--fechar">
                 <h6 className="dash-edit-modal__panel-title">
-                  <i className="bi bi-check2-circle" aria-hidden="true" /> Fechar pagamento
+                  <i className="bi bi-check2-circle" aria-hidden="true" /> Confirmar pagamento
                 </h6>
                 <div className="row g-2">
                   <div className="col-12 col-md-5">
@@ -480,7 +485,8 @@ export function FuncionarioPagamentoModal({ open, onClose, usuarioId, semana, on
                       />
                     </div>
                     <p className="dash-func-pag-modal__hint">
-                      Diária + empreitas − vales (pode ajustar). Ao salvar, fica pago e entra nas despesas.
+                      Diária + empreitas − vales (pode ajustar). Salvar deixa em aberto. Confirmar marca como pago e
+                      entra nas despesas.
                     </p>
                   </div>
                   <div className="col-12 col-md-7">
@@ -504,9 +510,17 @@ export function FuncionarioPagamentoModal({ open, onClose, usuarioId, semana, on
               <button type="button" className="btn dash-edit-modal__btn-cancel" onClick={onClose}>
                 Cancelar
               </button>
+              <button
+                type="button"
+                className="btn dash-edit-modal__btn-cancel"
+                disabled={saving}
+                onClick={() => void salvar(false)}
+              >
+                Salvar
+              </button>
               <button type="submit" className="btn dash-edit-modal__btn-save visitas-orc-add-btn" disabled={saving}>
                 <i className="bi bi-check-lg" aria-hidden="true" />{" "}
-                {saving ? "Salvando…" : "Salvar pagamento"}
+                {saving ? "Salvando…" : "Confirmar pagamento"}
               </button>
             </div>
           </form>

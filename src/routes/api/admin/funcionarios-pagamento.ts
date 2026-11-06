@@ -42,6 +42,7 @@ const postSchema = z.discriminatedUnion("action", [
     observacao: z.string().optional(),
     id: z.number().int().positive().optional(),
     dias: diasSchema,
+    confirmar: z.boolean().optional(),
   }),
   z.object({ action: z.literal("excluir"), id: z.number().int().positive() }),
   z.object({
@@ -259,6 +260,7 @@ export const Route = createFileRoute("/api/admin/funcionarios-pagamento")({
             pagamentoParseValor(d.valor_diario),
             d.dias as Record<DiaChave, boolean>,
             d.id,
+            d.confirmar === true,
           );
           return jsonResponse({ ok: res.ok, message: res.message }, res.ok ? 200 : 400);
         } catch (err) {

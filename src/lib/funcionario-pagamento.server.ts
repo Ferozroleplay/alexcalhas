@@ -126,7 +126,20 @@ async function ensurePagamentoDespesaColuna(prisma: Awaited<ReturnType<typeof ge
   } catch {
     /* coluna já existe */
   }
+  try {
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE funcionario_pagamento_semanal ADD COLUMN confirmado TINYINT NOT NULL DEFAULT 1`,
+    );
+  } catch {
+    /* coluna já existe */
+  }
   colunaDespesaPronta = true;
+}
+
+function pagamentoEstaPago(pag: Record<string, unknown> | null): boolean {
+  if (!pag) return false;
+  if (pag.confirmado == null) return true;
+  return int(pag.confirmado) === 1;
 }
 
 function hojeBrasil(): string {
@@ -343,6 +356,7 @@ export type PagamentoCard = {
 
 export async function montarCardsSemana(semanaInicio: string): Promise<PagamentoCard[]> {
   const prisma = await getPrisma();
+  await ensurePagamentoDespesaColuna(prisma);
   const sem = pagamentoInicioSemana(semanaInicio);
   const funcionarios = await listarFuncionarios();
   if (funcionarios.length === 0) return [];
@@ -427,7 +441,7 @@ export async function montarCardsSemana(semanaInicio: string): Promise<Pagamento
       total_vales: totalVales,
       total_empreitas: totalEmpreitas,
       valor_liquido: valorLiquido,
-      pago: Boolean(pag),
+      pago: pagamentoEstaPago(pag),
     });
   }
 
@@ -473,6 +487,7 @@ export type PagamentoModalData = {
 
 export async function montarDadosSemana(usuarioId: number, semanaInicio: string): Promise<PagamentoModalData | null> {
   const prisma = await getPrisma();
+  await ensurePagamentoDespesaColuna(prisma);
   const uid = int(usuarioId);
   if (uid <= 0) return null;
 
@@ -568,7 +583,7 @@ export async function montarDadosSemana(usuarioId: number, semanaInicio: string)
     total_vales: totalVales,
     valor_liquido: valorLiquido,
     observacao: pag ? String(pag.observacao ?? "") : "",
-    pago: Boolean(pag),
+    pago: pagamentoEstaPago(pag),
     vales,
   };
 }
@@ -582,8 +597,10 @@ export async function salvarPagamento(
   valorDiario: number,
   dias: Record<DiaChave, boolean>,
   idEdit?: number | null,
+  confirmar = false,
 ): Promise<{ ok: boolean; message: string }> {
   const prisma = await getPrisma();
+  await ensurePagamentoDespesaColuna(prisma);
   const uid = int(usuarioId);
   const sem = pagamentoInicioSemana(semanaInicio);
   const vd = Math.max(0, pagamentoParseValor(valorDiario));
@@ -605,6 +622,8 @@ export async function salvarPagamento(
   const semEsc = esc(sem);
   const obsEsc = esc(observacao);
   const diasSql = DIAS_CHAVES.map((k) => `dias_${k} = ${diasMarcados[k] ? 1 : 0}`).join(", ");
+  const jaPago = pagamentoEstaPago(await buscarPagamentoUsuarioSemana(prisma, uid, sem));
+  const confirmado = confirmar || jaPago ? 1 : 0;
 
   if (idEdit && idEdit > 0) {
     const id = int(idEdit);
@@ -614,35 +633,43 @@ export async function salvarPagamento(
         ${diasSql}, dias_trabalhados = ${diasTotaisCount},
         valor_bruto = '${valorBruto.toFixed(2)}', total_vales = '${totalVales.toFixed(2)}',
         total_empreitas = '${totalEmpreitas.toFixed(2)}', valor = '${valorLiq.toFixed(2)}',
-        observacao = '${obsEsc}', lancado_por = ${int(adminId)}
+        observacao = '${obsEsc}', lancado_por = ${int(adminId)}, confirmado = ${confirmado}
        WHERE id = ${id}`,
     );
-    await lancarDespesaDoPagamento(prisma, adminId, uid, sem, valorLiq, observacao);
-    return { ok: true, message: "Pagamento salvo. Ficou pago e entrou nas despesas." };
+  } else {
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO funcionario_pagamento_semanal (
+        usuario_id, semana_inicio, valor_diario,
+        dias_seg, dias_ter, dias_qua, dias_qui, dias_sex,
+        dias_trabalhados, valor_bruto, total_vales, total_empreitas, valor, observacao, lancado_por, confirmado
+      ) VALUES (
+        ${uid}, '${semEsc}', '${vd.toFixed(2)}',
+        ${diasMarcados.seg}, ${diasMarcados.ter}, ${diasMarcados.qua}, ${diasMarcados.qui}, ${diasMarcados.sex},
+        ${diasTotaisCount}, '${valorBruto.toFixed(2)}', '${totalVales.toFixed(2)}', '${totalEmpreitas.toFixed(2)}',
+        '${valorLiq.toFixed(2)}', '${obsEsc}', ${int(adminId)}, ${confirmado}
+      )
+      ON DUPLICATE KEY UPDATE
+        valor_diario = VALUES(valor_diario),
+        dias_seg = VALUES(dias_seg), dias_ter = VALUES(dias_ter), dias_qua = VALUES(dias_qua),
+        dias_qui = VALUES(dias_qui), dias_sex = VALUES(dias_sex),
+        dias_trabalhados = VALUES(dias_trabalhados), valor_bruto = VALUES(valor_bruto),
+        total_vales = VALUES(total_vales), total_empreitas = VALUES(total_empreitas),
+        valor = VALUES(valor), observacao = VALUES(observacao), lancado_por = VALUES(lancado_por),
+        confirmado = VALUES(confirmado),
+        atualizado_em = CURRENT_TIMESTAMP`,
+    );
   }
 
-  await prisma.$executeRawUnsafe(
-    `INSERT INTO funcionario_pagamento_semanal (
-      usuario_id, semana_inicio, valor_diario,
-      dias_seg, dias_ter, dias_qua, dias_qui, dias_sex,
-      dias_trabalhados, valor_bruto, total_vales, total_empreitas, valor, observacao, lancado_por
-    ) VALUES (
-      ${uid}, '${semEsc}', '${vd.toFixed(2)}',
-      ${diasMarcados.seg}, ${diasMarcados.ter}, ${diasMarcados.qua}, ${diasMarcados.qui}, ${diasMarcados.sex},
-      ${diasTotaisCount}, '${valorBruto.toFixed(2)}', '${totalVales.toFixed(2)}', '${totalEmpreitas.toFixed(2)}',
-      '${valorLiq.toFixed(2)}', '${obsEsc}', ${int(adminId)}
-    )
-    ON DUPLICATE KEY UPDATE
-      valor_diario = VALUES(valor_diario),
-      dias_seg = VALUES(dias_seg), dias_ter = VALUES(dias_ter), dias_qua = VALUES(dias_qua),
-      dias_qui = VALUES(dias_qui), dias_sex = VALUES(dias_sex),
-      dias_trabalhados = VALUES(dias_trabalhados), valor_bruto = VALUES(valor_bruto),
-      total_vales = VALUES(total_vales), total_empreitas = VALUES(total_empreitas),
-      valor = VALUES(valor), observacao = VALUES(observacao), lancado_por = VALUES(lancado_por),
-      atualizado_em = CURRENT_TIMESTAMP`,
-  );
-  await lancarDespesaDoPagamento(prisma, adminId, uid, sem, valorLiq, observacao);
-  return { ok: true, message: "Pagamento salvo. Ficou pago e entrou nas despesas." };
+  if (confirmado === 1) {
+    await lancarDespesaDoPagamento(prisma, adminId, uid, sem, valorLiq, observacao);
+    return {
+      ok: true,
+      message: confirmar
+        ? "Pagamento confirmado. Ficou pago e entrou nas despesas."
+        : "Pagamento atualizado.",
+    };
+  }
+  return { ok: true, message: "Semana salva. Ainda está em aberto." };
 }
 
 export async function excluirPagamento(id: number): Promise<boolean> {
@@ -808,7 +835,7 @@ export async function resumoFuncionariosPeriodo(dataDe: string, dataAte: string)
   for (const row of rows) {
     const uid = int(row.usuario_id);
     const sem = ymdFromDb(row.semana_inicio);
-    if (!sem) continue;
+    if (!sem || !pagamentoEstaPago(row)) continue;
     if (!byUser.has(uid)) {
       byUser.set(uid, {
         nome: String(row.funcionario_nome),
