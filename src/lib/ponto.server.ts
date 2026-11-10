@@ -517,6 +517,20 @@ export async function criarRegistroPontoAdmin(
   );
   if (!user[0]) return { ok: false, message: "Funcionário não encontrado." };
 
+  const dia = sql.slice(0, 10);
+  const doDia = await prisma.$queryRawUnsafe<{ tipo: string }[]>(
+    `SELECT tipo FROM funcionario_ponto
+     WHERE usuario_id = ${uid}
+       AND registrado_em >= '${esc(`${dia} 00:00:00`)}'
+       AND registrado_em <= '${esc(`${dia} 23:59:59`)}'`,
+  );
+  if (doDia.some((r) => pontoNormalizarTipo(String(r.tipo)) === tipo)) {
+    return {
+      ok: false,
+      message: `Já existe ${pontoLabelTipo(tipo)} neste dia. Corrija o horário em vez de criar outra batida.`,
+    };
+  }
+
   const tipoEsc = esc(tipo);
   const emEsc = esc(sql);
   await prisma.$executeRawUnsafe(

@@ -6,6 +6,7 @@ import { useAdminAuth } from "@/components/admin/admin-auth";
 import { DashPageHero } from "@/components/admin/DashPageHero";
 import { InvPagination, paginateItems } from "@/components/admin/inventario-ui";
 import { HoleriteDocument } from "@/components/admin/HoleriteDocument";
+import { PontoCriarJornadaModal } from "@/components/admin/PontoCriarJornadaModal";
 import { PontoEditarJornadaModal } from "@/components/admin/PontoEditarJornadaModal";
 import { PontoFolhaDocument } from "@/components/admin/PontoFolhaDocument";
 import { PontoFuncCell, PontoJornadaHoras } from "@/components/admin/PontoFuncCell";
@@ -81,6 +82,7 @@ export function PontoControlePage() {
   const [registros, setRegistros] = useState<PontoRegistroAdmin[]>([]);
   const [detalheOpen, setDetalheOpen] = useState(false);
   const [detalhePage, setDetalhePage] = useState(1);
+  const [criarOpen, setCriarOpen] = useState(false);
   const [editarOpen, setEditarOpen] = useState(false);
   const [editarJornada, setEditarJornada] = useState<{
     usuario_id: number;
@@ -306,6 +308,30 @@ export function PontoControlePage() {
     }
   }
 
+  function abrirCriarJornada() {
+    if (funcionarios.length === 0) {
+      dashToast("Nenhum funcionário para lançar o ponto.", "warning");
+      return;
+    }
+    setCriarOpen(true);
+  }
+
+  function pontoCriado(info: { usuarioId: number; data: string }) {
+    const foraDoPeriodo = info.data < de || info.data > ate;
+    const outroFuncionario = usuarioFiltro > 0 && usuarioFiltro !== info.usuarioId;
+    if (!foraDoPeriodo && !outroFuncionario) {
+      void load();
+      return;
+    }
+    void navigate({
+      search: {
+        usuario: outroFuncionario ? info.usuarioId : usuarioFiltro > 0 ? usuarioFiltro : undefined,
+        de: info.data < de ? info.data : de,
+        ate: info.data > ate ? info.data : ate,
+      },
+    });
+  }
+
   function abrirEditarJornada(j: PontoJornada) {
     setEditarJornada({
       usuario_id: j.usuario_id,
@@ -496,9 +522,20 @@ export function PontoControlePage() {
               </section>
 
               <section className="dash-edit-modal__panel mb-3">
-                <h2 className="dash-edit-modal__panel-title">
-                  <i className="bi bi-table" aria-hidden="true" /> Jornadas no período
-                </h2>
+                <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-2">
+                  <h2 className="dash-edit-modal__panel-title mb-0">
+                    <i className="bi bi-table" aria-hidden="true" /> Jornadas no período
+                  </h2>
+                  {podeEditar ? (
+                    <button
+                      type="button"
+                      className="btn btn-sm visitas-orc-add-btn"
+                      onClick={abrirCriarJornada}
+                    >
+                      <i className="bi bi-plus-lg" aria-hidden="true" /> Criar ponto
+                    </button>
+                  ) : null}
+                </div>
                 <div className="table-responsive dash-ponto-table-shell">
                   <table className="table table-sm dash-ponto-table dash-ponto-table--pro mb-0">
                     <thead>
@@ -523,7 +560,9 @@ export function PontoControlePage() {
                       {jornadas.length === 0 ? (
                         <tr>
                           <td colSpan={podeEditar ? 12 : 11} className="dash-ponto-table__empty">
-                            Nenhum registro encontrado para os filtros selecionados.
+                            {podeEditar
+                              ? "Nenhum registro neste período. Use Criar ponto se o funcionário esqueceu de bater."
+                              : "Nenhum registro encontrado para os filtros selecionados."}
                           </td>
                         </tr>
                       ) : (
@@ -784,6 +823,21 @@ export function PontoControlePage() {
           </div>
         </div>
       </AdminModal>
+
+      <PontoCriarJornadaModal
+        open={criarOpen}
+        onClose={() => setCriarOpen(false)}
+        funcionarios={funcionarios}
+        usuarioInicial={usuarioFiltro}
+        dataInicial={ate}
+        jornadas={jornadas}
+        onSaved={pontoCriado}
+        onEditarExistente={(j) => {
+          const completa = jornadas.find((item) => item.usuario_id === j.usuario_id && item.data === j.data);
+          setCriarOpen(false);
+          if (completa) abrirEditarJornada(completa);
+        }}
+      />
 
       <PontoEditarJornadaModal
         open={editarOpen}
