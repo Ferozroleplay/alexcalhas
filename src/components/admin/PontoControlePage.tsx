@@ -408,6 +408,14 @@ export function PontoControlePage() {
         accent="ponto"
         layout="header"
         showNovaVisita={false}
+        cta={
+          podeEditar ? (
+            <button type="button" className="dash-form-page__cta dash-form-page__cta--solid" onClick={abrirCriarJornada}>
+              <i className="bi bi-plus-lg" aria-hidden="true" />
+              <span>Criar ponto</span>
+            </button>
+          ) : null
+        }
       />
 
       <div className="dash-page-body dash-page-body--with-header">
@@ -517,25 +525,21 @@ export function PontoControlePage() {
                         {gerandoPdf ? "Gerando…" : "Holerite do mês"}
                       </button>
                     </div>
+                    {podeEditar ? (
+                      <div className="col-12 col-md-3 d-grid">
+                        <button type="button" className="btn visitas-orc-add-btn" onClick={abrirCriarJornada}>
+                          <i className="bi bi-plus-lg" aria-hidden="true" /> Criar ponto
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 </form>
               </section>
 
               <section className="dash-edit-modal__panel mb-3">
-                <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-2">
-                  <h2 className="dash-edit-modal__panel-title mb-0">
-                    <i className="bi bi-table" aria-hidden="true" /> Jornadas no período
-                  </h2>
-                  {podeEditar ? (
-                    <button
-                      type="button"
-                      className="btn btn-sm visitas-orc-add-btn"
-                      onClick={abrirCriarJornada}
-                    >
-                      <i className="bi bi-plus-lg" aria-hidden="true" /> Criar ponto
-                    </button>
-                  ) : null}
-                </div>
+                <h2 className="dash-edit-modal__panel-title">
+                  <i className="bi bi-table" aria-hidden="true" /> Jornadas no período
+                </h2>
                 <div className="table-responsive dash-ponto-table-shell">
                   <table className="table table-sm dash-ponto-table dash-ponto-table--pro mb-0">
                     <thead>
