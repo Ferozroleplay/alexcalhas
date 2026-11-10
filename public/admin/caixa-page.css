@@ -1050,3 +1050,101 @@ html[data-bs-theme="light"] .caixa-lucro-table .is-pos {
 html[data-bs-theme="light"] .caixa-lucro-table .is-neg {
   color: #dc2626;
 }
+
+.caixa-page {
+  max-width: none;
+}
+
+.caixa-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.caixa-top h1 {
+  margin: 0;
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.caixa-top p {
+  margin: 4px 0 0;
+  color: #8b98ab;
+  font-size: 0.86rem;
+}
+
+.caixa-top__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.caixa-top__ghost {
+  border: 1px solid #2c3544;
+  background: transparent;
+  color: #c5d0de;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.caixa-top .caixa-action {
+  width: auto;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #12986a;
+  color: #fff;
+}
+
+.caixa-top .caixa-action:hover {
+  background: #0f7d57;
+}
+
+.caixa-top .caixa-action > .bi,
+.caixa-top .caixa-action span {
+  color: #fff;
+  font-size: 0.86rem;
+}
+
+.caixa-board {
+  gap: 14px;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+  min-height: 0;
+  border-radius: 0;
+}
+
+.caixa-side,
+.caixa-main {
+  border: 1px solid #2c3544;
+  border-radius: 14px;
+  background: #1c222d;
+}
+
+.caixa-side {
+  border-right: 1px solid #2c3544;
+}
+
+.caixa-fin {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+html[data-bs-theme="light"] .caixa-top h1 {
+  color: #0f172a;
+}
+
+html[data-bs-theme="light"] .caixa-side,
+html[data-bs-theme="light"] .caixa-main {
+  background: #fff;
+  border-color: rgba(15, 23, 42, 0.1);
+}

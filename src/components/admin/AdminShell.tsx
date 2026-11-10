@@ -24,6 +24,10 @@ const NAV_MAIN: { to: string; label: string; icon: string; exact?: boolean }[] =
   { to: "/painel/pendencias", label: "Pendências", icon: "bi-exclamation-circle" },
 ];
 
+const NAV_DIA_EXTRA: { to: string; label: string; icon: string; exact?: boolean }[] = [
+  { to: "/painel/ponto-controle", label: "Bate-ponto", icon: "bi-clock" },
+];
+
 const NAV_ADMIN: { to: string; label: string; icon: string }[] = [
   { to: "/painel/empresa", label: "Empresa", icon: "bi-buildings" },
   { to: "/painel/clientes", label: "Clientes", icon: "bi-person-vcard" },
@@ -36,7 +40,6 @@ const NAV_ADMIN: { to: string; label: string; icon: string }[] = [
   { to: "/painel/financeiro", label: "Financeiro", icon: "bi-cash-coin" },
   { to: "/painel/despesas", label: "Despesas", icon: "bi-receipt" },
   { to: "/painel/funcionarios", label: "Funcionários", icon: "bi-people-fill" },
-  { to: "/painel/ponto-controle", label: "Bate-ponto", icon: "bi-clock" },
   { to: "/painel/logs", label: "Log do sistema", icon: "bi-journal-code" },
 ];
 
@@ -60,7 +63,6 @@ export function AdminShell() {
   const { user, logout, setVisao } = useAdminAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [produtosOpen, setProdutosOpen] = useState(pathname.includes("produto"));
-  const [adminOpen, setAdminOpen] = useState(NAV_ADMIN.some((n) => pathname.startsWith(n.to)));
   const [produtosMenu, setProdutosMenu] = useState<ProdutoMenu[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarMini, setSidebarMini] = useState(() => {
@@ -396,8 +398,9 @@ export function AdminShell() {
               </>
             )}
 
+            {isAdminVisao ? <li className="dash-nav-sec">Dia</li> : null}
             {isAdminVisao &&
-              NAV_MAIN.map(({ to, label, icon, exact }) => (
+              [...NAV_MAIN, ...NAV_DIA_EXTRA].map(({ to, label, icon, exact }) => (
                 <li key={to} className={navActive(pathname, to, exact) ? "activeMenu" : ""}>
                   <Link to={to} className="dash-nav-link" title={label} onClick={() => setSidebarOpen(false)}>
                     <i className={`bi ${icon}`} aria-hidden="true" />
@@ -406,6 +409,7 @@ export function AdminShell() {
                 </li>
               ))}
 
+            {isAdminVisao ? <li className="dash-nav-sec">Empresa</li> : null}
             {isAdminVisao && (
             <li className={`dash-nav-group${produtosOpen ? " is-open" : ""}`}>
               <button
@@ -458,39 +462,17 @@ export function AdminShell() {
             </li>
             )}
 
-            {isAdminVisao && (
-            <li className={`dash-nav-group${adminOpen ? " is-open" : ""}`}>
-              <button
-                type="button"
-                className="dash-nav-group__toggle"
-                aria-expanded={adminOpen}
-                title="Administração"
-                onClick={() => openGroupIfMini(() => setAdminOpen((v) => !v))}
-              >
-                <span className="dash-nav-group__label">
-                  <i className="bi bi-shield-lock" aria-hidden="true" />
-                  <span className="dash-nav-group__text">Administração</span>
-                </span>
-                <i className="bi bi-chevron-down dash-nav-group__chevron" aria-hidden="true" />
-              </button>
-              <ul className="dash-nav-sub">
-                {NAV_ADMIN.filter(
-                  (item) => item.to !== "/painel/usuarios" || user?.podeGerenciarUsuarios,
-                ).map(({ to, label, icon }) => (
-                  <li key={to} className={pathname.startsWith(to) ? "activeMenu" : ""}>
-                    <Link
-                      to={to}
-                      className="dash-nav-link dash-nav-link--sub"
-                      onClick={() => setSidebarOpen(false)}
-                    >
-                      <i className={`bi ${icon}`} aria-hidden="true" />
-                      <span>{label}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </li>
-            )}
+            {isAdminVisao &&
+              NAV_ADMIN.filter(
+                (item) => item.to !== "/painel/usuarios" || user?.podeGerenciarUsuarios,
+              ).map(({ to, label, icon }) => (
+                <li key={to} className={pathname.startsWith(to) ? "activeMenu" : ""}>
+                  <Link to={to} className="dash-nav-link" title={label} onClick={() => setSidebarOpen(false)}>
+                    <i className={`bi ${icon}`} aria-hidden="true" />
+                    <span>{label}</span>
+                  </Link>
+                </li>
+              ))}
           </ul>
         </nav>
 

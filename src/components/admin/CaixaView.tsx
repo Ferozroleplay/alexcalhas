@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { useAdminAuth } from "@/components/admin/admin-auth";
 import { AdminModal } from "@/components/admin/modals/AdminModal";
 import type { CaixaDiaResumo, CaixaStatus } from "@/lib/caixa.server";
 
@@ -28,11 +27,6 @@ function ymd(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function firstName(nome: string): string {
-  const p = nome.trim().split(/\s+/)[0];
-  return p || "usuário";
-}
-
 function money(v: number, hidden = false) {
   if (hidden) return "R$ ••••••";
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -48,7 +42,6 @@ type Linha = {
 };
 
 export function CaixaView() {
-  const { user } = useAdminAuth();
   const hoje = useMemo(() => ymd(new Date()), []);
   const [selectedYmd, setSelectedYmd] = useState(hoje);
   const [viewMonth, setViewMonth] = useState(() => {
@@ -59,7 +52,6 @@ export function CaixaView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [hideMoney, setHideMoney] = useState(true);
-  const [hideFin, setHideFin] = useState(true);
   const [caixaAberto, setCaixaAberto] = useState(false);
   const [statusMap, setStatusMap] = useState<CaixaStatusMap>({});
   const [toggling, setToggling] = useState(false);
@@ -212,8 +204,8 @@ export function CaixaView() {
   const dataLabel =
     resumo?.dataLabel ?? selectedYmd.split("-").reverse().join("/");
 
-  const nome = firstName(user?.nome ?? "Alex");
   const lucroNegativo = (resumo?.lucroReal ?? 0) < 0;
+  const diaNumero = Number(selectedYmd.slice(8, 10));
 
   return (
     <div className="caixa-page">
@@ -223,21 +215,40 @@ export function CaixaView() {
         </div>
       ) : null}
 
+      <header className="caixa-top">
+        <div>
+          <h1>Caixa</h1>
+          <p>
+            {dataLabel} · {caixaAberto ? "aberto" : "fechado"}
+            {loading ? " · carregando" : resumo ? ` · ${resumo.qtdVendas ?? 0} vendas` : ""}
+          </p>
+        </div>
+        <div className="caixa-top__actions">
+          <button type="button" className="caixa-top__ghost" onClick={() => setLucroOpen(true)}>
+            Lucro real
+          </button>
+          <button
+            type="button"
+            className="caixa-top__ghost"
+            onClick={() => setHideMoney((v) => !v)}
+          >
+            <i className={`bi bi-eye${hideMoney ? "" : "-slash"}`} aria-hidden="true" />
+            {hideMoney ? "Mostrar valores" : "Ocultar valores"}
+          </button>
+          <button
+            type="button"
+            className={`caixa-action caixa-action--primary${caixaAberto ? " is-open" : ""}`}
+            onClick={() => void toggleCaixa()}
+            disabled={toggling}
+          >
+            <i className={`bi ${caixaAberto ? "bi-unlock-fill" : "bi-lock-fill"}`} aria-hidden="true" />
+            <span>{caixaAberto ? "Fechar caixa" : "Abrir caixa"}</span>
+          </button>
+        </div>
+      </header>
+
       <section className="caixa-board" aria-label="Caixa diário">
         <aside className="caixa-side">
-          <p className="caixa-side__eyebrow">CAIXA</p>
-          <h1 className="caixa-side__hello">Olá, {nome}</h1>
-          <p className="caixa-side__status">
-            Veja os movimentos do dia <strong>{dataLabel}</strong>.{" "}
-            {caixaAberto ? (
-              <>Caixa aberto.</>
-            ) : (
-              <>
-                Caixa fechado. Clique em <em>Abrir caixa</em> para reabrir.
-              </>
-            )}
-          </p>
-
           <div className="caixa-cal" aria-label="Calendário">
             <div className="caixa-cal__head">
               <button
@@ -307,63 +318,15 @@ export function CaixaView() {
               )}
             </div>
           </div>
-
-          <div className="caixa-actions">
-            <button
-              type="button"
-              className="caixa-action"
-              onClick={() => setLucroOpen(true)}
-            >
-              <i className="bi bi-graph-up-arrow" aria-hidden="true" />
-              <span>
-                Lucro real
-                <small>Atalho Alt + 6</small>
-              </span>
-            </button>
-            <button
-              type="button"
-              className="caixa-action"
-              onClick={() => setToast("Listar caixas em breve.")}
-            >
-              <i className="bi bi-list-ul" aria-hidden="true" />
-              <span>
-                Listar caixas
-                <small>Atalho Alt + 5</small>
-              </span>
-            </button>
-            <button
-              type="button"
-              className={`caixa-action caixa-action--primary${caixaAberto ? " is-open" : ""}`}
-              onClick={() => void toggleCaixa()}
-              disabled={toggling}
-            >
-              <i className={`bi ${caixaAberto ? "bi-unlock-fill" : "bi-lock-fill"}`} aria-hidden="true" />
-              <span>
-                {caixaAberto ? "Fechar caixa" : "Abrir caixa"}
-                <small>Atalho Alt + 2</small>
-              </span>
-            </button>
-          </div>
         </aside>
 
         <div className="caixa-main">
           <div className="caixa-main__head">
             <div>
-              <h2>Resumo do caixa diário</h2>
-              <p>
-                {loading
-                  ? "Carregando…"
-                  : `${resumo?.qtdVendas ?? 0} venda(s) faturada(s) neste dia`}
-              </p>
+              <h2>
+                <i className="bi bi-cash-coin" aria-hidden="true" /> Dia {diaNumero}
+              </h2>
             </div>
-            <button
-              type="button"
-              className="caixa-eye"
-              aria-label={hideMoney ? "Mostrar valores" : "Ocultar valores"}
-              onClick={() => setHideMoney((v) => !v)}
-            >
-              <i className={`bi bi-eye${hideMoney ? "-slash" : ""}`} aria-hidden="true" />
-            </button>
           </div>
 
           {error ? <p className="caixa-error">{error}</p> : null}
@@ -387,30 +350,19 @@ export function CaixaView() {
         </div>
       </section>
 
-      <section className="caixa-fin" aria-labelledby="caixa-fin-title">
-        <div className="caixa-fin__head">
-          <h2 id="caixa-fin-title">Resumo financeiro</h2>
-          <button
-            type="button"
-            className="caixa-eye"
-            aria-label={hideFin ? "Mostrar valores" : "Ocultar valores"}
-            onClick={() => setHideFin((v) => !v)}
-          >
-            <i className={`bi bi-eye${hideFin ? "-slash" : ""}`} aria-hidden="true" />
-          </button>
-        </div>
+      <section className="caixa-fin" aria-label="Resumo financeiro">
         <div className="caixa-fin__grid">
           <Link to="/painel/confirmado" className="caixa-fin__card">
-            <span>Vendas (dia)</span>
-            <strong>{money(resumo?.vendas ?? 0, hideFin)}</strong>
+            <span>Vendas do dia</span>
+            <strong>{money(resumo?.vendas ?? 0, hideMoney)}</strong>
           </Link>
           <button type="button" className="caixa-fin__card" onClick={() => setLucroOpen(true)}>
             <span>Custo materiais</span>
-            <strong>{money(resumo?.custoMateriais ?? 0, hideFin)}</strong>
+            <strong>{money(resumo?.custoMateriais ?? 0, hideMoney)}</strong>
           </button>
           <button type="button" className="caixa-fin__card" onClick={() => setLucroOpen(true)}>
             <span>Despesas</span>
-            <strong>{money(resumo?.despesas ?? 0, hideFin)}</strong>
+            <strong>{money(resumo?.despesas ?? 0, hideMoney)}</strong>
           </button>
           <button
             type="button"
@@ -419,7 +371,7 @@ export function CaixaView() {
           >
             <span>Lucro real</span>
             <strong className={lucroNegativo ? "is-red" : "is-green"}>
-              {money(resumo?.lucroReal ?? 0, hideFin)}
+              {money(resumo?.lucroReal ?? 0, hideMoney)}
             </strong>
           </button>
         </div>
