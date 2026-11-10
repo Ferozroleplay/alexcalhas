@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ideia — painel completo</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" />
+  <style>
+    :root {
+      --bg: #151a22;
+      --side: #171c25;
+      --card: #1c222d;
+      --line: #2c3544;
+      --text: #e8eef6;
+      --muted: #8b98ab;
+      --green: #12986a;
+      --green-soft: rgba(18, 152, 106, 0.14);
+      --warn: #f5b942;
+      --warn-soft: rgba(245, 185, 66, 0.14);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: grid;
+      grid-template-columns: 232px 1fr;
+      grid-template-rows: auto 1fr;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .chrome {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: #10151c;
+      border-bottom: 1px solid var(--line);
+    }
+    .chrome span { color: var(--muted); font-size: 12px; }
+    .url {
+      flex: 1;
+      background: #1c222d;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: 13px;
+      color: #d5deea;
+    }
+    .url b { color: #3ee09f; font-weight: 650; }
+    aside {
+      background: var(--side);
+      border-right: 1px solid var(--line);
+      padding: 16px 10px 24px;
+      overflow: auto;
+    }
+    .brand { font-weight: 700; font-size: 15px; padding: 0 10px 10px; }
+    .brand small { display: block; color: var(--muted); font-weight: 500; font-size: 11px; margin-top: 2px; }
+    .sec { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; padding: 12px 10px 4px; }
+    a.item {
+      width: 100%;
+      display: flex; align-items: center; gap: 10px;
+      color: #c5d0de; text-align: left; text-decoration: none;
+      background: transparent; border: 0; cursor: pointer;
+      padding: 8px 10px; border-radius: 8px; font: inherit; font-size: 14px; font-weight: 500;
+    }
+    a.item i { width: 18px; text-align: center; color: #9aa8ba; }
+    a.item .path { margin-left: auto; color: #6d7c90; font-size: 10px; font-weight: 500; }
+    a.item.on { background: var(--green); color: #fff; }
+    a.item.on i, a.item.on .path { color: #fff; }
+    a.item:hover:not(.on) { background: var(--green-soft); color: #fff; }
+    main { padding: 18px 22px 22px; overflow: auto; min-width: 0; display: flex; flex-direction: column; }
+    .screen { display: none; }
+    .screen.on { display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 12px; }
+    .top { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+    h1 { margin: 0; font-size: 22px; font-weight: 700; }
+    .sub { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .btn {
+      border: 0; background: var(--green); color: #fff; text-decoration: none;
+      border-radius: 8px; padding: 8px 12px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    .btn.ghost { background: transparent; color: #c5d0de; border: 1px solid var(--line); }
+    .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip {
+      background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+      padding: 6px 12px; font-size: 12px; color: #c5d0de;
+    }
+    .chip strong { color: #fff; }
+    .chip.warn { background: var(--warn-soft); border-color: transparent; color: var(--warn); }
+    .grid2 { display: grid; grid-template-columns: 280px 1fr; gap: 14px; }
+    .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+    .card h2 { margin: 0 0 12px; font-size: 14px; font-weight: 650; display: flex; align-items: center; gap: 8px; }
+    .miss { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
+    .miss:first-of-type { border-top: 0; padding-top: 0; }
+    .av {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: grid; place-items: center; font-size: 12px; font-weight: 700;
+      background: var(--warn-soft); color: var(--warn); flex-shrink: 0;
+    }
+    .av.ok { background: var(--green-soft); color: #3ee09f; }
+    .grow { flex: 1; min-width: 0; }
+    .miss b, .person b { display: block; font-size: 14px; }
+    .miss span, .person span, .muted { color: var(--muted); font-size: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 0.03em; padding: 0 8px 8px; }
+    td { padding: 10px 8px; border-top: 1px solid var(--line); }
+    tr.rowline { cursor: pointer; }
+    tr.rowline:hover td { background: rgba(255,255,255,0.02); }
+    tr.detail td { color: var(--muted); font-size: 12px; background: #171d27; }
+    .hide { display: none; }
+    .hint { margin: 10px 0 0; color: var(--muted); font-size: 12px; }
+    .sheet { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 0; overflow: hidden; }
+    .search {
+      display: flex; align-items: center; gap: 8px;
+      margin: 12px 14px; padding: 8px 12px;
+      border: 1px solid var(--line); border-radius: 10px; color: var(--muted);
+    }
+    .search input {
+      flex: 1; border: 0; background: transparent; color: var(--text);
+      font: inherit; font-size: 13px; outline: none;
+    }
+    .sheet .scroll { flex: 1; overflow: auto; }
+    .sheet table { min-width: 760px; }
+    .sheet th, .sheet td { white-space: nowrap; }
+    .id { color: #9aa8ba; font-weight: 650; }
+    .acts { display: flex; gap: 4px; }
+    .acts button {
+      width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--line);
+      background: transparent; color: #c5d0de; cursor: pointer;
+    }
+    .pager {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px;
+    }
+    .fin { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .fin .card span { color: var(--muted); font-size: 12px; }
+    .fin .card strong { display: block; margin-top: 6px; font-size: 18px; }
+    .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 12px; }
+    .cal .wd { color: var(--muted); font-size: 11px; padding-bottom: 4px; }
+    .cal button {
+      border: 0; background: transparent; color: var(--text);
+      border-radius: 8px; height: 32px; font: inherit; font-size: 12px; cursor: pointer;
+    }
+    .cal button.on { background: var(--green); color: #fff; }
+    .cal button.dot { box-shadow: inset 0 -2px 0 var(--green); }
+    .money { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; }
+    .money:first-of-type { border-top: 0; }
+    .money b { font-weight: 650; }
+    .money.total b { color: #3ee09f; }
+    .stat { font-size: 20px; font-weight: 700; margin: 4px 0 0; }
+    .person { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+    .tag { font-size: 11px; padding: 3px 8px; border-radius: 999px; background: var(--green-soft); color: #3ee09f; }
+    .tag.wait { background: var(--warn-soft); color: var(--warn); }
+    @media (max-width: 900px) {
+      body { grid-template-columns: 1fr; height: auto; overflow: auto; }
+      aside { position: sticky; top: 0; max-height: 42vh; }
+      .grid2, .grid3, .fin { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="chrome">
+    <span>Rota</span>
+    <div class="url" id="url">https://www.alexcalhas.com<b>/painel</b></div>
+  </div>
+  <aside>
+    <div class="brand">Alex Calhas<small>O clique abre a rota</small></div>
+    <div class="sec">DIA</div>
+    <a class="item on" data-go="caixa" href="/painel"><i class="bi bi-cash-coin"></i> Caixa</a>
+    <a class="item" data-go="hoje" href="/painel/hoje"><i class="bi bi-sun"></i> Hoje</a>
+    <a class="item" data-go="visitas" href="/painel/visitas"><i class="bi bi-journal-text"></i> Visitas</a>
+    <a class="item" data-go="orcamentado" href="/painel/orcamentado"><i class="bi bi-clipboard2-pulse"></i> Orçamentado</a>
+    <a class="item" data-go="confirmado" href="/painel/confirmado"><i class="bi bi-journal-bookmark"></i> Confirmado</a>
+    <a class="item" data-go="finalizado" href="/painel/finalizado"><i class="bi bi-journal-check"></i> Finalizado</a>
+    <a class="item" data-go="pendencias" href="/painel/pendencias"><i class="bi bi-exclamation-circle"></i> Pendências</a>
+    <a class="item" data-go="ponto" href="/painel/ponto-controle"><i class="bi bi-clock"></i> Bate-ponto</a>
+    <div class="sec">EMPRESA</div>
+    <a class="item" data-go="empresa" href="/painel/empresa"><i class="bi bi-buildings"></i> Empresa</a>
+    <a class="item" data-go="clientes" href="/painel/clientes"><i class="bi bi-person-vcard"></i> Clientes</a>
+    <a class="item" data-go="materiais" href="/painel/material"><i class="bi bi-box-seam"></i> Materiais</a>
+    <a class="item" data-go="parceiros" href="/painel/parceiros"><i class="bi bi-building"></i> Parceiros</a>
+    <a class="item" data-go="calculadora" href="/painel/calculadora-bobina"><i class="bi bi-calculator"></i> Calculadora</a>
+    <a class="item" data-go="condutores" href="/painel/calculadora-condutores"><i class="bi bi-rulers"></i> Condutores</a>
+    <a class="item" data-go="usuarios" href="/painel/usuarios"><i class="bi bi-people"></i> Usuários</a>
+    <a class="item" data-go="entregas" href="/painel/fornecedores"><i class="bi bi-inbox"></i> Entregas</a>
+    <a class="item" data-go="financeiro" href="/painel/financeiro"><i class="bi bi-cash-stack"></i> Financeiro</a>
+    <a class="item" data-go="despesas" href="/painel/despesas"><i class="bi bi-receipt"></i> Despesas</a>
+    <a class="item" data-go="funcionarios" href="/painel/funcionarios"><i class="bi bi-people-fill"></i> Funcionários</a>
+    <a class="item" data-go="logs" href="/painel/logs"><i class="bi bi-journal-code"></i> Log do sistema</a>
+  </aside>
+  <main>
+    <section class="screen on" id="caixa">
+      <div class="top">
+        <div>
+          <h1>Caixa</h1>
+          <p class="sub">10 de novembro · aberto</p>
+        </div>
+        <div class="row">
+          <button class="btn ghost" id="olho" type="button"><i class="bi bi-eye"></i> Mostrar valores</button>
+          <button class="btn" type="button">Fechar caixa</button>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <h2>Novembro 2026</h2>
+          <div class="cal" id="cal">
+            <span class="wd">D</span><span class="wd">S</span><span class="wd">T</span><span class="wd">Q</span><span class="wd">Q</span><span class="wd">S</span><span class="wd">S</span>
+          </div>
+        </div>
+        <div class="card" id="valores">
+          <h2><i class="bi bi-cash-coin"></i> Dia 10</h2>
+          <div class="money"><span>Dinheiro</span><b data-v="1840">R$ ••••••</b></div>
+          <div class="money"><span>Cartões</span><b data-v="960">R$ ••••••</b></div>
+          <div class="money"><span>Pix</span><b data-v="2350">R$ ••••••</b></div>
+          <div class="money"><span>Cheques</span><b data-v="0">R$ ••••••</b></div>
+          <div class="money"><span>Financeira</span><b data-v="0">R$ ••••••</b></div>
+          <div class="money total"><span>Saldo final do dia</span><b data-v="5150">R$ ••••••</b></div>
+          <div class="money total"><span>Lucro real</span><b data-v="1280">R$ ••••••</b></div>
+          <div class="money"><span>Recebimentos</span><b data-v="5150">R$ ••••••</b></div>
+          <div class="money"><span>Vendas</span><b data-v="4200">R$ ••••••</b></div>
+          <div class="money"><span>Sangrias e suprimentos</span><b data-v="200">R$ ••••••</b></div>
+          <div class="money"><span>Devoluções</span><b data-v="0">R$ ••••••</b></div>
+        </div>
+      </div>
+      <div class="fin">
+        <div class="card"><span>Vendas do dia</span><strong data-fin="4200">R$ ••••••</strong></div>
+        <div class="card"><span>Custo materiais</span><strong data-fin="2100">R$ ••••••</strong></div>
+        <div class="card"><span>Despesas</span><strong data-fin="820">R$ ••••••</strong></div>
+        <div class="card"><span>Lucro real</span><strong data-fin="1280">R$ ••••••</strong></div>
+      </div>
+    </section>
+
+    <section class="screen" id="hoje">
+      <div class="top">
+        <div>
+          <h1>Hoje</h1>
+          <p class="sub">O que precisa da sua mão agora.</p>
+        </div>
+        <div class="chips">
+          <span class="chip"><strong>2</strong> visitas</span>
+          <span class="chip"><strong>1</strong> orçamento aberto</span>
+          <span class="chip warn"><strong>1</strong> sem ponto</span>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <h2><i class="bi bi-exclamation-circle"></i> Ponto de hoje</h2>
+          <div class="miss">
+            <div class="av">B</div>
+            <div class="grow"><b>Bryan</b><span>Não bateu a entrada</span></div>
+            <a class="btn" data-go="ponto" href="/painel/ponto-controle">Criar ponto</a>
+          </div>
+          <div class="miss">
+            <div class="av ok">JH</div>
+            <div class="grow"><b>Jhonata</b><span>Em serviço desde 08:01</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Visitas de hoje</h2>
+          <div class="person"><div class="grow"><b>Rua das Acácias, 120</b><span>14:00 · orçamento de calha</span></div><span class="tag wait">A visitar</span></div>
+          <div class="person"><div class="grow"><b>Av. Brasil, 880</b><span>16:30 · medida</span></div><span class="tag wait">A visitar</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="visitas">
+      <div class="top">
+        <div><h1>Visitas</h1><p class="sub">Clientes com visita agendada aguardando confirmação e orçamento. 8 no total.</p></div>
+        <button class="btn" type="button"><i class="bi bi-calendar4-range"></i> Agendar visita</button>
+      </div>
+      <div class="card sheet">
+        <label class="search"><i class="bi bi-search"></i><input type="search" placeholder="Buscar por nome do cliente…" /></label>
+        <div class="scroll">
+          <table>
+            <thead><tr><th>ID</th><th>CLIENTE</th><th>TELEFONE</th><th>ENDEREÇO</th><th>DATA / HORA</th><th>OBSERVAÇÃO</th><th>AÇÕES</th></tr></thead>
+            <tbody>
+              <tr><td class="id">#184</td><td>Maria Souza</td><td>(31) 98888-1111</td><td>Rua das Acácias, 120</td><td>10/11 · 14:00</td><td>Calha e rufo</td><td class="acts"><button type="button" title="WhatsApp"><i class="bi bi-whatsapp"></i></button><button type="button" title="Editar"><i class="bi bi-pencil"></i></button><button type="button" title="Mais"><i class="bi bi-three-dots"></i></button></td></tr>
+              <tr><td class="id">#183</td><td>Carlos Lima</td><td>(31) 97777-2222</td><td>Av. Brasil, 880</td><td>10/11 · 16:30</td><td>Tirar medida</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button><button type="button"><i class="bi bi-pencil"></i></button><button type="button"><i class="bi bi-three-dots"></i></button></td></tr>
+              <tr><td class="id">#182</td><td>Ana Ribeiro</td><td>(31) 96666-4444</td><td>Rua 7, 45</td><td>11/11 · 09:00</td><td>Condutor entupido</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button><button type="button"><i class="bi bi-pencil"></i></button><button type="button"><i class="bi bi-three-dots"></i></button></td></tr>
+              <tr><td class="id">#181</td><td>Pedro Nunes</td><td>(31) 96666-3333</td><td>Rua das Flores, 18</td><td>11/11 · 11:30</td><td>Troca de calha</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button><button type="button"><i class="bi bi-pencil"></i></button><button type="button"><i class="bi bi-three-dots"></i></button></td></tr>
+              <tr><td class="id">#180</td><td>José Alves</td><td>(31) 95555-1212</td><td>Rua do Comércio, 300</td><td>12/11 · 08:30</td><td>Orçamento de rufo</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button><button type="button"><i class="bi bi-pencil"></i></button><button type="button"><i class="bi bi-three-dots"></i></button></td></tr>
+              <tr><td class="id">#179</td><td>Loja Centro</td><td>(31) 94444-9090</td><td>Av. Afonso Pena, 1500</td><td>12/11 · 15:00</td><td>Frente da loja</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button><button type="button"><i class="bi bi-pencil"></i></button><button type="button"><i class="bi bi-three-dots"></i></button></td></tr>
+              <tr><td class="id">#178</td><td>Paulo Henrique</td><td>(31) 93333-8080</td><td>Rua Itambé, 77</td><td>13/11 · 10:00</td><td>Casa nova</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button><button type="button"><i class="bi bi-pencil"></i></button><button type="button"><i class="bi bi-three-dots"></i></button></td></tr>
+              <tr><td class="id">#177</td><td>Sítio Boa Vista</td><td>(31) 92222-7070</td><td>MG-010, km 12</td><td>13/11 · 14:30</td><td>Galpão</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button><button type="button"><i class="bi bi-pencil"></i></button><button type="button"><i class="bi bi-three-dots"></i></button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pager"><span>8 visitas</span><span>Página 1 de 1</span></div>
+      </div>
+    </section>
+
+    <section class="screen" id="orcamentado">
+      <div class="top">
+        <div><h1>Orçamentado</h1><p class="sub">Serviços com orçamento enviado aguardando confirmação de montagem.</p></div>
+        <button class="btn" type="button">Novo orçamento</button>
+      </div>
+      <div class="card sheet">
+        <label class="search"><i class="bi bi-search"></i><input type="search" placeholder="Buscar por nome do cliente…" /></label>
+        <div class="scroll">
+          <table>
+            <thead><tr><th>ID</th><th>CLIENTE</th><th>TELEFONE</th><th>ENDEREÇO</th><th>VALOR</th><th>RECEBIDO</th><th>DETALHES</th><th>AÇÕES</th></tr></thead>
+            <tbody>
+              <tr><td class="id">#176</td><td>Maria Souza</td><td>(31) 98888-1111</td><td>Rua das Acácias, 120</td><td>R$ 2.450</td><td>R$ 0</td><td>Material (4)</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button><button type="button"><i class="bi bi-pencil"></i></button></td></tr>
+              <tr><td class="id">#174</td><td>José Alves</td><td>(31) 95555-1212</td><td>Rua do Comércio, 300</td><td>R$ 890</td><td>R$ 200</td><td>Material (2)</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button><button type="button"><i class="bi bi-pencil"></i></button></td></tr>
+              <tr><td class="id">#170</td><td>Carlos Lima</td><td>(31) 97777-2222</td><td>Av. Brasil, 880</td><td>R$ 1.680</td><td>R$ 0</td><td>Material (3)</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button><button type="button"><i class="bi bi-pencil"></i></button></td></tr>
+              <tr><td class="id">#168</td><td>Loja Centro</td><td>(31) 94444-9090</td><td>Av. Afonso Pena, 1500</td><td>R$ 3.200</td><td>R$ 1.000</td><td>Material (6)</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button><button type="button"><i class="bi bi-pencil"></i></button></td></tr>
+              <tr><td class="id">#165</td><td>Paulo Henrique</td><td>(31) 93333-8080</td><td>Rua Itambé, 77</td><td>R$ 740</td><td>R$ 0</td><td>Material (1)</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button><button type="button"><i class="bi bi-pencil"></i></button></td></tr>
+              <tr><td class="id">#161</td><td>Ana Ribeiro</td><td>(31) 96666-4444</td><td>Rua 7, 45</td><td>R$ 560</td><td>R$ 0</td><td>Sem itens</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button><button type="button"><i class="bi bi-pencil"></i></button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pager"><span>6 orçamentos</span><span>Página 1 de 1</span></div>
+      </div>
+    </section>
+
+    <section class="screen" id="confirmado">
+      <div class="top"><div><h1>Confirmado</h1><p class="sub">Montagens confirmadas em andamento até a conclusão do serviço.</p></div></div>
+      <div class="card sheet">
+        <label class="search"><i class="bi bi-search"></i><input type="search" placeholder="Buscar por nome do cliente…" /></label>
+        <div class="scroll">
+          <table>
+            <thead><tr><th>ID</th><th>CLIENTE</th><th>TELEFONE</th><th>ENDEREÇO</th><th>MONTAGEM</th><th>VALOR</th><th>RECEBIDO</th><th>AÇÕES</th></tr></thead>
+            <tbody>
+              <tr><td class="id">#160</td><td>Pedro Nunes</td><td>(31) 96666-3333</td><td>Rua das Flores, 18</td><td>12/11 · Jhonata</td><td>R$ 1.900</td><td>R$ 500</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button><button type="button"><i class="bi bi-check2"></i></button></td></tr>
+              <tr><td class="id">#158</td><td>Loja Centro</td><td>(31) 94444-9090</td><td>Av. Afonso Pena, 1500</td><td>13/11 · Bryan</td><td>R$ 3.200</td><td>R$ 1.000</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button><button type="button"><i class="bi bi-check2"></i></button></td></tr>
+              <tr><td class="id">#155</td><td>Sítio Boa Vista</td><td>(31) 92222-7070</td><td>MG-010, km 12</td><td>14/11 · Jhonata</td><td>R$ 4.800</td><td>R$ 2.000</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button><button type="button"><i class="bi bi-check2"></i></button></td></tr>
+              <tr><td class="id">#151</td><td>Maria Souza</td><td>(31) 98888-1111</td><td>Rua das Acácias, 120</td><td>14/11 · Bryan</td><td>R$ 2.450</td><td>R$ 800</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button><button type="button"><i class="bi bi-check2"></i></button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pager"><span>4 confirmados</span><span>Página 1 de 1</span></div>
+      </div>
+    </section>
+
+    <section class="screen" id="finalizado">
+      <div class="top"><div><h1>Finalizado</h1><p class="sub">Histórico de serviços concluídos.</p></div></div>
+      <div class="card sheet">
+        <label class="search"><i class="bi bi-search"></i><input type="search" placeholder="Buscar por nome do cliente…" /></label>
+        <div class="scroll">
+          <table>
+            <thead><tr><th>ID</th><th>CLIENTE</th><th>TELEFONE</th><th>ENDEREÇO</th><th>VALOR</th><th>AÇÕES</th></tr></thead>
+            <tbody>
+              <tr><td class="id">#149</td><td>Ana Ribeiro</td><td>(31) 96666-4444</td><td>Rua 7, 45</td><td>R$ 1.200</td><td class="acts"><button type="button"><i class="bi bi-eye"></i></button></td></tr>
+              <tr><td class="id">#146</td><td>Carlos Lima</td><td>(31) 97777-2222</td><td>Av. Brasil, 880</td><td>R$ 980</td><td class="acts"><button type="button"><i class="bi bi-eye"></i></button></td></tr>
+              <tr><td class="id">#140</td><td>José Alves</td><td>(31) 95555-1212</td><td>Rua do Comércio, 300</td><td>R$ 1.540</td><td class="acts"><button type="button"><i class="bi bi-eye"></i></button></td></tr>
+              <tr><td class="id">#138</td><td>Pedro Nunes</td><td>(31) 96666-3333</td><td>Rua das Flores, 18</td><td>R$ 760</td><td class="acts"><button type="button"><i class="bi bi-eye"></i></button></td></tr>
+              <tr><td class="id">#132</td><td>Loja Centro</td><td>(31) 94444-9090</td><td>Av. Afonso Pena, 1500</td><td>R$ 2.100</td><td class="acts"><button type="button"><i class="bi bi-eye"></i></button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pager"><span>5 finalizados nesta página</span><span>Página 1 de 1</span></div>
+      </div>
+    </section>
+
+    <section class="screen" id="pendencias">
+      <div class="top"><div><h1>Pendências</h1><p class="sub">Serviços finalizados sem pagamento. Cobre pelo WhatsApp.</p></div></div>
+      <div class="card sheet">
+        <label class="search"><i class="bi bi-search"></i><input type="search" placeholder="Buscar por nome do cliente…" /></label>
+        <div class="scroll">
+          <table>
+            <thead><tr><th>ID</th><th>CLIENTE</th><th>TELEFONE</th><th>ENDEREÇO</th><th>ATRASO</th><th>VALOR</th><th>RECEBIDO</th><th>AÇÕES</th></tr></thead>
+            <tbody>
+              <tr><td class="id">#149</td><td>Ana Ribeiro</td><td>(31) 96666-4444</td><td>Rua 7, 45</td><td><span class="tag wait">3 dias</span></td><td>R$ 1.200</td><td>R$ 400</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button></td></tr>
+              <tr><td class="id">#140</td><td>José Alves</td><td>(31) 95555-1212</td><td>Rua do Comércio, 300</td><td><span class="tag wait">8 dias</span></td><td>R$ 1.540</td><td>R$ 0</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button></td></tr>
+              <tr><td class="id">#132</td><td>Loja Centro</td><td>(31) 94444-9090</td><td>Av. Afonso Pena, 1500</td><td><span class="tag wait">1 dia</span></td><td>R$ 2.100</td><td>R$ 1.000</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button></td></tr>
+              <tr><td class="id">#128</td><td>Paulo Henrique</td><td>(31) 93333-8080</td><td>Rua Itambé, 77</td><td><span class="tag wait">12 dias</span></td><td>R$ 640</td><td>R$ 0</td><td class="acts"><button type="button"><i class="bi bi-whatsapp"></i></button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pager"><span>4 pendências</span><span>Página 1 de 1</span></div>
+      </div>
+    </section>
+
+    <section class="screen" id="ponto">
+      <div class="top">
+        <div><h1>Bate-ponto</h1><p class="sub">Novembro · só o essencial na lista.</p></div>
+        <div class="row">
+          <button class="btn" type="button">Criar ponto</button>
+          <button class="btn ghost" type="button">Holerite do mês</button>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>FUNCIONÁRIO</th><th>DATA</th><th>ENTRADA</th><th>SAÍDA</th><th>HORAS</th><th>VALOR</th></tr></thead>
+          <tbody>
+            <tr class="rowline" data-target="p1"><td>Jhonata</td><td>10/11</td><td>08:01</td><td>—</td><td>em aberto</td><td>R$ 150</td></tr>
+            <tr class="detail hide" id="p1"><td colspan="6">Almoço 12:00 · retorno 13:30 · intervalo 1h 30min</td></tr>
+            <tr class="rowline" data-target="p2"><td>Bryan</td><td>10/11</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr class="detail hide" id="p2"><td colspan="6">Sem batida. Criar ponto preenche a jornada deste dia.</td></tr>
+            <tr class="rowline" data-target="p3"><td>Bryan</td><td>06/11</td><td>07:59</td><td>17:00</td><td>7h 28min</td><td>R$ 70</td></tr>
+            <tr class="detail hide" id="p3"><td colspan="6">Almoço 12:02 · retorno 13:31</td></tr>
+          </tbody>
+        </table>
+        <p class="hint">Clique na linha para ver almoço, retorno e intervalo.</p>
+      </div>
+    </section>
+
+    <section class="screen" id="empresa">
+      <div class="top"><div><h1>Empresa</h1><p class="sub">Dados que saem no orçamento e no holerite.</p></div><button class="btn" type="button">Salvar</button></div>
+      <div class="card">
+        <div class="money"><span>Nome</span><b>Alex Calhas</b></div>
+        <div class="money"><span>Telefone</span><b>(31) 99999-0000</b></div>
+        <div class="money"><span>Cidade</span><b>Belo Horizonte</b></div>
+      </div>
+    </section>
+
+    <section class="screen" id="clientes">
+      <div class="top"><div><h1>Clientes</h1><p class="sub">Quem já pediu serviço.</p></div><button class="btn" type="button">Novo cliente</button></div>
+      <div class="card">
+        <table>
+          <thead><tr><th>NOME</th><th>TELEFONE</th><th>CIDADE</th></tr></thead>
+          <tbody>
+            <tr><td>Maria Souza</td><td>(31) 98888-1111</td><td>BH</td></tr>
+            <tr><td>Carlos Lima</td><td>(31) 97777-2222</td><td>Contagem</td></tr>
+            <tr><td>Pedro Nunes</td><td>(31) 96666-3333</td><td>BH</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="screen" id="materiais">
+      <div class="top"><div><h1>Materiais</h1><p class="sub">Estoque usado na obra.</p></div><button class="btn" type="button">Novo material</button></div>
+      <div class="card">
+        <table>
+          <thead><tr><th>ITEM</th><th>ESTOQUE</th><th>MÍNIMO</th></tr></thead>
+          <tbody>
+            <tr><td>Bobina galv. 0,50</td><td>2</td><td>3</td></tr>
+            <tr><td>Parafuso costura</td><td>400</td><td>200</td></tr>
+            <tr><td>Rufo 30 cm</td><td>18 m</td><td>10 m</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="screen" id="parceiros">
+      <div class="top"><div><h1>Parceiros</h1><p class="sub">Quem indica ou divide serviço.</p></div><button class="btn" type="button">Novo parceiro</button></div>
+      <div class="card"><div class="person"><div class="grow"><b>Telhas Norte</b><span>Indicação · 4 obras no ano</span></div></div></div>
+    </section>
+
+    <section class="screen" id="calculadora">
+      <div class="top"><div><h1>Calculadora de bobina</h1><p class="sub">Metros de calha a partir da bobina.</p></div></div>
+      <div class="grid3">
+        <div class="card"><h2>Largura</h2><p class="stat">40 cm</p></div>
+        <div class="card"><h2>Comprimento</h2><p class="stat">12 m</p></div>
+        <div class="card"><h2>Peças</h2><p class="stat">8</p><p class="muted">Resultado de exemplo</p></div>
+      </div>
+    </section>
+
+    <section class="screen" id="condutores">
+      <div class="top"><div><h1>Condutores</h1><p class="sub">Conta de queda e emenda.</p></div></div>
+      <div class="grid3">
+        <div class="card"><h2>Quedas</h2><p class="stat">3</p></div>
+        <div class="card"><h2>Altura</h2><p class="stat">6 m</p></div>
+        <div class="card"><h2>Total</h2><p class="stat">18 m</p></div>
+      </div>
+    </section>
+
+    <section class="screen" id="usuarios">
+      <div class="top"><div><h1>Usuários</h1><p class="sub">Quem entra no painel.</p></div><button class="btn" type="button">Cadastrar</button></div>
+      <div class="card">
+        <div class="person"><div class="av ok">A</div><div class="grow"><b>Alex</b><span>Admin</span></div></div>
+        <div class="person"><div class="av ok">B</div><div class="grow"><b>Bryan</b><span>Funcionário</span></div></div>
+        <div class="person"><div class="av ok">JH</div><div class="grow"><b>Jhonata</b><span>Funcionário</span></div></div>
+        <div class="person"><div class="av ok">P</div><div class="grow"><b>Poliane</b><span>Atendimento</span></div></div>
+      </div>
+    </section>
+
+    <section class="screen" id="entregas">
+      <div class="top"><div><h1>Entregas</h1><p class="sub">Material que o fornecedor trouxe.</p></div></div>
+      <div class="card">
+        <table>
+          <thead><tr><th>FORNECEDOR</th><th>ITEM</th><th>DATA</th></tr></thead>
+          <tbody>
+            <tr><td>Aço Minas</td><td>Bobina 0,50</td><td>08/11</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="screen" id="financeiro">
+      <div class="top"><div><h1>Financeiro</h1><p class="sub">Pagamento dos funcionários no mês.</p></div></div>
+      <div class="card">
+        <table>
+          <thead><tr><th>FUNCIONÁRIO</th><th>DIAS</th><th>A PAGAR</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>Jhonata</td><td>8</td><td>R$ 1.200</td><td><button class="btn" type="button">Pagar</button></td></tr>
+            <tr><td>Bryan</td><td>7</td><td>R$ 490</td><td><button class="btn" type="button">Pagar</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="screen" id="despesas">
+      <div class="top"><div><h1>Despesas</h1><p class="sub">O que saiu do caixa e não é obra.</p></div><button class="btn" type="button">Nova despesa</button></div>
+      <div class="card">
+        <table>
+          <thead><tr><th>DATA</th><th>O QUÊ</th><th>VALOR</th></tr></thead>
+          <tbody>
+            <tr><td>10/11</td><td>Combustível</td><td>R$ 180</td></tr>
+            <tr><td>09/11</td><td>Almoço da equipe</td><td>R$ 64</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="screen" id="funcionarios">
+      <div class="top"><div><h1>Funcionários</h1><p class="sub">Diária e dados do holerite.</p></div></div>
+      <div class="card">
+        <table>
+          <thead><tr><th>NOME</th><th>DIÁRIA</th><th>PONTO</th></tr></thead>
+          <tbody>
+            <tr><td>Jhonata</td><td>R$ 150</td><td><span class="tag">Bate ponto</span></td></tr>
+            <tr><td>Bryan</td><td>R$ 70</td><td><span class="tag">Bate ponto</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="screen" id="logs">
+      <div class="top"><div><h1>Log do sistema</h1><p class="sub">O que o painel registrou. Está limpo.</p></div></div>
+      <div class="card"><p class="muted">Nenhum aviso nesta lista.</p></div>
+    </section>
+  </main>
+  <script>
+    const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+    const cal = document.getElementById("cal");
+    for (let d = 1; d <= 30; d++) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = String(d);
+      if (d === 10) b.className = "on";
+      else if (d < 10) b.className = "dot";
+      b.addEventListener("click", () => {
+        cal.querySelectorAll("button").forEach((x) => x.classList.remove("on"));
+        b.classList.add("on");
+        document.querySelector("#caixa h2 i")?.parentElement && (document.querySelector("#valores h2").innerHTML = '<i class="bi bi-cash-coin"></i> Dia ' + d);
+      });
+      cal.appendChild(b);
+    }
+    let aberto = false;
+    document.getElementById("olho").addEventListener("click", () => {
+      aberto = !aberto;
+      document.querySelectorAll("[data-v], [data-fin]").forEach((el) => {
+        const n = el.dataset.v || el.dataset.fin;
+        el.textContent = aberto ? money.format(Number(n)) : "R$ ••••••";
+      });
+      document.getElementById("olho").innerHTML = aberto
+        ? '<i class="bi bi-eye-slash"></i> Ocultar valores'
+        : '<i class="bi bi-eye"></i> Mostrar valores';
+    });
+    function go(id, href, push) {
+      document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("on", s.id === id));
+      document.querySelectorAll("aside a.item").forEach((b) => b.classList.toggle("on", b.dataset.go === id));
+      const link = document.querySelector('aside a.item[data-go="' + id + '"]');
+      const path = href || (link ? link.getAttribute("href") : "/painel");
+      document.getElementById("url").innerHTML = "https://www.alexcalhas.com<b>" + path + "</b>";
+      if (push) history.pushState({ id }, "", "?rota=" + encodeURIComponent(path));
+      if (link) link.scrollIntoView({ block: "nearest" });
+    }
+    document.querySelectorAll("a[data-go]").forEach((el) => {
+      el.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        go(el.dataset.go, el.getAttribute("href"), true);
+      });
+    });
+    const aberta = new URLSearchParams(location.search).get("rota");
+    if (aberta) {
+      const link = document.querySelector('aside a.item[href="' + aberta + '"]');
+      if (link) go(link.dataset.go, aberta, false);
+    }
+    window.addEventListener("popstate", () => {
+      const path = new URLSearchParams(location.search).get("rota") || "/painel";
+      const link = document.querySelector('aside a.item[href="' + path + '"]');
+      if (link) go(link.dataset.go, path, false);
+    });
+    document.querySelectorAll("tr.rowline").forEach((row) => {
+      row.addEventListener("click", () => {
+        document.getElementById(row.dataset.target).classList.toggle("hide");
+      });
+    });
+  </script>
+</body>
+</html>
