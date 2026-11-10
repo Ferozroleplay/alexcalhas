@@ -64,6 +64,16 @@ export async function enviarThumbUsuario(id: number, file: File): Promise<{ thum
   return { thumb: data.thumb };
 }
 
+export async function excluirUsuario(id: number): Promise<string> {
+  const res = await fetch(`/api/admin/usuarios/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  const data = await parseJson<{ ok?: boolean; message?: string }>(res);
+  if (!res.ok) throw new Error(data.message ?? "Não foi possível excluir o usuário.");
+  return data.message ?? "Usuário excluído.";
+}
+
 export async function impersonarUsuario(targetId: number): Promise<{ redirect: string }> {
   const res = await fetch("/api/admin/impersonar", {
     method: "POST",

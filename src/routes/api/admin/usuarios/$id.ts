@@ -6,7 +6,7 @@ import { getAdminSessionFromRequest, isAdminRequest, podeGerenciarUsuarios } fro
 import { jsonResponse } from "@/lib/http.server";
 import { hashPasswordPhp } from "@/lib/password.server";
 import { thumbPublicUrl } from "@/lib/usuario-thumb.server";
-import { getUsuarioById, updateUsuario } from "@/lib/usuarios.server";
+import { deleteUsuario, getUsuarioById, updateUsuario } from "@/lib/usuarios.server";
 
 const NIVEIS = ["admin", "funcionário", "funcionario", "fornecedor", "contador"] as const;
 
@@ -100,6 +100,26 @@ export const Route = createFileRoute("/api/admin/usuarios/$id")({
                 }
               : null,
           });
+        } catch (err) {
+          return jsonResponse({ ok: false, message: dbErrorMessage(err) }, 503);
+        }
+      },
+
+      DELETE: async ({ request, params }) => {
+        if (!isAdminRequest(request)) return jsonResponse({ ok: false }, 401);
+        const session = getAdminSessionFromRequest(request);
+        if (!podeGerenciarUsuarios(session)) {
+          return jsonResponse({ ok: false, message: "Acesso apenas para administrador." }, 403);
+        }
+        const id = lerId(params.id);
+        if (!id) return jsonResponse({ ok: false, message: "ID inválido." }, 400);
+        if (session && session.userId === id) {
+          return jsonResponse({ ok: false, message: "Você não pode excluir a própria conta." }, 422);
+        }
+
+        try {
+          const res = await deleteUsuario(id);
+          return jsonResponse({ ok: res.ok, message: res.message }, res.ok ? 200 : 404);
         } catch (err) {
           return jsonResponse({ ok: false, message: dbErrorMessage(err) }, 503);
         }

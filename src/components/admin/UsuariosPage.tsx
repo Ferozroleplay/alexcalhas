@@ -9,11 +9,12 @@ import { DashPageHero } from "@/components/admin/DashPageHero";
 import { UserThumb } from "@/components/admin/UserThumb";
 import { UsuarioAvatarPicker } from "@/components/admin/UsuarioAvatarPicker";
 import { fetchFornecedoresSelect, type FornecedorSelect } from "@/lib/admin-api";
-import { dashAlert } from "@/lib/dash-ui";
+import { dashConfirm, dashToast } from "@/lib/dash-ui";
 import {
   atualizarUsuario,
   criarUsuario,
   enviarThumbUsuario,
+  excluirUsuario,
   fetchUsuario,
   fetchUsuarios,
   impersonarUsuario,
@@ -93,6 +94,29 @@ export function UsuariosPage() {
     }
     void load();
   }, [load, ready, user, navigate]);
+
+  async function excluir(alvo: UsuarioItem) {
+    if (user && alvo.id === user.id) {
+      dashToast("Você não pode excluir a própria conta.", "warning");
+      return;
+    }
+    const ok = await dashConfirm({
+      title: "Excluir usuário?",
+      message: `Excluir ${alvo.nome} (@${alvo.usuario})? Essa conta deixa de entrar no painel.`,
+      confirmText: "Excluir",
+      variant: "danger",
+    });
+    if (!ok) return;
+    setErro("");
+    try {
+      const message = await excluirUsuario(alvo.id);
+      setItens((lista) => lista.filter((item) => item.id !== alvo.id));
+      setMsg(message);
+      dashToast(message, "success");
+    } catch (err) {
+      setErro(err instanceof Error ? err.message : "Não foi possível excluir.");
+    }
+  }
 
   async function confirmarImpersonacao() {
     if (!impersonarAlvo) return;
@@ -334,18 +358,16 @@ export function UsuariosPage() {
                               },
                             ]
                           : []),
-                        {
-                          label: "Excluir",
-                          icon: "bi-trash",
-                          className: "text-danger",
-                          onClick: () =>
-                            void dashAlert({
-                              title: "Em breve",
-                              message:
-                                "Exclusão pelo React em breve. Use o painel PHP se precisar agora.",
-                              variant: "info",
-                            }),
-                        },
+                        ...(user && u.id !== user.id
+                          ? [
+                              {
+                                label: "Excluir",
+                                icon: "bi-trash",
+                                className: "text-danger",
+                                onClick: () => void excluir(u),
+                              },
+                            ]
+                          : []),
                       ]}
                     />
                   </div>
