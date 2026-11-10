@@ -1174,6 +1174,41 @@ body.dashboard-app--react .inv-maps-chip--compact {
   white-space: nowrap;
 }
 
+body.dashboard-app--react .inv-endereco-acoes {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+}
+
+body.dashboard-app--react button.inv-maps-chip {
+  cursor: pointer;
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+body.dashboard-app--react .inv-endereco-escrito {
+  flex: 1 0 100%;
+  margin: 0.1rem 0 0;
+  padding: 0.45rem 0.55rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-secundary, #1f2937);
+  background: rgba(22, 202, 133, 0.08);
+  border: 1px solid rgba(22, 202, 133, 0.28);
+  white-space: normal;
+  word-break: break-word;
+  user-select: text;
+}
+
+html[data-bs-theme="dark"] body.dashboard-app--react .inv-endereco-escrito {
+  color: #e5e7eb;
+}
+
 body.dashboard-app--react .inv-maps-chip__text {
   overflow: hidden;
   text-overflow: ellipsis;

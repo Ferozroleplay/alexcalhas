@@ -885,7 +885,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
                           />
                         }
                       />
-                      <MobileKeyValue label="Endereço" value={<EnderecoCell item={item} />} />
+                      <MobileKeyValue label="Endereço" value={<EnderecoCell item={item} verEscrito />} />
                       {showVisita ? (
                         <>
                           <MobileKeyValue label="Data" value={<VisitaDataCell data={item.dataVisita} />} />

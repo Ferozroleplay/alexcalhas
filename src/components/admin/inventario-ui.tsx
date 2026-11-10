@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import type { AgendamentoItem } from "@/lib/admin-api";
 import { formatHoraVisitaExibicao } from "@/lib/inventario-format";
@@ -181,19 +181,23 @@ export function EnderecoLink({
   endereco,
   title,
   compact = false,
+  verEscrito = false,
 }: {
   endereco: string;
   title?: string;
   /** Na listagem: só ícone + "Mapa", sem texto longo na célula. */
   compact?: boolean;
+  /** No celular: botão ao lado do mapa que mostra o endereço escrito. */
+  verEscrito?: boolean;
 }) {
+  const [aberto, setAberto] = useState(false);
   const texto = endereco.trim();
   if (!texto) return <span className="inv-detail-empty">—</span>;
 
   const mapsUrl = googleMapsUrlEndereco(texto);
   const tooltip = title ?? texto;
 
-  return (
+  const mapa = (
     <a
       href={mapsUrl}
       className={`inv-maps-chip${compact ? " inv-maps-chip--compact" : ""}`}
@@ -205,6 +209,24 @@ export function EnderecoLink({
       <i className="bi bi-geo-alt" aria-hidden="true" />
       {compact ? <span>Mapa</span> : <span className="inv-maps-chip__text">{texto}</span>}
     </a>
+  );
+
+  if (!verEscrito) return mapa;
+
+  return (
+    <span className="inv-endereco-acoes">
+      {mapa}
+      <button
+        type="button"
+        className={`inv-maps-chip inv-maps-chip--compact${aberto ? " is-on" : ""}`}
+        aria-expanded={aberto}
+        onClick={() => setAberto((v) => !v)}
+      >
+        <i className="bi bi-text-left" aria-hidden="true" />
+        <span>Endereço</span>
+      </button>
+      {aberto ? <span className="inv-endereco-escrito">{texto}</span> : null}
+    </span>
   );
 }
 
@@ -221,11 +243,13 @@ export function EnderecoPartsCell({
 export function EnderecoCell({
   item,
   compact = true,
+  verEscrito = false,
 }: {
   item: AgendamentoItem;
   compact?: boolean;
+  verEscrito?: boolean;
 }) {
-  return <EnderecoLink endereco={buildEnderecoCompleto(item)} compact={compact} />;
+  return <EnderecoLink endereco={buildEnderecoCompleto(item)} compact={compact} verEscrito={verEscrito} />;
 }
 
 export { InvActionBtn, InvRowActions } from "@/components/admin/admin-row-actions";
