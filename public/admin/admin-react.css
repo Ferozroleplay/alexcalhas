@@ -2461,3 +2461,132 @@ html[data-bs-theme="light"] .dash-ponto-detalhe.is-open .dash-ponto-detalhe__tog
   color: #047857;
   background: rgba(22, 202, 133, 0.1);
 }
+
+/* Painel mais limpo: fundo liso, menu e botões sem degradê animado. */
+html[data-bs-theme="light"] body.dashboard-app--react .dashboard-content {
+  background: #f3f5f7 !important;
+  background-image: none !important;
+}
+
+html[data-bs-theme="dark"] body.dashboard-app--react .dashboard-content {
+  background: #151a22 !important;
+  background-image: none !important;
+}
+
+html[data-bs-theme="dark"] body.dashboard-app--react .dash-sidebar,
+html[data-bs-theme="dark"] body.dashboard-app--react #nav-menu.dash-sidebar,
+html[data-bs-theme="dark"] body.dashboard-app--react .dash-sidebar__brand,
+html[data-bs-theme="dark"] body.dashboard-app--react .dash-sidebar__footer,
+html[data-bs-theme="dark"] body.dashboard-app--react #menu-top.dash-topbar {
+  background: #171c25 !important;
+  box-shadow: none !important;
+  border-color: #2a3240 !important;
+}
+
+html[data-bs-theme="light"] body.dashboard-app--react .dash-sidebar,
+html[data-bs-theme="light"] body.dashboard-app--react #nav-menu.dash-sidebar {
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+body.dashboard-app--react #nav-menu .dash-nav-link,
+body.dashboard-app--react .dash-nav-link {
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 0.48rem 0.72rem;
+}
+
+body.dashboard-app--react #nav-menu .dash-nav-link::after,
+body.dashboard-app--react .dash-nav-link::after,
+body.dashboard-app--react #nav-menu .dash-nav-link:hover::after,
+body.dashboard-app--react .dash-nav-link:hover::after {
+  animation: none !important;
+  opacity: 0 !important;
+}
+
+body.dashboard-app--react #nav-menu .dash-nav-link:hover,
+body.dashboard-app--react .dash-nav-link:hover {
+  transform: none;
+  box-shadow: none;
+  background: rgba(18, 165, 110, 0.12) !important;
+}
+
+body.dashboard-app--react #nav-menu .activeMenu > .dash-nav-link,
+body.dashboard-app--react .dash-nav-list .activeMenu > .dash-nav-link,
+body.dashboard-app--react #nav-menu .activeMenu > .dash-nav-link:hover,
+body.dashboard-app--react .dash-nav-list .activeMenu > .dash-nav-link:hover {
+  animation: none !important;
+  background: #12986a !important;
+  background-image: none !important;
+  background-size: auto !important;
+  box-shadow: none !important;
+  color: #fff !important;
+  transform: none;
+}
+
+body.dashboard-app--react #nav-menu .activeMenu > .dash-nav-link .bi,
+body.dashboard-app--react .dash-nav-list .activeMenu > .dash-nav-link .bi,
+body.dashboard-app--react #nav-menu .activeMenu > .dash-nav-link:hover .bi {
+  color: #fff !important;
+}
+
+body.dashboard-app--react .visitas-orc-add-btn,
+body.dashboard-app--react .dash-edit-modal__btn-save,
+body.dashboard-app--react .dash-form-page__cta--solid,
+body.dashboard-app--react .visitas-orc-add-btn:hover,
+body.dashboard-app--react .dash-edit-modal__btn-save:hover,
+body.dashboard-app--react .dash-form-page__cta--solid:hover {
+  animation: none !important;
+  background: #12986a !important;
+  background-image: none !important;
+  background-size: auto !important;
+  box-shadow: none !important;
+  transform: none;
+}
+
+body.dashboard-app--react .visitas-orc-add-btn:hover,
+body.dashboard-app--react .dash-edit-modal__btn-save:hover,
+body.dashboard-app--react .dash-form-page__cta--solid:hover {
+  filter: brightness(1.08);
+}
+
+body.dashboard-app--react .dash-form-page__cta::after,
+body.dashboard-app--react .visitas-orc-add-btn::after,
+body.dashboard-app--react .dash-edit-modal__btn-save::after,
+body.dashboard-app--react .metric-card,
+html[data-bs-theme="light"] body.dashboard-app--react .metric-card,
+html[data-bs-theme="dark"] body.dashboard-app--react .metric-card {
+  animation: none !important;
+}
+
+body.dashboard-app--react .dash-form-page__cta::after,
+body.dashboard-app--react .visitas-orc-add-btn::after,
+body.dashboard-app--react .dash-edit-modal__btn-save::after {
+  display: none !important;
+}
+
+html[data-bs-theme="dark"] body.dashboard-app--react .dash-edit-modal__panel,
+html[data-bs-theme="dark"] body.dashboard-app--react .dash-form-card,
+html[data-bs-theme="dark"] body.dashboard-app--react .user-list-card {
+  background: #1c222d !important;
+  border-color: #2c3544 !important;
+  box-shadow: none !important;
+}
+
+body.dashboard-app--react .dash-edit-modal__panel,
+body.dashboard-app--react .dash-form-card,
+body.dashboard-app--react .user-list-card,
+body.dashboard-app--react .dash-page-body--with-header {
+  border-radius: 14px;
+}
+
+body.dashboard-app--react .dash-ponto-table--pro thead th,
+body.dashboard-app--react .table thead th {
+  letter-spacing: 0.03em;
+  font-weight: 600;
+}
+
+html[data-bs-theme="dark"] body.dashboard-app--react .dash-ponto-table-shell {
+  background: #171d27;
+  border-color: #2c3544;
+}
