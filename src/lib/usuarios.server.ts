@@ -1,4 +1,5 @@
 import { getPrisma } from "@/lib/db.server";
+import { removerThumbArquivo } from "@/lib/usuario-thumb.server";
 
 export type UsuarioRow = {
   id: number;
@@ -171,13 +172,14 @@ export async function updateUsuario(
 
 export async function deleteUsuario(id: number): Promise<{ ok: boolean; message: string }> {
   const prisma = await getPrisma();
-  const rows = await prisma.$queryRawUnsafe<{ id: unknown; nome: string }[]>(
-    `SELECT id, nome FROM usuarios WHERE id = ? LIMIT 1`,
+  const rows = await prisma.$queryRawUnsafe<{ id: unknown; nome: string; thumb: string }[]>(
+    `SELECT id, nome, thumb FROM usuarios WHERE id = ? LIMIT 1`,
     id,
   );
   if (!rows[0]) return { ok: false, message: "Usuário não encontrado." };
 
   await prisma.$executeRawUnsafe(`DELETE FROM usuarios WHERE id = ? LIMIT 1`, id);
+  await removerThumbArquivo(rows[0].thumb ?? "");
   return { ok: true, message: `${rows[0].nome} foi excluído.` };
 }
 

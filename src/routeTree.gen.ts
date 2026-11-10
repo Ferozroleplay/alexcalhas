@@ -76,6 +76,7 @@ import { Route as ApiAdminUsuariosRouteImport } from './routes/api/admin/usuario
 import { Route as ApiAdminVisaoRouteImport } from './routes/api/admin/visao'
 import { Route as ApiAgendamentosIdRouteImport } from './routes/api/agendamentos/$id'
 import { Route as ApiMediaBlobRouteImport } from './routes/api/media/blob'
+import { Route as ApiMediaUsuarioFotoRouteImport } from './routes/api/media/usuario-foto'
 import { Route as ApiAdminProdutosIdRouteImport } from './routes/api/admin/produtos/$id'
 import { Route as ApiAdminSiteChatFotoRouteImport } from './routes/api/admin/site-chat/foto'
 import { Route as ApiAdminUsuariosIdRouteImport } from './routes/api/admin/usuarios/$id'
@@ -428,6 +429,11 @@ const ApiMediaBlobRoute = ApiMediaBlobRouteImport.update({
   path: '/api/media/blob',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMediaUsuarioFotoRoute = ApiMediaUsuarioFotoRouteImport.update({
+  id: '/api/media/usuario-foto',
+  path: '/api/media/usuario-foto',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminProdutosIdRoute = ApiAdminProdutosIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -557,6 +563,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/visao': typeof ApiAdminVisaoRoute
   '/api/agendamentos/$id': typeof ApiAgendamentosIdRouteWithChildren
   '/api/media/blob': typeof ApiMediaBlobRoute
+  '/api/media/usuario-foto': typeof ApiMediaUsuarioFotoRoute
   '/api/admin/produtos/$id': typeof ApiAdminProdutosIdRouteWithChildren
   '/api/admin/site-chat/foto': typeof ApiAdminSiteChatFotoRoute
   '/api/admin/usuarios/$id': typeof ApiAdminUsuariosIdRouteWithChildren
@@ -636,6 +643,7 @@ export interface FileRoutesByTo {
   '/api/admin/visao': typeof ApiAdminVisaoRoute
   '/api/agendamentos/$id': typeof ApiAgendamentosIdRouteWithChildren
   '/api/media/blob': typeof ApiMediaBlobRoute
+  '/api/media/usuario-foto': typeof ApiMediaUsuarioFotoRoute
   '/api/admin/produtos/$id': typeof ApiAdminProdutosIdRouteWithChildren
   '/api/admin/site-chat/foto': typeof ApiAdminSiteChatFotoRoute
   '/api/admin/usuarios/$id': typeof ApiAdminUsuariosIdRouteWithChildren
@@ -717,6 +725,7 @@ export interface FileRoutesById {
   '/api/admin/visao': typeof ApiAdminVisaoRoute
   '/api/agendamentos/$id': typeof ApiAgendamentosIdRouteWithChildren
   '/api/media/blob': typeof ApiMediaBlobRoute
+  '/api/media/usuario-foto': typeof ApiMediaUsuarioFotoRoute
   '/api/admin/produtos/$id': typeof ApiAdminProdutosIdRouteWithChildren
   '/api/admin/site-chat/foto': typeof ApiAdminSiteChatFotoRoute
   '/api/admin/usuarios/$id': typeof ApiAdminUsuariosIdRouteWithChildren
@@ -799,6 +808,7 @@ export interface FileRouteTypes {
     | '/api/admin/visao'
     | '/api/agendamentos/$id'
     | '/api/media/blob'
+    | '/api/media/usuario-foto'
     | '/api/admin/produtos/$id'
     | '/api/admin/site-chat/foto'
     | '/api/admin/usuarios/$id'
@@ -878,6 +888,7 @@ export interface FileRouteTypes {
     | '/api/admin/visao'
     | '/api/agendamentos/$id'
     | '/api/media/blob'
+    | '/api/media/usuario-foto'
     | '/api/admin/produtos/$id'
     | '/api/admin/site-chat/foto'
     | '/api/admin/usuarios/$id'
@@ -958,6 +969,7 @@ export interface FileRouteTypes {
     | '/api/admin/visao'
     | '/api/agendamentos/$id'
     | '/api/media/blob'
+    | '/api/media/usuario-foto'
     | '/api/admin/produtos/$id'
     | '/api/admin/site-chat/foto'
     | '/api/admin/usuarios/$id'
@@ -1013,6 +1025,7 @@ export interface RootRouteChildren {
   ApiAdminUsuariosRoute: typeof ApiAdminUsuariosRouteWithChildren
   ApiAdminVisaoRoute: typeof ApiAdminVisaoRoute
   ApiMediaBlobRoute: typeof ApiMediaBlobRoute
+  ApiMediaUsuarioFotoRoute: typeof ApiMediaUsuarioFotoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1486,6 +1499,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMediaBlobRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/media/usuario-foto': {
+      id: '/api/media/usuario-foto'
+      path: '/api/media/usuario-foto'
+      fullPath: '/api/media/usuario-foto'
+      preLoaderRoute: typeof ApiMediaUsuarioFotoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/produtos/$id': {
       id: '/api/admin/produtos/$id'
       path: '/$id'
@@ -1778,6 +1798,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminUsuariosRoute: ApiAdminUsuariosRouteWithChildren,
   ApiAdminVisaoRoute: ApiAdminVisaoRoute,
   ApiMediaBlobRoute: ApiMediaBlobRoute,
+  ApiMediaUsuarioFotoRoute: ApiMediaUsuarioFotoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

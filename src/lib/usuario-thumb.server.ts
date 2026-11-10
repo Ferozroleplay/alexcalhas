@@ -2,9 +2,13 @@ import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomBytes } from "node:crypto";
 
-import { uploadBlob } from "@/lib/blob-upload.server";
+import { hasBlobStorage, uploadBlob } from "@/lib/blob-upload.server";
+import { getPrisma } from "@/lib/db.server";
 import {
   blobUrlParaExibicao,
+  DB_FOTO_PREFIX,
+  dbFotoId,
+  dbFotoPublicPath,
   isBlobPrivateRef,
   resolveBlobStoredUrl,
 } from "@/lib/usuario-thumb-url";
@@ -29,6 +33,8 @@ export function isThumbStoredUrl(thumb: string): boolean {
 }
 
 export function thumbPublicUrl(arquivo: string): string {
+  const noBanco = dbFotoPublicPath(arquivo);
+  if (noBanco) return noBanco;
   if (isBlobPrivateRef(arquivo) || isThumbStoredUrl(arquivo)) {
     return blobUrlParaExibicao(arquivo);
   }
@@ -57,9 +63,12 @@ export async function salvarThumbUpload(
   const key = `thumbs/${Date.now()}_${randomBytes(4).toString("hex")}.${ext}`;
 
   if (isReadOnlyServerless()) {
-    const blob = await uploadBlob(key, file);
-    if ("erro" in blob) return { erro: blob.erro };
-    return { arquivo: blob.stored };
+    if (hasBlobStorage()) {
+      const blob = await uploadBlob(key, file);
+      if ("erro" in blob) return { erro: blob.erro };
+      return { arquivo: blob.stored };
+    }
+    return salvarThumbNoBanco(file);
   }
 
   if (!canPersistUploadsOnDisk("USER_THUMB_DIR")) {
@@ -74,8 +83,69 @@ export async function salvarThumbUpload(
   return { arquivo };
 }
 
+const FOTO_BANCO_MAX_BYTES = 4 * 1024 * 1024;
+
+async function garantirTabelaFoto(): Promise<void> {
+  const prisma = await getPrisma();
+  await prisma.$executeRawUnsafe(
+    `CREATE TABLE IF NOT EXISTS usuario_foto (
+      id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+      mime VARCHAR(40) NOT NULL,
+      dados MEDIUMBLOB NOT NULL,
+      criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+  );
+}
+
+async function salvarThumbNoBanco(file: File): Promise<{ arquivo: string } | { erro: string }> {
+  if (file.size > FOTO_BANCO_MAX_BYTES) {
+    return { erro: "A foto passou de 4 MB. Escolha uma imagem menor." };
+  }
+  await garantirTabelaFoto();
+  const prisma = await getPrisma();
+  const buf = Buffer.from(await file.arrayBuffer());
+  await prisma.$executeRawUnsafe(
+    `INSERT INTO usuario_foto (mime, dados) VALUES (?, ?)`,
+    file.type,
+    buf,
+  );
+  const inserted = await prisma.$queryRawUnsafe<{ id: unknown }[]>(`SELECT LAST_INSERT_ID() AS id`);
+  const id = Number(inserted[0]?.id) || 0;
+  if (id <= 0) return { erro: "Não foi possível guardar a foto." };
+  return { arquivo: `${DB_FOTO_PREFIX}${id}` };
+}
+
+export async function lerUsuarioFoto(
+  id: number,
+): Promise<{ mime: string; dados: Uint8Array } | null> {
+  if (!Number.isInteger(id) || id <= 0) return null;
+  const prisma = await getPrisma();
+  const rows = await prisma.$queryRawUnsafe<{ mime: string; dados: Uint8Array | null }[]>(
+    `SELECT mime, dados FROM usuario_foto WHERE id = ? LIMIT 1`,
+    id,
+  );
+  const row = rows[0];
+  if (!row?.dados || !FOTOS_TIPOS.has(row.mime)) return null;
+  return { mime: row.mime, dados: row.dados };
+}
+
+async function apagarFotoBanco(id: number): Promise<void> {
+  const prisma = await getPrisma();
+  await prisma.$executeRawUnsafe(`DELETE FROM usuario_foto WHERE id = ? LIMIT 1`, id);
+}
+
 export async function removerThumbArquivo(thumb: string): Promise<void> {
   if (!thumb || thumb === "nao.png") return;
+  const fotoId = dbFotoId(thumb);
+  if (fotoId) {
+    try {
+      await apagarFotoBanco(fotoId);
+    } catch {
+      /* tabela pode ainda não existir */
+    }
+    return;
+  }
   if (isThumbStoredUrl(thumb) || isBlobPrivateRef(thumb)) {
     try {
       const { del } = await import("@vercel/blob");
