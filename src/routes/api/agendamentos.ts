@@ -17,6 +17,7 @@ import { jsonResponse, PUBLIC_CORS } from "@/lib/http.server";
 import {
   listarIdsPendenciaCobranca,
   mapaCobrarPendencia,
+  mapaPagarEm,
 } from "@/lib/inventario-pendencia.server";
 import {
   calcularResumoRecebimento,
@@ -131,11 +132,13 @@ export const Route = createFileRoute("/api/agendamentos")({
             .map((r) => r.id);
           const mapaRecebido = await mapaTotalRecebidoPorInventario(idsRecebimento);
           const cobrar = status === "finalizado" ? await mapaCobrarPendencia(idsRecebimento) : null;
+          const pagarEm = status === "pendencias" ? await mapaPagarEm(rows.map((r) => r.id)) : null;
 
           const items = rows.map((row) => {
               const item = {
                 ...serializeInventario(row, { incluirItens: false }),
                 osToken: criarOsToken(row.id),
+                pagarEm: pagarEm?.get(row.id) ?? null,
               };
               if (!statusPermiteRecebimento(row.status)) return item;
               const agg = mapaRecebido[row.id];

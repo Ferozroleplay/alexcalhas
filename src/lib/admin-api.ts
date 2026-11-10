@@ -27,6 +27,7 @@ export type AgendamentoItem = {
   saldoPendente?: number;
   quitado?: boolean;
   qtdPagamentos?: number;
+  pagarEm?: string | null;
   osToken?: string;
 };
 
@@ -469,13 +470,17 @@ export async function confirmarMontagem(
 
 export async function finalizarServico(
   id: number,
-  opts?: { pagou?: boolean },
+  opts?: { pagou?: boolean; pagarEm?: string },
 ): Promise<AgendamentoItem> {
   const res = await fetch(`/api/agendamentos/${id}`, {
     method: "PATCH",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status: "finalizado", pagou: opts?.pagou === true }),
+    body: JSON.stringify({
+      status: "finalizado",
+      pagou: opts?.pagou === true,
+      pagarEm: opts?.pagarEm,
+    }),
   });
   const data = await parseJson<{ ok?: boolean; item?: AgendamentoItem; message?: string }>(res);
   if (!res.ok || !data.item) throw new Error(data.message ?? "Não foi possível finalizar.");

@@ -86,6 +86,15 @@ function MobileKeyValue({ label, value }: { label: string; value: React.ReactNod
   );
 }
 
+function formatarDataPagar(data: string | null | undefined): string {
+  const t = String(data ?? "").trim();
+  const br = /^(\d{2})-(\d{2})-(\d{4})$/.exec(t);
+  if (br) return `${br[1]}/${br[2]}/${br[3]}`;
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(t);
+  if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+  return t || "—";
+}
+
 function AtrasoCell({ item }: { item: AgendamentoItem }) {
   const dias = diasAtrasoPagamento(dataReferenciaAtraso(item));
   const tone = dias >= 7 ? "late" : dias >= 1 ? "warn" : "ok";
@@ -726,6 +735,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
                         {showVisita ? <th className="inv-col-datetime">Data / Hora</th> : null}
                         {showVisita ? <th className="inv-col-observacao">Observação</th> : null}
                         {showMontagem ? <th className="inv-col-montagem">Montagem</th> : null}
+                        {showAtraso ? <th className="inv-col-atraso">Pagar em</th> : null}
                         {showAtraso ? <th className="inv-col-atraso">Atraso</th> : null}
                         {showValor ? <th className="inv-col-valor">Valor</th> : null}
                         {showRecebido ? <th className="inv-col-recebido">Recebido</th> : null}
@@ -788,6 +798,9 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
                           ) : null}
                           {showMontagem ? (
                             <td className="inv-col-montagem">{item.dataMontagem || "—"}</td>
+                          ) : null}
+                          {showAtraso ? (
+                            <td className="inv-col-atraso">{formatarDataPagar(item.pagarEm)}</td>
                           ) : null}
                           {showAtraso ? (
                             <td className="inv-col-atraso">
@@ -888,6 +901,9 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
                       ) : null}
                       {showMontagem ? (
                         <MobileKeyValue label="Montagem" value={item.dataMontagem || "—"} />
+                      ) : null}
+                      {showAtraso ? (
+                        <MobileKeyValue label="Pagar em" value={formatarDataPagar(item.pagarEm)} />
                       ) : null}
                       {showAtraso ? (
                         <MobileKeyValue label="Atraso" value={<AtrasoCell item={item} />} />

@@ -2,7 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { INVENTARIO_STATUS } from "@/lib/agendamento-constants";
-import { dbErrorMessage, excluirInventario, serializeInventario } from "@/lib/agendamento.server";
+import {
+  dbErrorMessage,
+  excluirInventario,
+  serializeInventario,
+  toDataVisitaBr,
+} from "@/lib/agendamento.server";
 import {
   funcionarioPodeVerInventario,
   getAdminSessionFromRequest,
@@ -22,6 +27,7 @@ import {
 const patchSchema = z.object({
   status: z.enum(INVENTARIO_STATUS),
   pagou: z.boolean().optional(),
+  pagarEm: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
 
 export const Route = createFileRoute("/api/agendamentos/$id")({
@@ -125,14 +131,21 @@ export const Route = createFileRoute("/api/agendamentos/$id")({
             }
           }
 
+          if (next === "finalizado" && parsed.data.pagou !== true && !parsed.data.pagarEm) {
+            return jsonResponse(
+              { ok: false, message: "Informa a data que o cliente vai pagar." },
+              422,
+            );
+          }
+
           const updated = await prisma.inventario.update({
             where: { id },
             data: { status: next },
           });
 
-          if (next === "finalizado" && parsed.data.pagou !== true) {
+          if (next === "finalizado" && parsed.data.pagou !== true && parsed.data.pagarEm) {
             try {
-              await marcarPendenciaCobranca(id);
+              await marcarPendenciaCobranca(id, toDataVisitaBr(parsed.data.pagarEm));
             } catch (pendenciaErr) {
               console.error("[PATCH /api/agendamentos/$id] marcar pendência", pendenciaErr);
             }

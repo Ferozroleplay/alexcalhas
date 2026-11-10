@@ -22,13 +22,61 @@ export async function ensureCobrarPendenciaColumn(): Promise<void> {
   colunaPronta = true;
 }
 
-export async function marcarPendenciaCobranca(inventarioId: number): Promise<void> {
-  await ensureCobrarPendenciaColumn();
+let colunaPagarPronta = false;
+
+export async function ensurePagarEmColumn(): Promise<void> {
+  if (colunaPagarPronta) return;
   const prisma = await getPrisma();
+  try {
+    await prisma.$queryRawUnsafe(`SELECT pagar_em FROM inventario LIMIT 1`);
+    colunaPagarPronta = true;
+    return;
+  } catch {
+    /* coluna ainda não existe */
+  }
+  try {
+    await prisma.$executeRawUnsafe(`ALTER TABLE inventario ADD COLUMN pagar_em VARCHAR(20) NULL`);
+  } catch {
+    /* coluna já existe */
+  }
+  colunaPagarPronta = true;
+}
+
+export async function marcarPendenciaCobranca(
+  inventarioId: number,
+  pagarEm?: string | null,
+): Promise<void> {
+  await ensureCobrarPendenciaColumn();
+  await ensurePagarEmColumn();
+  const prisma = await getPrisma();
+  if (pagarEm) {
+    await prisma.$executeRawUnsafe(
+      `UPDATE inventario SET cobrar_pendencia = 1, pagar_em = ? WHERE id = ?`,
+      pagarEm,
+      inventarioId,
+    );
+    return;
+  }
   await prisma.$executeRawUnsafe(
     `UPDATE inventario SET cobrar_pendencia = 1 WHERE id = ?`,
     inventarioId,
   );
+}
+
+export async function mapaPagarEm(ids: number[]): Promise<Map<number, string>> {
+  const safe = ids.filter((id) => Number.isInteger(id) && id > 0);
+  const mapa = new Map<number, string>();
+  if (safe.length === 0) return mapa;
+  await ensurePagarEmColumn();
+  const prisma = await getPrisma();
+  const rows = await prisma.$queryRawUnsafe<{ id: number; pagar_em: string | null }[]>(
+    `SELECT id, pagar_em FROM inventario WHERE id IN (${safe.join(",")})`,
+  );
+  for (const row of rows) {
+    const data = String(row.pagar_em ?? "").trim();
+    if (data) mapa.set(Number(row.id), data);
+  }
+  return mapa;
 }
 
 export async function listarIdsPendenciaCobranca(opts?: {
