@@ -81,9 +81,15 @@ export const Route = createFileRoute("/api/agendamentos/$id/confirmar-montagem")
           });
 
           // Sai do estoque (Materiais) os metros do orçamento.
+          // Não segura o botão se a baixa passar de 8s: o status já foi gravado.
           let estoqueMsg = "";
           try {
-            const baixa = await baixarEstoqueDoInventario(id);
+            const baixa = await Promise.race([
+              baixarEstoqueDoInventario(id),
+              new Promise<never>((_, reject) => {
+                setTimeout(() => reject(new Error("baixa-estoque-timeout")), 8000);
+              }),
+            ]);
             if (baixa.jaBaixado) {
               estoqueMsg = " Estoque já tinha sido baixado neste serviço.";
             } else if (baixa.baixas.length > 0) {

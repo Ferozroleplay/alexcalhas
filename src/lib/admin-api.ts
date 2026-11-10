@@ -457,6 +457,7 @@ export async function confirmarMontagem(
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
+    signal: AbortSignal.timeout(20000),
     body: JSON.stringify({
       dataMontagem,
       formaPagamento: extra?.formaPagamento,

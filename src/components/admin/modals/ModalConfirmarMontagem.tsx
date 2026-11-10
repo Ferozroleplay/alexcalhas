@@ -111,7 +111,14 @@ export function ModalConfirmarMontagem({ open, onClose, item, onSaved }: Props) 
       onSaved(saved);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao confirmar.");
+      const abortou = err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
+      setError(
+        abortou
+          ? "A resposta demorou. A montagem pode já ter sido salva. Fecha isso e atualiza a página."
+          : err instanceof Error
+            ? err.message
+            : "Erro ao confirmar.",
+      );
     } finally {
       setSaving(false);
     }
