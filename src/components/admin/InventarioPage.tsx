@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useAdminAuth } from "@/components/admin/admin-auth";
 import { DashPageHero } from "@/components/admin/DashPageHero";
@@ -114,7 +114,9 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const [busca, setBusca] = useState("");
-  const [buscaDebounced, setBuscaDebounced] = useState("");
+  const [buscaServidor, setBuscaServidor] = useState("");
+  const loadSeq = useRef(0);
+  const jaCarregou = useRef(false);
 
   const [orcamentoOpen, setOrcamentoOpen] = useState(false);
   const [orcamentoMode, setOrcamentoMode] = useState<"novo" | "editar">("novo");
@@ -134,25 +136,31 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
   const statusFilter = STATUS_FILTER[variant];
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      setItems(
-        await fetchAgendamentos(statusFilter, {
-          q: buscaDebounced,
-          limit: buscaDebounced ? 1000 : 250,
-        }),
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao carregar.");
-      setItems([]);
-    } finally {
-      setLoading(false);
+    const seq = ++loadSeq.current;
+    if (!jaCarregou.current) {
+      setLoading(true);
+      setError("");
     }
-  }, [statusFilter, buscaDebounced]);
+    try {
+      const next = await fetchAgendamentos(statusFilter, {
+        q: buscaServidor,
+        limit: buscaServidor ? 1000 : 250,
+      });
+      if (seq !== loadSeq.current) return;
+      jaCarregou.current = true;
+      setItems(next);
+      setError("");
+    } catch (err) {
+      if (seq !== loadSeq.current) return;
+      setError(err instanceof Error ? err.message : "Erro ao carregar.");
+      if (!jaCarregou.current) setItems([]);
+    } finally {
+      if (seq === loadSeq.current) setLoading(false);
+    }
+  }, [statusFilter, buscaServidor]);
 
   useEffect(() => {
-    const t = window.setTimeout(() => setBuscaDebounced(busca.trim()), 350);
+    const t = window.setTimeout(() => setBuscaServidor(busca.trim()), 400);
     return () => window.clearTimeout(t);
   }, [busca]);
 
@@ -654,11 +662,11 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
             </div>
           ) : null}
 
-          {loading ? (
+          {loading && items.length === 0 ? (
             <div className="inv-empty-state d-flex justify-content-center py-5">
               <Loader2 className="spin text-primary" size={32} aria-label="Carregando" />
             </div>
-          ) : items.length === 0 ? (
+          ) : items.length === 0 && !busca.trim() ? (
             <div className="inv-empty-state" role="status">
               <div className={`inv-empty-state__icon inv-empty-state__icon--${listingSlug}`}>
                 <i className={`bi ${meta.icon}`} aria-hidden="true" />
