@@ -114,7 +114,6 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const [busca, setBusca] = useState("");
-  const [buscaServidor, setBuscaServidor] = useState("");
   const loadSeq = useRef(0);
   const jaCarregou = useRef(false);
 
@@ -142,10 +141,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
       setError("");
     }
     try {
-      const next = await fetchAgendamentos(statusFilter, {
-        q: buscaServidor,
-        limit: buscaServidor ? 1000 : 250,
-      });
+      const next = await fetchAgendamentos(statusFilter);
       if (seq !== loadSeq.current) return;
       jaCarregou.current = true;
       setItems(next);
@@ -157,12 +153,7 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
     } finally {
       if (seq === loadSeq.current) setLoading(false);
     }
-  }, [statusFilter, buscaServidor]);
-
-  useEffect(() => {
-    const t = window.setTimeout(() => setBuscaServidor(busca.trim()), 400);
-    return () => window.clearTimeout(t);
-  }, [busca]);
+  }, [statusFilter]);
 
   useEffect(() => {
     void load();
@@ -179,8 +170,8 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
     const q = normalizarBusca(busca);
     if (!q) return sortedItems;
     return sortedItems.filter((item) => {
-      const nome = normalizarBusca(item.nome);
-      const telefone = item.telefone.replace(/\D/g, "");
+      const nome = normalizarBusca(String(item.nome ?? ""));
+      const telefone = String(item.telefone ?? "").replace(/\D/g, "");
       const id = String(item.id);
       const qDigits = q.replace(/\D/g, "");
       return (
@@ -681,7 +672,9 @@ export function InventarioPage({ variant }: { variant: InventarioVariant }) {
                   <i className="bi bi-search" aria-hidden="true" />
                   <input
                     id={`inv-busca-${listingSlug}`}
-                    type="search"
+                    type="text"
+                    inputMode="search"
+                    enterKeyHint="search"
                     value={busca}
                     onChange={(e) => setBusca(e.target.value)}
                     placeholder="Buscar por nome do cliente…"
